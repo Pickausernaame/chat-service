@@ -14,6 +14,7 @@ vars:
   DEV_TOOLS: |
     github.com/daixiang0/gci@v0.10.1
     mvdan.cc/gofumpt@v0.4.0
+    github.com/kazhuravlev/options-gen/cmd/options-gen@v0.28.4
 
 
 tasks:
@@ -36,8 +37,8 @@ tasks:
 
   fmt:
     - echo "- Format"
-    - gofumpt -l -w .
-    - gci write -s standard -s default -s "prefix({{.GO_MODULE}})" .
+    - gofumpt -l -w {{.GO_FILES}}
+    - gci write -s standard -s default -s "prefix({{.GO_MODULE}})" {{.GO_FILES}}
 
   lint:
     cmds:
