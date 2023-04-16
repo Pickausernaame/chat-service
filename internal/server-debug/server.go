@@ -108,7 +108,7 @@ func (s *Server) setLogLevel(eCtx echo.Context) error {
 	lvl := eCtx.FormValue("level")
 
 	err := logger.SetLogLevel(logger.NewOptions(strings.ToLower(lvl)))
-	s.lg.Error("setting log level", zap.String("level", lvl), zap.Error(err))
+	s.lg.Debug("setting log level", zap.String("level", lvl), zap.Error(err))
 	if err != nil {
 		return eCtx.NoContent(http.StatusBadRequest)
 	}

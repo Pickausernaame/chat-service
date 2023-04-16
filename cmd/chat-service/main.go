@@ -6,9 +6,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"os/signal"
-	"strconv"
+	"strings"
 	"syscall"
 
 	"golang.org/x/sync/errgroup"
@@ -37,21 +36,14 @@ func run() (errReturned error) {
 		return fmt.Errorf("parse and validate config %q: %v", *configPath, err)
 	}
 
-	isProduction := false
-	v := os.Getenv("IS_PRODUCTION")
-	if v != "" {
-		isProduction, err = strconv.ParseBool(v)
-		if err != nil {
-			return fmt.Errorf("parse env error: %v", err)
-		}
-	}
+	isProduction := strings.Contains(cfg.Global.Env, "prod") || strings.Contains(cfg.Global.Env, "stage")
 
 	opts := logger.NewOptions(cfg.Log.Level, logger.WithProductionMode(isProduction))
 	if err = logger.Init(opts); err != nil {
 		return fmt.Errorf("logger init error: %v", err)
 	}
 
-	logger.Sync()
+	defer logger.Sync()
 
 	srvDebug, err := serverdebug.New(serverdebug.NewOptions(cfg.Servers.Debug.Addr))
 	if err != nil {

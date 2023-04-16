@@ -27,7 +27,7 @@ func MustInit(opts Options) {
 }
 
 func Init(opts Options) error {
-	if err := SetLogLevel(opts); err != nil {
+	if err := setLogLevel(opts); err != nil {
 		return fmt.Errorf("set log level error: %v", err)
 	}
 
@@ -56,7 +56,7 @@ func Init(opts Options) error {
 	return nil
 }
 
-func SetLogLevel(opts Options) error {
+func setLogLevel(opts Options) error {
 	if err := opts.Validate(); err != nil {
 		return fmt.Errorf("validation logger options error: %v", err)
 	}
@@ -68,6 +68,10 @@ func SetLogLevel(opts Options) error {
 
 	globalLogLevel.SetLevel(lvl)
 	return nil
+}
+
+func SetLogLevel(opts Options) error {
+	return setLogLevel(opts)
 }
 
 func LogLevel() string {
