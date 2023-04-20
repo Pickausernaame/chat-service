@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"golang.org/x/sync/errgroup"
@@ -36,9 +35,8 @@ func run() (errReturned error) {
 		return fmt.Errorf("parse and validate config %q: %v", *configPath, err)
 	}
 
-	isProduction := strings.Contains(cfg.Global.Env, "prod") || strings.Contains(cfg.Global.Env, "stage")
-
-	opts := logger.NewOptions(cfg.Log.Level, logger.WithProductionMode(isProduction))
+	opts := logger.NewOptions(cfg.Global.Env, logger.WithLevel(logger.NewLogLevelOption(cfg.Log.Level)),
+		logger.WithVersion(cfg.Global.Version), logger.WithSentryDSN(cfg.Sentry.DSN))
 	if err = logger.Init(opts); err != nil {
 		return fmt.Errorf("logger init error: %v", err)
 	}

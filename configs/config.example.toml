@@ -1,5 +1,6 @@
 [global]
 env = "dev"
+ver = "0.0.1"
 
 [log]
 level = "info"
@@ -7,3 +8,6 @@ level = "info"
 [servers]
 [servers.debug]
 addr = ":8079"
+
+[sentry]
+dsn = "http://7dc894a2773a424780da7a0464bd3241@sentry/2"

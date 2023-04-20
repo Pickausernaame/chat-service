@@ -10,12 +10,21 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/Pickausernaame/chat-service/internal/validator"
 )
 
 //go:generate options-gen -out-filename=logger_options.gen.go -from-struct=Options
 type Options struct {
-	level          string `option:"mandatory" validate:"required,oneof=debug info warn error"`
-	productionMode bool
+	level     LogLevelOption
+	env       string `option:"mandatory" validate:"required,oneof=dev stage prod"`
+	sentryDSN string `validate:"http_url,omitempty"`
+	version   string `validate:"semver,omitempty"`
+}
+
+//go:generate options-gen -out-filename=logger_lvl_option.gen.go -from-struct=LogLevelOption
+type LogLevelOption struct {
+	value string `option:"mandatory" validate:"required,oneof=debug info warn error"`
 }
 
 var globalLogLevel = zap.NewAtomicLevel()
@@ -27,7 +36,7 @@ func MustInit(opts Options) {
 }
 
 func Init(opts Options) error {
-	if err := setLogLevel(opts); err != nil {
+	if err := setLogLevel(opts.level); err != nil {
 		return fmt.Errorf("set log level error: %v", err)
 	}
 
@@ -41,7 +50,8 @@ func Init(opts Options) error {
 	}
 
 	encoder := zapcore.NewConsoleEncoder(encoderConfig)
-	if opts.productionMode {
+
+	if opts.env == "stage" || opts.env == "prod" {
 		encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 		encoder = zapcore.NewJSONEncoder(encoderConfig)
 	}
@@ -49,19 +59,34 @@ func Init(opts Options) error {
 	cores := []zapcore.Core{
 		zapcore.NewCore(encoder, os.Stdout, globalLogLevel),
 	}
+	if opts.sentryDSN != "" {
+		core, err := NewSentryCore(opts)
+		if err != nil {
+			return fmt.Errorf("sentry core creating error: %v", err)
+		}
+		cores = append(cores, core)
+	}
 
 	l := zap.New(zapcore.NewTee(cores...))
-	zap.ReplaceGlobals(l)
 
+	if opts.version != "" {
+		l = l.With(zap.String("version", opts.version))
+	}
+
+	if opts.env != "" {
+		l = l.With(zap.String("env", opts.env))
+	}
+
+	zap.ReplaceGlobals(l)
 	return nil
 }
 
-func setLogLevel(opts Options) error {
-	if err := opts.Validate(); err != nil {
-		return fmt.Errorf("validation logger options error: %v", err)
+func setLogLevel(opt LogLevelOption) error {
+	if err := validator.Validator.Struct(opt); err != nil {
+		return fmt.Errorf("validation logger level error: %v", err)
 	}
 
-	lvl, err := zapcore.ParseLevel(opts.level)
+	lvl, err := zapcore.ParseLevel(opt.value)
 	if err != nil {
 		return fmt.Errorf("parse logger level error: %v", err)
 	}
@@ -70,8 +95,8 @@ func setLogLevel(opts Options) error {
 	return nil
 }
 
-func SetLogLevel(opts Options) error {
-	return setLogLevel(opts)
+func SetLogLevel(opt LogLevelOption) error {
+	return setLogLevel(opt)
 }
 
 func LogLevel() string {

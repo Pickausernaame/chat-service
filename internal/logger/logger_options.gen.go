@@ -11,14 +11,14 @@ import (
 type OptOptionsSetter func(o *Options)
 
 func NewOptions(
-	level string,
+	env string,
 	options ...OptOptionsSetter,
 ) Options {
 	o := Options{}
 
 	// Setting defaults from field tag (if present)
 
-	o.level = level
+	o.env = env
 
 	for _, opt := range options {
 		opt(&o)
@@ -26,21 +26,49 @@ func NewOptions(
 	return o
 }
 
-func WithProductionMode(opt bool) OptOptionsSetter {
+func WithLevel(opt LogLevelOption) OptOptionsSetter {
 	return func(o *Options) {
-		o.productionMode = opt
+		o.level = opt
+	}
+}
+
+func WithSentryDSN(opt string) OptOptionsSetter {
+	return func(o *Options) {
+		o.sentryDSN = opt
+	}
+}
+
+func WithVersion(opt string) OptOptionsSetter {
+	return func(o *Options) {
+		o.version = opt
 	}
 }
 
 func (o *Options) Validate() error {
 	errs := new(errors461e464ebed9.ValidationErrors)
-	errs.Add(errors461e464ebed9.NewValidationError("level", _validate_Options_level(o)))
+	errs.Add(errors461e464ebed9.NewValidationError("env", _validate_Options_env(o)))
+	errs.Add(errors461e464ebed9.NewValidationError("sentryDSN", _validate_Options_sentryDSN(o)))
+	errs.Add(errors461e464ebed9.NewValidationError("version", _validate_Options_version(o)))
 	return errs.AsError()
 }
 
-func _validate_Options_level(o *Options) error {
-	if err := validator461e464ebed9.GetValidatorFor(o).Var(o.level, "required,oneof=debug info warn error"); err != nil {
-		return fmt461e464ebed9.Errorf("field `level` did not pass the test: %w", err)
+func _validate_Options_env(o *Options) error {
+	if err := validator461e464ebed9.GetValidatorFor(o).Var(o.env, "required,oneof=dev stage prod"); err != nil {
+		return fmt461e464ebed9.Errorf("field `env` did not pass the test: %w", err)
+	}
+	return nil
+}
+
+func _validate_Options_sentryDSN(o *Options) error {
+	if err := validator461e464ebed9.GetValidatorFor(o).Var(o.sentryDSN, "http_url,omitempty"); err != nil {
+		return fmt461e464ebed9.Errorf("field `sentryDSN` did not pass the test: %w", err)
+	}
+	return nil
+}
+
+func _validate_Options_version(o *Options) error {
+	if err := validator461e464ebed9.GetValidatorFor(o).Var(o.version, "semver,omitempty"); err != nil {
+		return fmt461e464ebed9.Errorf("field `version` did not pass the test: %w", err)
 	}
 	return nil
 }

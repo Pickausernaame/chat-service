@@ -57,11 +57,13 @@ func New(opts Options) (*Server, error) {
 	index.addPage("/version", "Get build information")
 	index.addPage("/debug/pprof/", "Go std profiler")
 	index.addPage("/debug/pprof/profile?seconds=30", "Take half min profile")
+	index.addPage("/debug/error", "Debug sentry error event")
 
 	e.GET("/", index.handler)
 	e.GET("/version", s.Version)
 	e.GET("/log/level", s.getLogLevel)
 	e.PUT("/log/level", s.setLogLevel)
+	e.GET("/debug/error", s.error)
 	pprof.Register(e, "/debug/pprof")
 
 	return s, nil
@@ -107,11 +109,16 @@ func (s *Server) getLogLevel(eCtx echo.Context) error {
 func (s *Server) setLogLevel(eCtx echo.Context) error {
 	lvl := eCtx.FormValue("level")
 
-	err := logger.SetLogLevel(logger.NewOptions(strings.ToLower(lvl)))
+	err := logger.SetLogLevel(logger.NewLogLevelOption(strings.ToLower(lvl)))
 	s.lg.Debug("setting log level", zap.String("level", lvl), zap.Error(err))
 	if err != nil {
 		return eCtx.NoContent(http.StatusBadRequest)
 	}
 
 	return eCtx.String(http.StatusOK, s.lg.Level().String())
+}
+
+func (s *Server) error(eCtx echo.Context) error {
+	s.lg.Error("debug error msg", zap.Error(errors.New("debug error")))
+	return eCtx.NoContent(http.StatusOK)
 }

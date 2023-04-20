@@ -8,6 +8,7 @@ type Config struct {
 	Global  GlobalConfig  `toml:"global"`
 	Log     LogConfig     `toml:"log"`
 	Servers ServersConfig `toml:"servers"`
+	Sentry  SentryConfig  `toml:"sentry"`
 }
 
 func (c Config) Validate() error {
@@ -15,7 +16,8 @@ func (c Config) Validate() error {
 }
 
 type GlobalConfig struct {
-	Env string `toml:"env" validate:"required,oneof=dev stage prod"`
+	Env     string `toml:"env" validate:"required,oneof=dev stage prod"`
+	Version string `toml:"ver" validate:"semver,omitempty"`
 }
 
 type LogConfig struct {
@@ -28,4 +30,8 @@ type ServersConfig struct {
 
 type DebugServerConfig struct {
 	Addr string `toml:"addr" validate:"required,hostname_port"`
+}
+
+type SentryConfig struct {
+	DSN string `toml:"dsn" validate:"http_url,omitempty"`
 }
