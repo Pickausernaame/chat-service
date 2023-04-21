@@ -13,6 +13,7 @@ vars:
     github.com/daixiang0/gci@v0.10.1
     mvdan.cc/gofumpt@v0.4.0
     github.com/kazhuravlev/options-gen/cmd/options-gen@v0.28.4
+    entgo.io/ent/cmd/ent@v0.11.10
   DOCKER_COMPOSE_PATHS: |
     ./deploy/local/docker-compose.yaml
     ./deploy/local/docker-compose.sentry.yaml
@@ -23,7 +24,7 @@ vars:
     UserID
   TYPES_PKG: types
   TYPES_DST: ./internal/types/types.gen.go
-
+  ENT_SCHEMA: ./internal/store/schema
 
 tasks:
   default:
@@ -92,6 +93,11 @@ tasks:
       - echo "Generate types..."
       - go run ./cmd/gen-types {{.TYPES_PKG}} {{ trim .TYPES | splitLines | join "," }} {{.TYPES_DST}}
 
+  ent:new:
+    cmds:
+      - ent new --target {{.ENT_SCHEMA}} {{.CLI_ARGS}}
+      - task: tidy
+  
   deps:
     cmds:
       - echo "- Starting deps"
