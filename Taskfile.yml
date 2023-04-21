@@ -7,18 +7,22 @@ vars:
   GO_MODULE: github.com/Pickausernaame/chat-service
   GO_FILES:
     sh: find . -type f -name '*.go' -not -path "./vendor/*" -not -path "*.gen.go" | tr "\n" " "
-
   GOLANGCI_LINT_VERSION: v1.52.2
   GOLANGCI_LINT_CACHE: .cache/golangci
-                                                      
   DEV_TOOLS: |
     github.com/daixiang0/gci@v0.10.1
     mvdan.cc/gofumpt@v0.4.0
     github.com/kazhuravlev/options-gen/cmd/options-gen@v0.28.4
-
   DOCKER_COMPOSE_PATHS: |
     ./deploy/local/docker-compose.yaml
     ./deploy/local/docker-compose.sentry.yaml
+  TYPES: |
+    ChatID
+    MessageID
+    ProblemID
+    UserID
+  TYPES_PKG: types
+  TYPES_DST: ./internal/types/types.gen.go
 
 
 tasks:
@@ -77,6 +81,16 @@ tasks:
         {{- range $i, $tool := .DEV_TOOLS | splitLines -}}
           {{ if $tool }} go install -v {{$tool}} {{end}}
         {{end -}}
+
+  generate:
+    - echo "Run go generate..."
+    - go generate ./...
+    - task: gen:types
+
+  gen:types:
+    cmds:
+      - echo "Generate types..."
+      - go run ./cmd/gen-types {{.TYPES_PKG}} {{ trim .TYPES | splitLines | join "," }} {{.TYPES_DST}}
 
   deps:
     cmds:
