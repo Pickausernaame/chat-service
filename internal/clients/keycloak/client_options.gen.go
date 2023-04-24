@@ -42,7 +42,6 @@ func (o *Options) Validate() error {
 	errs := new(errors461e464ebed9.ValidationErrors)
 	errs.Add(errors461e464ebed9.NewValidationError("basePath", _validate_Options_basePath(o)))
 	errs.Add(errors461e464ebed9.NewValidationError("realmName", _validate_Options_realmName(o)))
-	errs.Add(errors461e464ebed9.NewValidationError("debugMode", _validate_Options_debugMode(o)))
 	errs.Add(errors461e464ebed9.NewValidationError("clientID", _validate_Options_clientID(o)))
 	errs.Add(errors461e464ebed9.NewValidationError("clientSecret", _validate_Options_clientSecret(o)))
 	return errs.AsError()
@@ -58,13 +57,6 @@ func _validate_Options_basePath(o *Options) error {
 func _validate_Options_realmName(o *Options) error {
 	if err := validator461e464ebed9.GetValidatorFor(o).Var(o.realmName, "required"); err != nil {
 		return fmt461e464ebed9.Errorf("field `realmName` did not pass the test: %w", err)
-	}
-	return nil
-}
-
-func _validate_Options_debugMode(o *Options) error {
-	if err := validator461e464ebed9.GetValidatorFor(o).Var(o.debugMode, "required"); err != nil {
-		return fmt461e464ebed9.Errorf("field `debugMode` did not pass the test: %w", err)
 	}
 	return nil
 }

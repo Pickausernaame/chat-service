@@ -10,7 +10,7 @@ import (
 type Options struct {
 	basePath  string `option:"mandatory" validate:"required"`
 	realmName string `option:"mandatory" validate:"required"`
-	debugMode bool   `validate:"required"`
+	debugMode bool
 
 	clientID     string `option:"mandatory" validate:"required"`
 	clientSecret string `option:"mandatory" validate:"required"`

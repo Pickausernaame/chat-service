@@ -9,6 +9,7 @@ type Config struct {
 	Log     LogConfig     `toml:"log"`
 	Servers ServersConfig `toml:"servers"`
 	Sentry  SentryConfig  `toml:"sentry"`
+	Clients ClientsConfig `toml:"clients"`
 }
 
 func (c Config) Validate() error {
@@ -34,10 +35,28 @@ type DebugServerConfig struct {
 }
 
 type ServersClientConfig struct {
-	Addr          string   `toml:"addr" validate:"required,hostname_port"`
-	AllowsOrigins []string `toml:"allow_origins" validate:"required,min=1"`
+	Addr           string                            `toml:"addr" validate:"required,hostname_port"`
+	AllowsOrigins  []string                          `toml:"allow_origins" validate:"required,min=1"`
+	RequiredAccess ServersClientRequiredAccessConfig `toml:"required_access"`
+}
+
+type ServersClientRequiredAccessConfig struct {
+	Resource string `toml:"resource" validate:"required"`
+	Role     string `toml:"role" validate:"required"`
 }
 
 type SentryConfig struct {
 	DSN string `toml:"dsn" validate:"http_url,omitempty"`
+}
+
+type ClientsConfig struct {
+	Keycloak KeycloakClientConfig `toml:"keycloak"`
+}
+
+type KeycloakClientConfig struct {
+	BasePath     string `toml:"base_path" validate:"required,http_url"`
+	Realm        string `toml:"realm" validate:"required"`
+	ClientID     string `toml:"client_id" validate:"required"`
+	ClientSecret string `toml:"client_secret" validate:"required"`
+	DebugMode    bool   `toml:"debug_mode"`
 }

@@ -9,8 +9,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
+	keycloakclient "github.com/Pickausernaame/chat-service/internal/clients/keycloak"
 	"github.com/Pickausernaame/chat-service/internal/config"
 	"github.com/Pickausernaame/chat-service/internal/logger"
 	clientv1 "github.com/Pickausernaame/chat-service/internal/server-client/v1"
@@ -44,6 +46,21 @@ func run() (errReturned error) {
 
 	defer logger.Sync()
 
+	if cfg.Clients.Keycloak.DebugMode && cfg.Global.Env == "prod" {
+		zap.L().Warn("Keycloak.DebugMode = true AND Global.Env = Production")
+	}
+
+	kc, err := keycloakclient.New(
+		keycloakclient.NewOptions(
+			cfg.Clients.Keycloak.BasePath,
+			cfg.Clients.Keycloak.Realm,
+			cfg.Clients.Keycloak.ClientID,
+			cfg.Clients.Keycloak.ClientSecret,
+			keycloakclient.WithDebugMode(cfg.Clients.Keycloak.DebugMode)))
+	if err != nil {
+		return fmt.Errorf("keycloak client init error: %v", err)
+	}
+
 	srvDebug, err := serverdebug.New(serverdebug.NewOptions(cfg.Servers.Debug.Addr))
 	if err != nil {
 		return fmt.Errorf("init debug server: %v", err)
@@ -59,11 +76,12 @@ func run() (errReturned error) {
 	if err != nil {
 		return fmt.Errorf("getting swagger: %v", err)
 	}
-	srvClient, err := initServerClient(cfg.Servers.Client.Addr, cfg.Servers.Client.AllowsOrigins, swg)
+	srvClient, err := initServerClient(cfg.Servers.Client.Addr, cfg.Servers.Client.AllowsOrigins, swg, kc,
+		cfg.Servers.Client.RequiredAccess.Resource, cfg.Servers.Client.RequiredAccess.Role)
 	if err != nil {
 		return fmt.Errorf("init server client: %v", err)
 	}
-	// client
+	// server client
 	eg.Go(func() error { return srvClient.Run(ctx) })
 
 	// Run services.
