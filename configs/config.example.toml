@@ -8,6 +8,9 @@ level = "info"
 [servers]
 [servers.debug]
 addr = ":8079"
+[servers.client]
+addr = ":8080"
+allow_origins = ["http://localhost:3011", "http://localhost:3000"]
 
 [sentry]
 dsn = "http://7dc894a2773a424780da7a0464bd3241@sentry/2"

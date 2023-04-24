@@ -8,3 +8,4 @@
 /chat-service
 configs/config.toml
 .cache
+bank-realm.json

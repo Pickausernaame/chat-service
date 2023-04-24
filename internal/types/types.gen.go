@@ -203,3 +203,52 @@ func (t *UserID) scan(v any) error {
 func (t UserID) string() string {
 	return uuid.UUID(t).String()
 }
+
+type RequestID uuid.UUID
+
+var RequestIDNil RequestID
+
+func NewRequestID() RequestID {
+	return RequestID(uuid.New())
+}
+
+func (t RequestID) IsZero() bool { return t.isZero() }
+
+func (t RequestID) MarshalText() ([]byte, error) {
+	return []byte(t.string()), nil
+}
+
+func (t RequestID) Matches(x interface{}) bool {
+	value, ok := x.(uuid.UUID)
+	if !ok {
+		return false
+	}
+	return t.String() == value.String()
+}
+
+func (t RequestID) String() string { return t.string() }
+
+func (t RequestID) Validate() error {
+	if t.isZero() {
+		return errors.New("empty value")
+	}
+	return nil
+}
+
+func (t RequestID) Value() (driver.Value, error) { return t.string(), nil }
+
+func (t *RequestID) Scan(src any) error { return t.scan(src) }
+
+func (t *RequestID) UnmarshalText(text []byte) error { return t.scan(text) }
+
+func (t *RequestID) isZero() bool {
+	return t == nil || (uuid.UUID)(*t) == uuid.Nil
+}
+
+func (t *RequestID) scan(v any) error {
+	return (*uuid.UUID)(t).Scan(v)
+}
+
+func (t RequestID) string() string {
+	return uuid.UUID(t).String()
+}

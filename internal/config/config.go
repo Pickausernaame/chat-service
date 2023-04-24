@@ -25,11 +25,17 @@ type LogConfig struct {
 }
 
 type ServersConfig struct {
-	Debug DebugServerConfig `toml:"debug"`
+	Debug  DebugServerConfig   `toml:"debug"`
+	Client ServersClientConfig `toml:"client"`
 }
 
 type DebugServerConfig struct {
 	Addr string `toml:"addr" validate:"required,hostname_port"`
+}
+
+type ServersClientConfig struct {
+	Addr          string   `toml:"addr" validate:"required,hostname_port"`
+	AllowsOrigins []string `toml:"allow_origins" validate:"required,min=1"`
 }
 
 type SentryConfig struct {

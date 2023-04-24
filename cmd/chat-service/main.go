@@ -13,6 +13,7 @@ import (
 
 	"github.com/Pickausernaame/chat-service/internal/config"
 	"github.com/Pickausernaame/chat-service/internal/logger"
+	clientv1 "github.com/Pickausernaame/chat-service/internal/server-client/v1"
 	serverdebug "github.com/Pickausernaame/chat-service/internal/server-debug"
 )
 
@@ -51,7 +52,19 @@ func run() (errReturned error) {
 	eg, ctx := errgroup.WithContext(ctx)
 
 	// Run servers.
+	// debug server
 	eg.Go(func() error { return srvDebug.Run(ctx) })
+
+	swg, err := clientv1.GetSwagger()
+	if err != nil {
+		return fmt.Errorf("getting swagger: %v", err)
+	}
+	srvClient, err := initServerClient(cfg.Servers.Client.Addr, cfg.Servers.Client.AllowsOrigins, swg)
+	if err != nil {
+		return fmt.Errorf("init server client: %v", err)
+	}
+	// client
+	eg.Go(func() error { return srvClient.Run(ctx) })
 
 	// Run services.
 	// Ждут своего часа.
