@@ -50,11 +50,33 @@ func New(opts Options) (*Server, error) {
 
 	e := echo.New()
 	e.Use(
-		middleware.Recover(),
-		// (165(size of message without body) + 3000*4(max size of body)) * 10(count of messages per 1 request) * 2 (
-		// margin factor) --> 240Kb --> 1m
-		middleware.BodyLimit("240K"),
+		middleware.RecoverWithConfig(middleware.RecoverConfig{
+			Skipper:           middleware.DefaultSkipper,
+			StackSize:         4 << 10,
+			DisableStackAll:   false,
+			DisablePrintStack: false,
+			LogErrorFunc: func(c echo.Context, err error, stack []byte) error {
+				l := zap.L().Named("recovery")
+				msg := fmt.Sprintf("[PANIC RECOVER] %v %s\n", err, stack)
+				switch l.Level() {
+				case zap.DebugLevel:
+					c.Logger().Debug(msg)
+				case zap.InfoLevel:
+					c.Logger().Info(msg)
+				case zap.WarnLevel:
+					c.Logger().Warn(msg)
+				case zap.ErrorLevel:
+					c.Logger().Error(msg)
+				default:
+					c.Logger().Print(msg)
+				}
+				return nil
+			},
+		}),
 		middlewares.ZapLogger(opts.logger.Named("middleware")),
+		// (165(size of message without body) + 3000*4(max size of body)) * 1(count of messages per 1 request) * 2 (
+		// margin factor) --> 24Kb
+		middleware.BodyLimit("24K"),
 		middleware.CORSWithConfig(
 			middleware.CORSConfig{
 				AllowOrigins: opts.allowOrigins,

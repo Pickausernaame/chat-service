@@ -24,7 +24,7 @@ func (Message) Fields() []ent.Field {
 		field.UUID("author_id", types.UserID{}).Immutable(),
 		field.Bool("is_visible_for_client").Immutable().Default(false),
 		field.Bool("is_visible_for_manager").Immutable().Default(false),
-		field.String("body"),
+		field.String("body").MaxLen(3000),
 		field.Time("checked_at").Optional(),
 		field.Bool("is_blocked").Default(false),
 		field.Bool("is_service").Default(false),
