@@ -55,23 +55,7 @@ func New(opts Options) (*Server, error) {
 			StackSize:         4 << 10,
 			DisableStackAll:   false,
 			DisablePrintStack: false,
-			LogErrorFunc: func(c echo.Context, err error, stack []byte) error {
-				l := zap.L().Named("recovery")
-				msg := fmt.Sprintf("[PANIC RECOVER] %v %s\n", err, stack)
-				switch l.Level() {
-				case zap.DebugLevel:
-					c.Logger().Debug(msg)
-				case zap.InfoLevel:
-					c.Logger().Info(msg)
-				case zap.WarnLevel:
-					c.Logger().Warn(msg)
-				case zap.ErrorLevel:
-					c.Logger().Error(msg)
-				default:
-					c.Logger().Print(msg)
-				}
-				return nil
-			},
+			LogErrorFunc:      middlewares.RecoveryLogFunc,
 		}),
 		middlewares.ZapLogger(opts.logger.Named("middleware")),
 		// (165(size of message without body) + 3000*4(max size of body)) * 1(count of messages per 1 request) * 2 (

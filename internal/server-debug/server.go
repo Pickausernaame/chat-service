@@ -44,7 +44,13 @@ func New(opts Options) (*Server, error) {
 	lg := zap.L().Named("server-debug")
 
 	e := echo.New()
-	e.Use(middleware.Recover(),
+	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
+		Skipper:           middleware.DefaultSkipper,
+		StackSize:         4 << 10,
+		DisableStackAll:   false,
+		DisablePrintStack: false,
+		LogErrorFunc:      middlewares.RecoveryLogFunc,
+	}),
 		middlewares.ZapLogger(lg.Named("middleware")))
 
 	s := &Server{

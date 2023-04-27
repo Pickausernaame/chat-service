@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -63,4 +64,23 @@ func ZapLogger(log *zap.Logger) echo.MiddlewareFunc {
 			return nil
 		}
 	}
+}
+
+func RecoveryLogFunc(c echo.Context, err error, stack []byte) error {
+	l := zap.L().Named("recovery")
+	msg := fmt.Sprintf("[PANIC RECOVER] %v %s\n", err, stack)
+	// nolint:exhaustive
+	switch l.Level() {
+	case zap.DebugLevel:
+		c.Logger().Debug(msg)
+	case zap.InfoLevel:
+		c.Logger().Info(msg)
+	case zap.WarnLevel:
+		c.Logger().Warn(msg)
+	case zap.ErrorLevel:
+		c.Logger().Error(msg)
+	default:
+		c.Logger().Print(msg)
+	}
+	return nil
 }
