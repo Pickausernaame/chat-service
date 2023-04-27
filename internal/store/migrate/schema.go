@@ -26,7 +26,7 @@ var (
 		{Name: "author_id", Type: field.TypeUUID},
 		{Name: "is_visible_for_client", Type: field.TypeBool, Default: false},
 		{Name: "is_visible_for_manager", Type: field.TypeBool, Default: false},
-		{Name: "body", Type: field.TypeString},
+		{Name: "body", Type: field.TypeString, Size: 3000},
 		{Name: "checked_at", Type: field.TypeTime, Nullable: true},
 		{Name: "is_blocked", Type: field.TypeBool, Default: false},
 		{Name: "is_service", Type: field.TypeBool, Default: false},

@@ -117,6 +117,11 @@ func (mu *MessageUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (mu *MessageUpdate) check() error {
+	if v, ok := mu.mutation.Body(); ok {
+		if err := message.BodyValidator(v); err != nil {
+			return &ValidationError{Name: "body", err: fmt.Errorf(`store: validator failed for field "Message.body": %w`, err)}
+		}
+	}
 	if _, ok := mu.mutation.ProblemID(); mu.mutation.ProblemCleared() && !ok {
 		return errors.New(`store: clearing a required unique edge "Message.problem"`)
 	}
@@ -274,6 +279,11 @@ func (muo *MessageUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (muo *MessageUpdateOne) check() error {
+	if v, ok := muo.mutation.Body(); ok {
+		if err := message.BodyValidator(v); err != nil {
+			return &ValidationError{Name: "body", err: fmt.Errorf(`store: validator failed for field "Message.body": %w`, err)}
+		}
+	}
 	if _, ok := muo.mutation.ProblemID(); muo.mutation.ProblemCleared() && !ok {
 		return errors.New(`store: clearing a required unique edge "Message.problem"`)
 	}

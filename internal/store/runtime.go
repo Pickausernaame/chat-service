@@ -36,6 +36,10 @@ func init() {
 	messageDescIsVisibleForManager := messageFields[5].Descriptor()
 	// message.DefaultIsVisibleForManager holds the default value on creation for the is_visible_for_manager field.
 	message.DefaultIsVisibleForManager = messageDescIsVisibleForManager.Default.(bool)
+	// messageDescBody is the schema descriptor for body field.
+	messageDescBody := messageFields[6].Descriptor()
+	// message.BodyValidator is a validator for the "body" field. It is called by the builders before save.
+	message.BodyValidator = messageDescBody.Validators[0].(func(string) error)
 	// messageDescIsBlocked is the schema descriptor for is_blocked field.
 	messageDescIsBlocked := messageFields[8].Descriptor()
 	// message.DefaultIsBlocked holds the default value on creation for the is_blocked field.
