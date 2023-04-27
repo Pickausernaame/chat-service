@@ -69,7 +69,7 @@ func ZapLogger(log *zap.Logger) echo.MiddlewareFunc {
 func RecoveryLogFunc(c echo.Context, err error, stack []byte) error {
 	l := zap.L().Named("recovery")
 	msg := fmt.Sprintf("[PANIC RECOVER] %v %s\n", err, stack)
-	// nolint:exhaustive
+	//nolint:exhaustive
 	switch l.Level() {
 	case zap.DebugLevel:
 		c.Logger().Debug(msg)
