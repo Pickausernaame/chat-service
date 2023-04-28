@@ -46,7 +46,7 @@ components:
         format: uuid
         x-go-type: types.RequestID
         x-go-type-import:
-          path: "github.com/myname/chat-service/internal/types"
+          path: "github.com/Pickausernaame/chat-service/internal/types"
       required: true
 
   schemas:
@@ -83,13 +83,13 @@ components:
           format: uuid
           x-go-type: types.MessageID
           x-go-type-import:
-            path: "github.com/myname/chat-service/internal/types"
+            path: "github.com/Pickausernaame/chat-service/internal/types"
         authorId:
           type: string
           format: uuid
           x-go-type: types.UserID
           x-go-type-import:
-            path: "github.com/myname/chat-service/internal/types"
+            path: "github.com/Pickausernaame/chat-service/internal/types"
         body:
           type: string
         createdAt:
