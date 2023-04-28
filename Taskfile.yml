@@ -7,15 +7,31 @@ vars:
   GO_MODULE: github.com/Pickausernaame/chat-service
   GO_FILES:
     sh: find . -type f -name '*.go' -not -path "./vendor/*" -not -path "*.gen.go" | tr "\n" " "
-
   GOLANGCI_LINT_VERSION: v1.52.2
   GOLANGCI_LINT_CACHE: .cache/golangci
-
   DEV_TOOLS: |
     github.com/daixiang0/gci@v0.10.1
     mvdan.cc/gofumpt@v0.4.0
     github.com/kazhuravlev/options-gen/cmd/options-gen@v0.28.4
-
+    entgo.io/ent/cmd/ent@v0.11.10
+    github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.12.4
+    github.com/golang/mock/mockgen@v1.6.0
+  DOCKER_COMPOSE_PATHS: |
+    ./deploy/local/docker-compose.yaml
+    ./deploy/local/docker-compose.sentry.yaml
+    ./deploy/local/docker-compose.swagger-ui.yaml
+  TYPES: |
+    ChatID
+    MessageID
+    ProblemID
+    UserID
+    RequestID
+  TYPES_PKG: types
+  TYPES_DST: ./internal/types/types.gen.go
+  ENT_SCHEMA: ./internal/store/schema
+  CLIENT_V1_SRC: ./api/client.v1.swagger.yml
+  CLIENT_V1_DST: ./internal/server-client/v1/server.gen.go
+  CLIENT_V1_PKG: clientv1
 
 tasks:
   default:
@@ -61,6 +77,18 @@ tasks:
       - echo "- Tests"
       - go test -race ./...
 
+  tests:integration:
+    env:
+      TEST_KEYCLOAK_BASE_PATH: 'http://localhost:3010'
+      TEST_KEYCLOAK_REALM: 'Bank'
+      TEST_KEYCLOAK_CLIENT_ID: 'integration-testing'
+      TEST_KEYCLOAK_CLIENT_SECRET: 'Xb9A5G6qBa0qzeI0vUvN1OvU1mjdr8AT'
+      TEST_KEYCLOAK_TEST_USER: 'integration-testing'
+      TEST_KEYCLOAK_TEST_PASSWORD: '123qwe'
+    cmds:
+      - echo "- Tests"
+      - go test -tags integration -race ./...
+
   build:
     cmds:
       - echo "- Build"
@@ -73,3 +101,105 @@ tasks:
         {{- range $i, $tool := .DEV_TOOLS | splitLines -}}
           {{ if $tool }} go install -v {{$tool}} {{end}}
         {{end -}}
+
+  generate:
+    - echo "Run go generate..."
+    - go generate ./...
+    - task: gen:types
+
+  gen:types:
+    cmds:
+      - echo "Generate types..."
+      - go run ./cmd/gen-types {{.TYPES_PKG}} {{ trim .TYPES | splitLines | join "," }} {{.TYPES_DST}}
+
+  gen:api:
+    cmds:
+      - oapi-codegen --old-config-style -generate server,spec,types -package clientv1 ./api/client.v1.swagger.yml > ./internal/server-client/v1/server.gen.go
+      
+  ent:new:
+    cmds:
+      - ent new --target {{.ENT_SCHEMA}} {{.CLI_ARGS}}
+      - task: tidy
+  
+  deps:
+    cmds:
+      - echo "- Starting deps"
+      - task: deps:_cmd
+        vars:
+          DOCKER_CMD: up -d
+
+  deps:cmd:
+    cmds:
+      - echo "- Command on deps"
+      - task: deps:_cmd
+        vars:
+          DOCKER_CMD: '{{.CLI_ARGS}}'
+
+  deps:status:
+    cmds:
+      - echo "- Deps status"
+      - task: deps:_cmd
+        vars:
+          DOCKER_CMD: 'ps -a'
+
+  deps:logs:
+    vars:
+      DOCKER_CMD:
+    cmds:
+      - task: deps:_cmd
+        vars:
+          DOCKER_CMD: 'logs --tail=50 {{.CLI_ARGS}}'
+
+  deps:stop:
+    cmds:
+      - echo "- Stopping deps"
+      - task: deps:_cmd
+        vars:
+          DOCKER_CMD: 'stop'
+
+  deps:reset-psql:
+    cmds:
+      - task: deps:reset
+        vars:
+          SERVICE: postgres
+
+  deps:reset:
+    cmds:
+      - echo "- Resetting {{.SERVICE}}"
+      - task: deps:_cmd
+        vars:
+          DOCKER_CMD: 'rm -fsv {{.SERVICE}}'
+      - task: deps:_cmd
+        vars:
+          DOCKER_CMD: 'up -d {{.SERVICE}}'
+
+  deps:_cmd:
+    internal: true
+    cmds:
+      - echo {{.DOCKER_CMD}}
+      - echo "docker compose -f {{ trim .DOCKER_COMPOSE_PATHS | splitLines | join " -f " }} {{.DOCKER_CMD}}"
+      - docker compose -f {{ trim .DOCKER_COMPOSE_PATHS | splitLines | join " -f " }} {{.DOCKER_CMD}}
+
+  deps:reset:sentry:
+    cmds:
+      - task: deps:reset
+        ignore_error: true
+        vars:
+          SERVICE: sentry
+
+  deps:sentry:init:
+    cmds:
+      #- task: deps:reset:sentry
+      - task: deps:_cmd
+        vars:
+          DOCKER_CMD: exec sentry sentry upgrade
+
+  deps:kc:export:
+    cmds:
+      - echo 'Dump Keycloak Bank realm...'
+      - task: deps:_cmd
+        vars:
+          DOCKER_CMD: exec keycloak sh -c "cd opt/keycloak/bin/; ./kc.sh export --file bank-realm.json --realm Bank"
+      - task: deps:_cmd
+        vars:
+          DOCKER_CMD: cp keycloak:opt/keycloak/bin/bank-realm.json ./deploy/local/

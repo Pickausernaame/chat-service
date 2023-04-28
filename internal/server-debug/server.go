@@ -17,6 +17,8 @@ import (
 
 	"github.com/Pickausernaame/chat-service/internal/buildinfo"
 	"github.com/Pickausernaame/chat-service/internal/logger"
+	"github.com/Pickausernaame/chat-service/internal/middlewares"
+	clientv1 "github.com/Pickausernaame/chat-service/internal/server-client/v1"
 )
 
 const (
@@ -42,7 +44,14 @@ func New(opts Options) (*Server, error) {
 	lg := zap.L().Named("server-debug")
 
 	e := echo.New()
-	e.Use(middleware.Recover())
+	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
+		Skipper:           middleware.DefaultSkipper,
+		StackSize:         4 << 10,
+		DisableStackAll:   false,
+		DisablePrintStack: false,
+		LogErrorFunc:      middlewares.RecoveryLogFunc,
+	}),
+		middlewares.ZapLogger(lg.Named("middleware")))
 
 	s := &Server{
 		lg: lg,
@@ -57,11 +66,15 @@ func New(opts Options) (*Server, error) {
 	index.addPage("/version", "Get build information")
 	index.addPage("/debug/pprof/", "Go std profiler")
 	index.addPage("/debug/pprof/profile?seconds=30", "Take half min profile")
+	index.addPage("/debug/error", "Debug sentry error event")
+	index.addPage("/schema/client", "Get client openAPI specification")
 
 	e.GET("/", index.handler)
 	e.GET("/version", s.Version)
 	e.GET("/log/level", s.getLogLevel)
 	e.PUT("/log/level", s.setLogLevel)
+	e.GET("/debug/error", s.error)
+	e.GET("/schema/client", s.schema)
 	pprof.Register(e, "/debug/pprof")
 
 	return s, nil
@@ -107,11 +120,24 @@ func (s *Server) getLogLevel(eCtx echo.Context) error {
 func (s *Server) setLogLevel(eCtx echo.Context) error {
 	lvl := eCtx.FormValue("level")
 
-	err := logger.SetLogLevel(logger.NewOptions(strings.ToLower(lvl)))
+	err := logger.SetLogLevel(logger.NewLogLevelOption(strings.ToLower(lvl)))
 	s.lg.Debug("setting log level", zap.String("level", lvl), zap.Error(err))
 	if err != nil {
 		return eCtx.NoContent(http.StatusBadRequest)
 	}
 
 	return eCtx.String(http.StatusOK, s.lg.Level().String())
+}
+
+func (s *Server) error(eCtx echo.Context) error {
+	s.lg.Debug("debug error msg", zap.Error(errors.New("debug error")))
+	return eCtx.NoContent(http.StatusOK)
+}
+
+func (s *Server) schema(eCtx echo.Context) error {
+	spec, err := clientv1.GetSwagger()
+	if err != nil {
+		eCtx.Error(err)
+	}
+	return eCtx.JSON(http.StatusOK, spec)
 }
