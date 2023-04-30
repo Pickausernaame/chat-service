@@ -170,7 +170,7 @@ func (t UserID) MarshalText() ([]byte, error) {
 }
 
 func (t UserID) Matches(x interface{}) bool {
-	value, ok := x.(uuid.UUID)
+	value, ok := x.(UserID)
 	if !ok {
 		return false
 	}

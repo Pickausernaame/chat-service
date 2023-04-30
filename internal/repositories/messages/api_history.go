@@ -35,7 +35,6 @@ func (r *Repo) GetClientChatMessages(
 	pageSize int,
 	cursor *Cursor,
 ) ([]Message, *Cursor, error) {
-
 	var msgs []*store.Message
 	isPageSizeExist := false
 	isCursorExist := false
