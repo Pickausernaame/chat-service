@@ -36,6 +36,14 @@ func (pc *ProblemCreate) SetManagerID(ti types.UserID) *ProblemCreate {
 	return pc
 }
 
+// SetNillableManagerID sets the "manager_id" field if the given value is not nil.
+func (pc *ProblemCreate) SetNillableManagerID(ti *types.UserID) *ProblemCreate {
+	if ti != nil {
+		pc.SetManagerID(*ti)
+	}
+	return pc
+}
+
 // SetResolveAt sets the "resolve_at" field.
 func (pc *ProblemCreate) SetResolveAt(t time.Time) *ProblemCreate {
 	pc.mutation.SetResolveAt(t)
@@ -134,7 +142,7 @@ func (pc *ProblemCreate) ExecX(ctx context.Context) {
 // defaults sets the default values of the builder before save.
 func (pc *ProblemCreate) defaults() {
 	if _, ok := pc.mutation.CreatedAt(); !ok {
-		v := problem.DefaultCreatedAt
+		v := problem.DefaultCreatedAt()
 		pc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := pc.mutation.ID(); !ok {
@@ -152,9 +160,6 @@ func (pc *ProblemCreate) check() error {
 		if err := v.Validate(); err != nil {
 			return &ValidationError{Name: "chat_id", err: fmt.Errorf(`store: validator failed for field "Problem.chat_id": %w`, err)}
 		}
-	}
-	if _, ok := pc.mutation.ManagerID(); !ok {
-		return &ValidationError{Name: "manager_id", err: errors.New(`store: missing required field "Problem.manager_id"`)}
 	}
 	if v, ok := pc.mutation.ManagerID(); ok {
 		if err := v.Validate(); err != nil {
@@ -209,7 +214,7 @@ func (pc *ProblemCreate) createSpec() (*Problem, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := pc.mutation.ManagerID(); ok {
 		_spec.SetField(problem.FieldManagerID, field.TypeUUID, value)
-		_node.ManagerID = &value
+		_node.ManagerID = value
 	}
 	if value, ok := pc.mutation.ResolveAt(); ok {
 		_spec.SetField(problem.FieldResolveAt, field.TypeTime, value)

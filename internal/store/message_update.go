@@ -143,6 +143,9 @@ func (mu *MessageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if mu.mutation.AuthorIDCleared() {
+		_spec.ClearField(message.FieldAuthorID, field.TypeUUID)
+	}
 	if value, ok := mu.mutation.Body(); ok {
 		_spec.SetField(message.FieldBody, field.TypeString, value)
 	}
@@ -321,6 +324,9 @@ func (muo *MessageUpdateOne) sqlSave(ctx context.Context) (_node *Message, err e
 				ps[i](selector)
 			}
 		}
+	}
+	if muo.mutation.AuthorIDCleared() {
+		_spec.ClearField(message.FieldAuthorID, field.TypeUUID)
 	}
 	if value, ok := muo.mutation.Body(); ok {
 		_spec.SetField(message.FieldBody, field.TypeString, value)

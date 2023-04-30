@@ -20,9 +20,9 @@ func (Problem) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", types.ProblemID{}).Immutable().Unique().Default(types.NewProblemID),
 		field.UUID("chat_id", types.ChatID{}).Immutable(),
-		field.UUID("manager_id", types.UserID{}).Nillable(),
+		field.UUID("manager_id", types.UserID{}).Optional(),
 		field.Time("resolve_at").Optional(),
-		field.Time("created_at").Immutable().Default(time.Now()),
+		field.Time("created_at").Immutable().Default(time.Now),
 	}
 }
 

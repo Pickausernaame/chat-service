@@ -21,7 +21,7 @@ func init() {
 	// chatDescCreatedAt is the schema descriptor for created_at field.
 	chatDescCreatedAt := chatFields[2].Descriptor()
 	// chat.DefaultCreatedAt holds the default value on creation for the created_at field.
-	chat.DefaultCreatedAt = chatDescCreatedAt.Default.(time.Time)
+	chat.DefaultCreatedAt = chatDescCreatedAt.Default.(func() time.Time)
 	// chatDescID is the schema descriptor for id field.
 	chatDescID := chatFields[0].Descriptor()
 	// chat.DefaultID holds the default value on creation for the id field.
@@ -51,7 +51,7 @@ func init() {
 	// messageDescCreatedAt is the schema descriptor for created_at field.
 	messageDescCreatedAt := messageFields[10].Descriptor()
 	// message.DefaultCreatedAt holds the default value on creation for the created_at field.
-	message.DefaultCreatedAt = messageDescCreatedAt.Default.(time.Time)
+	message.DefaultCreatedAt = messageDescCreatedAt.Default.(func() time.Time)
 	// messageDescID is the schema descriptor for id field.
 	messageDescID := messageFields[0].Descriptor()
 	// message.DefaultID holds the default value on creation for the id field.
@@ -61,7 +61,7 @@ func init() {
 	// problemDescCreatedAt is the schema descriptor for created_at field.
 	problemDescCreatedAt := problemFields[4].Descriptor()
 	// problem.DefaultCreatedAt holds the default value on creation for the created_at field.
-	problem.DefaultCreatedAt = problemDescCreatedAt.Default.(time.Time)
+	problem.DefaultCreatedAt = problemDescCreatedAt.Default.(func() time.Time)
 	// problemDescID is the schema descriptor for id field.
 	problemDescID := problemFields[0].Descriptor()
 	// problem.DefaultID holds the default value on creation for the id field.

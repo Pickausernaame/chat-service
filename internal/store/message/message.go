@@ -95,7 +95,7 @@ var (
 	// DefaultIsService holds the default value on creation for the "is_service" field.
 	DefaultIsService bool
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
-	DefaultCreatedAt time.Time
+	DefaultCreatedAt func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() types.MessageID
 )
