@@ -37,7 +37,7 @@ func (t {{.}}) MarshalText() ([]byte, error) {
 }
 
 func (t {{.}}) Matches(x interface{}) bool {
-	value, ok := x.(uuid.UUID)
+	value, ok := x.({{.}})
 	if !ok {
 		return false
 	}

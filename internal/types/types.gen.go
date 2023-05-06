@@ -23,7 +23,7 @@ func (t ChatID) MarshalText() ([]byte, error) {
 }
 
 func (t ChatID) Matches(x interface{}) bool {
-	value, ok := x.(uuid.UUID)
+	value, ok := x.(ChatID)
 	if !ok {
 		return false
 	}
@@ -72,7 +72,7 @@ func (t MessageID) MarshalText() ([]byte, error) {
 }
 
 func (t MessageID) Matches(x interface{}) bool {
-	value, ok := x.(uuid.UUID)
+	value, ok := x.(MessageID)
 	if !ok {
 		return false
 	}
@@ -121,7 +121,7 @@ func (t ProblemID) MarshalText() ([]byte, error) {
 }
 
 func (t ProblemID) Matches(x interface{}) bool {
-	value, ok := x.(uuid.UUID)
+	value, ok := x.(ProblemID)
 	if !ok {
 		return false
 	}
@@ -219,7 +219,7 @@ func (t RequestID) MarshalText() ([]byte, error) {
 }
 
 func (t RequestID) Matches(x interface{}) bool {
-	value, ok := x.(uuid.UUID)
+	value, ok := x.(RequestID)
 	if !ok {
 		return false
 	}
