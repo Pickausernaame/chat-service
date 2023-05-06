@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 
 	"github.com/Pickausernaame/chat-service/internal/types"
 )
@@ -39,5 +40,12 @@ func (Message) Edges() []ent.Edge {
 			Ref("messages").Unique().Field("problem_id").Required(),
 		edge.From("chat", Chat.Type).Immutable().
 			Ref("messages").Unique().Field("chat_id").Required(),
+	}
+}
+
+func (Message) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("created_at"),
+		index.Fields("chat_id"),
 	}
 }

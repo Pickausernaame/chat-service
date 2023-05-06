@@ -1,31 +1,63 @@
 package clientv1
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
-	"go.uber.org/zap"
 
+	srverr "github.com/Pickausernaame/chat-service/internal/errors"
+	"github.com/Pickausernaame/chat-service/internal/middlewares"
 	"github.com/Pickausernaame/chat-service/internal/types"
+	gethistory "github.com/Pickausernaame/chat-service/internal/usecases/client/get-history"
+	"github.com/Pickausernaame/chat-service/pkg/pointer"
 )
 
-var stub = MessagesPage{Messages: []Message{
-	{
-		AuthorId:  types.NewUserID(),
-		Body:      "Здравствуйте! Разберёмся.",
-		CreatedAt: time.Now(),
-		Id:        types.NewMessageID(),
-	},
-	{
-		AuthorId:  types.MustParse[types.UserID]("a391aae2-1a67-4288-be4b-f6eda6d50ffd"),
-		Body:      "Привет! Не могу снять денег с карты,\nпишет 'карта заблокирована'",
-		CreatedAt: time.Now().Add(-time.Minute),
-		Id:        types.NewMessageID(),
-	},
-}}
-
 func (h Handlers) PostGetHistory(eCtx echo.Context, params PostGetHistoryParams) error {
-	h.logger.Info("PostGetHistory", zap.Any("params", params))
-	return eCtx.JSON(http.StatusOK, map[string]interface{}{"data": stub})
+	ctx := eCtx.Request().Context()
+	clientID := middlewares.MustUserID(eCtx)
+	req := &GetHistoryRequest{}
+	if err := eCtx.Bind(req); err != nil {
+		return fmt.Errorf("binding GetHistory: %w", err)
+	}
+
+	resp, err := h.getHistory.Handle(ctx, gethistory.Request{
+		ID:       params.XRequestID,
+		ClientID: clientID,
+		PageSize: pointer.Indirect(req.PageSize),
+		Cursor:   pointer.Indirect(req.Cursor),
+	})
+	if err != nil {
+		if errors.Is(err, gethistory.ErrInvalidCursor) {
+			return srverr.NewServerError(http.StatusBadRequest, "invalid cursor", err)
+		}
+
+		if errors.Is(err, gethistory.ErrInvalidRequest) {
+			return srverr.NewServerError(http.StatusBadRequest, "invalid request", err)
+		}
+		return err
+	}
+
+	msgs := make([]Message, 0, len(resp.Messages))
+	for _, m := range resp.Messages {
+		msgs = append(msgs, toMessage(m))
+	}
+
+	return eCtx.JSON(http.StatusOK, &GetHistoryResponse{Data: &MessagesPage{Messages: msgs, Next: resp.NextCursor}})
+}
+
+func toMessage(msg *gethistory.Message) Message {
+	m := Message{
+		Id:         msg.ID,
+		Body:       msg.Body,
+		CreatedAt:  msg.CreatedAt,
+		IsBlocked:  msg.IsBlocked,
+		IsReceived: msg.IsReceived,
+		IsService:  msg.IsService,
+	}
+	if !msg.IsService {
+		m.AuthorId = pointer.PtrWithZeroAsNil[types.UserID](msg.AuthorID)
+	}
+	return m
 }

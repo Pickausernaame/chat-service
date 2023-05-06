@@ -21,6 +21,10 @@ type GlobalConfig struct {
 	Version string `toml:"ver" validate:"semver,omitempty"`
 }
 
+func (cfg *GlobalConfig) IsProd() bool {
+	return cfg.Env == "prod"
+}
+
 type LogConfig struct {
 	Level string `toml:"level" validate:"required,oneof=debug info warn error"`
 }
@@ -51,6 +55,7 @@ type SentryConfig struct {
 
 type ClientsConfig struct {
 	Keycloak KeycloakClientConfig `toml:"keycloak"`
+	PSQL     PSQLClientConfig     `toml:"psql"`
 }
 
 type KeycloakClientConfig struct {
@@ -59,4 +64,12 @@ type KeycloakClientConfig struct {
 	ClientID     string `toml:"client_id" validate:"required"`
 	ClientSecret string `toml:"client_secret" validate:"required"`
 	DebugMode    bool   `toml:"debug_mode"`
+}
+
+type PSQLClientConfig struct {
+	Host     string `toml:"host" validate:"required,hostname_port"`
+	UserName string `toml:"user_name" validate:"required"`
+	Password string `toml:"password" validate:"required"`
+	DBName   string `toml:"db_name" validate:"required"`
+	Debug    bool   `toml:"debug"`
 }

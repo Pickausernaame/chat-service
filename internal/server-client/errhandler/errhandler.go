@@ -37,5 +37,5 @@ func (h Handler) Handle(err error, eCtx echo.Context) {
 		details = ""
 	}
 
-	eCtx.JSON(http.StatusOK, h.responseBuilder(code, msg, details))
+	_ = eCtx.JSON(http.StatusOK, h.responseBuilder(code, msg, details))
 }

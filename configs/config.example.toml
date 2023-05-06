@@ -22,6 +22,12 @@ realm = "Bank"
 client_id = "chat-service"
 client_secret = "FOts8F0QQpGIVMwOX8788n5Z1l10aSje"
 debug_mode = true
+[clients.psql]
+host = "localhost:5433"
+user_name = "chat-service"
+password = "chat-service"
+db_name = "chat-service"
+debug = false
 
 [sentry]
 dsn = "http://7dc894a2773a424780da7a0464bd3241@127.0.0.1:9000/2"
