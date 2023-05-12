@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/zap"
 
 	"github.com/Pickausernaame/chat-service/internal/cursor"
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
@@ -36,7 +37,7 @@ func (s *UseCaseSuite) SetupTest() {
 	s.msgRepo = gethistorymocks.NewMockmessagesRepository(s.ctrl)
 
 	var err error
-	s.uCase, err = gethistory.New(gethistory.NewOptions(s.msgRepo))
+	s.uCase, err = gethistory.New(gethistory.NewOptions(s.msgRepo, gethistory.WithLg(zap.L())))
 	s.Require().NoError(err)
 
 	s.ContextSuite.SetupTest()
@@ -249,12 +250,12 @@ func (s *UseCaseSuite) TestGetClientChatMessages_Success_LastPage() {
 	s.Require().Len(resp.Messages, messagesCount)
 }
 
-func (s *UseCaseSuite) createMessages(count int, authorID types.UserID, chatID types.ChatID) []messagesrepo.Message {
+func (s *UseCaseSuite) createMessages(count int, authorID types.UserID, chatID types.ChatID) []*messagesrepo.Message {
 	s.T().Helper()
 
-	result := make([]messagesrepo.Message, 0, count)
+	result := make([]*messagesrepo.Message, 0, count)
 	for i := 0; i < count; i++ {
-		result = append(result, messagesrepo.Message{
+		result = append(result, &messagesrepo.Message{
 			ID:                  types.NewMessageID(),
 			ChatID:              chatID,
 			AuthorID:            authorID,

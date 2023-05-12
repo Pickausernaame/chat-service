@@ -34,7 +34,7 @@ func (r *Repo) GetClientChatMessages(
 	clientID types.UserID,
 	pageSize int,
 	cursor *Cursor,
-) ([]Message, *Cursor, error) {
+) ([]*Message, *Cursor, error) {
 	var msgs []*store.Message
 	isPageSizeExist := false
 	isCursorExist := false
@@ -75,7 +75,7 @@ func (r *Repo) GetClientChatMessages(
 			Order(message.ByCreatedAt(sql.OrderDesc())).Limit(pageSize).AllX(ctx)
 	}
 
-	res := make([]Message, 0, len(msgs))
+	res := make([]*Message, 0, len(msgs))
 	for _, m := range msgs {
 		res = append(res, adaptStoreMessage(m))
 	}

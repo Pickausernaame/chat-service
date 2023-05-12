@@ -17,6 +17,7 @@ import (
 func (h Handlers) PostGetHistory(eCtx echo.Context, params PostGetHistoryParams) error {
 	ctx := eCtx.Request().Context()
 	clientID := middlewares.MustUserID(eCtx)
+
 	req := &GetHistoryRequest{}
 	if err := eCtx.Bind(req); err != nil {
 		return fmt.Errorf("binding GetHistory: %w", err)

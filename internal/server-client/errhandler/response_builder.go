@@ -9,7 +9,7 @@ type Response struct {
 }
 
 var ResponseBuilder = func(code int, msg string, details string) any {
-	resp := Response{Error: clientv1.Error{Code: code, Message: msg}}
+	resp := Response{Error: clientv1.Error{Code: clientv1.ErrorCode(code), Message: msg}}
 	if details != "" {
 		resp.Error.Details = &details
 	}

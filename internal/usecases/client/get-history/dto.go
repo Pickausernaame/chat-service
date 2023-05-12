@@ -42,7 +42,7 @@ type Message struct {
 	IsService  bool
 }
 
-func toDTOMessage(msg messagesrepo.Message) *Message {
+func toDTOMessage(msg *messagesrepo.Message) *Message {
 	return &Message{
 		ID:         msg.ID,
 		AuthorID:   msg.AuthorID,

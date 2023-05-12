@@ -8,6 +8,25 @@ servers:
     description: Development server
 
 paths:
+  /sendMessage:
+    post:
+      description: Send new message to the chat.
+      parameters:
+        - $ref: "#/components/parameters/XRequestIDHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+      responses:
+        '200':
+          description: Message created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendMessageResponse"
+
   /getHistory:
     post:
       description: Get chat history.
@@ -65,9 +84,44 @@ components:
     ErrorCode:
       type: integer
       description: contains HTTP error codes and specific business logic error codes (the last must be >= 1000).
-      # TODO: Конкретные коды появятся в следующем уроке.
+      enum: [1000, 1001]
+      x-enum-varnames: [ErrorCodeCreateChatError, ErrorCodeCreateProblemError]
+#        - ErrorCodeCreateChatError
+#        - ErrorCodeCreateProblemError
       minimum: 400
 
+    SendMessageRequest:
+      required: [ messageBody ]
+      properties:
+        messageBody:
+          type: string
+          minLength: 1
+          maxLength: 3000.
+
+    SendMessageResponse:
+      properties:
+        data:
+          $ref: "#/components/schemas/MessageHeader"
+        error:
+          $ref: "#/components/schemas/Error"
+
+    MessageHeader:
+      properties:
+        id:
+          type: string
+          format: uuid
+          x-go-type: types.MessageID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+        authorId:
+          type: string
+          format: uuid
+          x-go-type: types.UserID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+        createdAt:
+          type: string
+          format: date-time
     # /getHistory
 
     GetHistoryRequest:

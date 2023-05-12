@@ -37,10 +37,10 @@ func (m *MockmessagesRepository) EXPECT() *MockmessagesRepositoryMockRecorder {
 }
 
 // GetClientChatMessages mocks base method.
-func (m *MockmessagesRepository) GetClientChatMessages(ctx context.Context, clientID types.UserID, pageSize int, cursor *messagesrepo.Cursor) ([]messagesrepo.Message, *messagesrepo.Cursor, error) {
+func (m *MockmessagesRepository) GetClientChatMessages(ctx context.Context, clientID types.UserID, pageSize int, cursor *messagesrepo.Cursor) ([]*messagesrepo.Message, *messagesrepo.Cursor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetClientChatMessages", ctx, clientID, pageSize, cursor)
-	ret0, _ := ret[0].([]messagesrepo.Message)
+	ret0, _ := ret[0].([]*messagesrepo.Message)
 	ret1, _ := ret[1].(*messagesrepo.Cursor)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

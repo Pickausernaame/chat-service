@@ -14,8 +14,9 @@ vars:
     mvdan.cc/gofumpt@v0.4.0
     github.com/kazhuravlev/options-gen/cmd/options-gen@v0.28.4
     entgo.io/ent/cmd/ent@v0.11.10
-    github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.12.4
+    github.com/deepmap/oapi-codegen/cmd/oapi-codegen@master
     github.com/golang/mock/mockgen@v1.6.0
+    github.com/onsi/ginkgo/v2/ginkgo@v2.9.1
   DOCKER_COMPOSE_PATHS: |
     ./deploy/local/docker-compose.yaml
     ./deploy/local/docker-compose.sentry.yaml
@@ -32,6 +33,8 @@ vars:
   CLIENT_V1_SRC: ./api/client.v1.swagger.yml
   CLIENT_V1_DST: ./internal/server-client/v1/server.gen.go
   CLIENT_V1_PKG: clientv1
+  E2E_CLIENT_V1_DST: ./tests/e2e/api/client/v1/client.gen.go
+  E2E_CLIENT_V1_PKG: apiclientv1
 
 tasks:
   default:
@@ -93,6 +96,21 @@ tasks:
       - echo "- Tests"
       - go test -tags integration -race ./...
 
+  tests:e2e:
+    env:
+      E2E_CLIENT_V1_API_ENDPOINT: http://localhost:8080/v1
+      E2E_KEYCLOAK_BASE_PATH: http://localhost:3010
+      E2E_KEYCLOAK_REALM: Bank
+      E2E_KEYCLOAK_CLIENT_ID: e2e-testing
+      E2E_KEYCLOAK_CLIENT_SECRET: BVg0D8oeOQfGgQVvQMKeMtezvl4WvA4D
+      E2E_KEYCLOAK_CLIENTS: e2e-user,e2e-user2
+      E2E_KEYCLOAK_CLIENT_DEBUG: false
+    cmds:
+      - echo "- End-to-end tests..."
+      # NOTE: It's important to run tests serial (without `-p` flag) – for correct `clientsPool` sharing.
+      - "ginkgo --fail-fast --timeout=1m --tags e2e {{.CLI_ARGS}} ./tests/e2e"
+  
+
   build:
     cmds:
       - echo "- Build"
@@ -110,6 +128,9 @@ tasks:
     - echo "Run go generate..."
     - go generate ./...
     - task: gen:types
+    - task: gen:api
+    - task: gen:e2e
+    - task: fmt
 
   gen:types:
     cmds:
@@ -119,7 +140,12 @@ tasks:
   gen:api:
     cmds:
       - oapi-codegen --old-config-style -generate server,spec,types -package clientv1 ./api/client.v1.swagger.yml > ./internal/server-client/v1/server.gen.go
-      
+
+  gen:e2e:
+    cmds:
+      - echo "[E2E] Generate client API..."
+      - oapi-codegen --old-config-style -generate types,client -package {{.E2E_CLIENT_V1_PKG}} {{.CLIENT_V1_SRC}} > {{.E2E_CLIENT_V1_DST}}
+
   ent:new:
     cmds:
       - ent new --target {{.ENT_SCHEMA}} {{.CLI_ARGS}}

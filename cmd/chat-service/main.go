@@ -16,7 +16,9 @@ import (
 	keycloakclient "github.com/Pickausernaame/chat-service/internal/clients/keycloak"
 	"github.com/Pickausernaame/chat-service/internal/config"
 	"github.com/Pickausernaame/chat-service/internal/logger"
+	chatsrepo "github.com/Pickausernaame/chat-service/internal/repositories/chats"
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
+	problemsrepo "github.com/Pickausernaame/chat-service/internal/repositories/problems"
 	serverdebug "github.com/Pickausernaame/chat-service/internal/server-debug"
 	"github.com/Pickausernaame/chat-service/internal/store"
 )
@@ -75,6 +77,18 @@ func run() (errReturned error) {
 		return fmt.Errorf("init messages repo error: %v", err)
 	}
 
+	// initialization chat repo
+	chatRepo, err := chatsrepo.New(chatsrepo.NewOptions(db))
+	if err != nil {
+		return fmt.Errorf("init chat repo error: %v", err)
+	}
+
+	// initialization problem repo
+	problemRepo, err := problemsrepo.New(problemsrepo.NewOptions(db))
+	if err != nil {
+		return fmt.Errorf("init problem repo error: %v", err)
+	}
+
 	// ... other repos
 
 	// creating servers
@@ -85,7 +99,7 @@ func run() (errReturned error) {
 	}
 
 	// initialization client server
-	srvClient, err := initServerClient(cfg, kc, msgRepo)
+	srvClient, err := initServerClient(cfg, kc, msgRepo, chatRepo, problemRepo, db)
 	if err != nil {
 		return fmt.Errorf("init server client: %v", err)
 	}

@@ -25,7 +25,7 @@ type messagesRepository interface {
 		clientID types.UserID,
 		pageSize int,
 		cursor *messagesrepo.Cursor,
-	) ([]messagesrepo.Message, *messagesrepo.Cursor, error)
+	) ([]*messagesrepo.Message, *messagesrepo.Cursor, error)
 }
 
 //go:generate options-gen -out-filename=usecase_options.gen.go -from-struct=Options
@@ -42,14 +42,13 @@ func New(opts Options) (UseCase, error) {
 	if err := opts.Validate(); err != nil {
 		return UseCase{}, fmt.Errorf("validating: %v", err)
 	}
-	return UseCase{opts}, nil
+	return UseCase{Options: opts}, nil
 }
 
 func (u UseCase) Handle(ctx context.Context, req Request) (Response, error) {
 	if err := req.Validate(); err != nil {
 		return Response{}, fmt.Errorf("request validation: %v %w", err, ErrInvalidRequest)
 	}
-
 	var cur *messagesrepo.Cursor
 	if req.Cursor != "" {
 		cur = &messagesrepo.Cursor{}

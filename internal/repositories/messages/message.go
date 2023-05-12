@@ -19,8 +19,8 @@ type Message struct {
 	CreatedAt           time.Time
 }
 
-func adaptStoreMessage(m *store.Message) Message {
-	return Message{
+func adaptStoreMessage(m *store.Message) *Message {
+	return &Message{
 		ID:                  m.ID,
 		ChatID:              m.ChatID,
 		AuthorID:            m.AuthorID,

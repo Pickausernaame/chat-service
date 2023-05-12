@@ -215,7 +215,7 @@ type msg struct {
 	CreatedAtAsUnixMilli int64
 }
 
-func newMsgFromRepoMsg(m messagesrepo.Message) msg {
+func newMsgFromRepoMsg(m *messagesrepo.Message) msg {
 	return msg{
 		ID:                   m.ID,
 		CreatedAtAsUnixMilli: m.CreatedAt.UnixMilli(),
@@ -241,14 +241,14 @@ func (s *MsgRepoHistoryAPISuite) getClientChatMessagesWhileCursor(clientID types
 	var cursors []cursor
 
 	var (
-		msgs []messagesrepo.Message
+		msgs []*messagesrepo.Message
 		err  error
 		next *messagesrepo.Cursor
 	)
 	for {
 		msgs, next, err = s.repo.GetClientChatMessages(s.Ctx, clientID, pageSize, next)
 		s.Require().NoError(err)
-		result = append(result, apply[messagesrepo.Message, msg](msgs, newMsgFromRepoMsg))
+		result = append(result, apply[*messagesrepo.Message, msg](msgs, newMsgFromRepoMsg))
 
 		if next == nil {
 			break
