@@ -27,6 +27,8 @@ vars:
     ProblemID
     UserID
     RequestID
+    JobID
+    FailedJobID
   TYPES_PKG: types
   TYPES_DST: ./internal/types/types.gen.go
   ENT_SCHEMA: ./internal/store/schema
@@ -91,7 +93,7 @@ tasks:
       TEST_PSQL_ADDRESS: '0.0.0.0:5433'
       TEST_PSQL_USER: chat-service
       TEST_PSQL_PASSWORD: chat-service
-      TEST_PSQL_DEBUG: true
+      TEST_PSQL_DEBUG: false
     cmds:
       - echo "- Tests"
       - go test -tags integration -race ./...
