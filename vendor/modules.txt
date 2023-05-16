@@ -237,6 +237,10 @@ github.com/perimeterx/marshmallow
 github.com/pmezard/go-difflib/difflib
 # github.com/rogpeppe/go-internal v1.10.0
 ## explicit; go 1.19
+# github.com/sourcegraph/conc v0.3.0
+## explicit; go 1.19
+github.com/sourcegraph/conc
+github.com/sourcegraph/conc/panics
 # github.com/stretchr/testify v1.8.2
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
@@ -260,8 +264,12 @@ github.com/zclconf/go-cty/cty/set
 # go.uber.org/atomic v1.10.0
 ## explicit; go 1.18
 go.uber.org/atomic
-# go.uber.org/multierr v1.6.0
-## explicit; go 1.12
+# go.uber.org/goleak v1.1.11
+## explicit; go 1.13
+go.uber.org/goleak
+go.uber.org/goleak/internal/stack
+# go.uber.org/multierr v1.9.0
+## explicit; go 1.19
 go.uber.org/multierr
 # go.uber.org/zap v1.24.0
 ## explicit; go 1.19

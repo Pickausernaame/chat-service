@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,35 +18,46 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// +build go1.13
+package goleak
 
-package multierr
+import (
+	"fmt"
+	"io"
+	"os"
+)
 
-import "errors"
+// Variables for stubbing in unit tests.
+var (
+	_osExit             = os.Exit
+	_osStderr io.Writer = os.Stderr
+)
 
-// As attempts to find the first error in the error list that matches the type
-// of the value that target points to.
-//
-// This function allows errors.As to traverse the values stored on the
-// multierr error.
-func (merr *multiError) As(target interface{}) bool {
-	for _, err := range merr.Errors() {
-		if errors.As(err, target) {
-			return true
-		}
-	}
-	return false
+// TestingM is the minimal subset of testing.M that we use.
+type TestingM interface {
+	Run() int
 }
 
-// Is attempts to match the provided error against errors in the error list.
+// VerifyTestMain can be used in a TestMain function for package tests to
+// verify that there were no goroutine leaks.
+// To use it, your TestMain function should look like:
 //
-// This function allows errors.Is to traverse the values stored on the
-// multierr error.
-func (merr *multiError) Is(target error) bool {
-	for _, err := range merr.Errors() {
-		if errors.Is(err, target) {
-			return true
+//  func TestMain(m *testing.M) {
+//    goleak.VerifyTestMain(m)
+//  }
+//
+// See https://golang.org/pkg/testing/#hdr-Main for more details.
+//
+// This will run all tests as per normal, and if they were successful, look
+// for any goroutine leaks and fail the tests if any leaks were found.
+func VerifyTestMain(m TestingM, options ...Option) {
+	exitCode := m.Run()
+
+	if exitCode == 0 {
+		if err := Find(options...); err != nil {
+			fmt.Fprintf(_osStderr, "goleak: Errors on successful test run: %v\n", err)
+			exitCode = 1
 		}
 	}
-	return false
+
+	_osExit(exitCode)
 }
