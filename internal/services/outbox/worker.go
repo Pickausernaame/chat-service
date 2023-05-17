@@ -112,8 +112,9 @@ func (w *Worker) Run(ctx context.Context, id int) {
 
 // postJobProcessing - it is post job processing
 // if job exists - delete it
-// if error exists - mark this job like failed
+// if error exists - mark this job like failed.
 func (w *Worker) postJobProcessing(ctx context.Context, jobMeta jobsrepo.Job, jobProcessingErr error) error {
+	//nolint:nestif
 	if jobMeta.Name != "" || jobProcessingErr != nil {
 		err := w.txtr.RunInTx(ctx, func(ctx context.Context) error {
 			if jobMeta.Name != "" {

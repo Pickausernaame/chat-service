@@ -128,7 +128,7 @@ func run() (errReturned error) {
 
 	err = obox.RegisterJob(sendMsgJob)
 	if err != nil {
-		return fmt.Errorf("registrating send msg job: %v", err)
+		return fmt.Errorf("registration send msg job: %v", err)
 	}
 
 	// creating servers

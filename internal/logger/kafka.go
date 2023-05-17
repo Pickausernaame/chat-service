@@ -16,6 +16,7 @@ type KafkaAdapted struct {
 }
 
 func (k KafkaAdapted) Printf(s string, i ...interface{}) {
+	//nolint:exhaustive
 	switch k.lvl {
 	case zapcore.ErrorLevel:
 		k.lg.Error(fmt.Sprintf(s, i...))
