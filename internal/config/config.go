@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	"github.com/Pickausernaame/chat-service/internal/validator"
 )
 
@@ -10,6 +12,7 @@ type Config struct {
 	Servers ServersConfig `toml:"servers"`
 	Sentry  SentryConfig  `toml:"sentry"`
 	Clients ClientsConfig `toml:"clients"`
+	Service ServiceConfig `toml:"services"`
 }
 
 func (c Config) Validate() error {
@@ -72,4 +75,22 @@ type PSQLClientConfig struct {
 	Password string `toml:"password" validate:"required"`
 	DBName   string `toml:"db_name" validate:"required"`
 	Debug    bool   `toml:"debug"`
+}
+
+type ServiceConfig struct {
+	MsgSender MsgSenderServiceConfig `toml:"msg_producer"`
+	Outbox    OutboxServiceConfig    `toml:"outbox"`
+}
+
+type MsgSenderServiceConfig struct {
+	Brokers       []string `toml:"brokers" validate:"required,min=1"`
+	Topic         string   `toml:"topic" validate:"required"`
+	BatchSize     int      `toml:"batch_size" validate:"required,min=1"`
+	EncryptionKey string   `toml:"encrypt_key" validate:"omitempty,hexadecimal"`
+}
+
+type OutboxServiceConfig struct {
+	Workers     int           `toml:"workers" validate:"required,min=1"`
+	Idle        time.Duration `toml:"idle_time" validate:"required,min=1s"`
+	ReservedFor time.Duration `toml:"reserve_for" validate:"required,min=1s"`
 }

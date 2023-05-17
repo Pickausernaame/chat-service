@@ -27,7 +27,19 @@ host = "localhost:5433"
 user_name = "chat-service"
 password = "chat-service"
 db_name = "chat-service"
-debug = false
+debug = true
+
+[services.msg_producer]
+brokers = ["localhost:9092"]
+topic = "chat.messages"
+batch_size = 1
+encrypt_key = "" # Leave it blank to disable encryption.
+
+[services.outbox]
+workers = 2
+idle_time = "1s"
+reserve_for = "5m"
+
 
 [sentry]
 dsn = "http://7dc894a2773a424780da7a0464bd3241@127.0.0.1:9000/2"

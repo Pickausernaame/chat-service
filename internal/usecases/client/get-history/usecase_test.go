@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/zap"
 
 	"github.com/Pickausernaame/chat-service/internal/cursor"
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
@@ -37,7 +36,7 @@ func (s *UseCaseSuite) SetupTest() {
 	s.msgRepo = gethistorymocks.NewMockmessagesRepository(s.ctrl)
 
 	var err error
-	s.uCase, err = gethistory.New(gethistory.NewOptions(s.msgRepo, gethistory.WithLg(zap.L())))
+	s.uCase, err = gethistory.New(gethistory.NewOptions(s.msgRepo))
 	s.Require().NoError(err)
 
 	s.ContextSuite.SetupTest()

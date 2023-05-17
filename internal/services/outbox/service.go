@@ -33,13 +33,13 @@ type Options struct {
 
 	jobsRepo jobsRepository `option:"mandatory" validate:"required"`
 	txtr     transactor     `option:"mandatory" validate:"required"`
-	lg       *zap.Logger    `option:"mandatory" validate:"required"`
 }
 
 type Service struct {
 	workers  []*Worker
 	reg      *registry
 	jobsRepo jobsRepository
+	lg       *zap.Logger
 }
 
 func New(opts Options) (*Service, error) {
@@ -49,7 +49,7 @@ func New(opts Options) (*Service, error) {
 	reg := newRegistry()
 
 	ws, err := newWorkers(
-		NewWorkerOptions(opts.idleTime, opts.reserveFor, opts.jobsRepo, reg, opts.txtr, opts.lg), opts.workers)
+		NewWorkerOptions(opts.idleTime, opts.reserveFor, opts.jobsRepo, reg, opts.txtr), opts.workers)
 	if err != nil {
 		return nil, fmt.Errorf("creating service %s: %v", serviceName, err)
 	}
@@ -58,6 +58,7 @@ func New(opts Options) (*Service, error) {
 		workers:  ws,
 		reg:      reg,
 		jobsRepo: opts.jobsRepo,
+		lg:       zap.L().Named("outbox"),
 	}, nil
 }
 

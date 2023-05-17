@@ -7,7 +7,6 @@ import (
 
 	errors461e464ebed9 "github.com/kazhuravlev/options-gen/pkg/errors"
 	validator461e464ebed9 "github.com/kazhuravlev/options-gen/pkg/validator"
-	"go.uber.org/zap"
 )
 
 type OptOptionsSetter func(o *Options)
@@ -18,7 +17,6 @@ func NewOptions(
 	reserveFor time.Duration,
 	jobsRepo jobsRepository,
 	txtr transactor,
-	lg *zap.Logger,
 	options ...OptOptionsSetter,
 ) Options {
 	o := Options{}
@@ -30,7 +28,6 @@ func NewOptions(
 	o.reserveFor = reserveFor
 	o.jobsRepo = jobsRepo
 	o.txtr = txtr
-	o.lg = lg
 
 	for _, opt := range options {
 		opt(&o)
@@ -45,7 +42,6 @@ func (o *Options) Validate() error {
 	errs.Add(errors461e464ebed9.NewValidationError("reserveFor", _validate_Options_reserveFor(o)))
 	errs.Add(errors461e464ebed9.NewValidationError("jobsRepo", _validate_Options_jobsRepo(o)))
 	errs.Add(errors461e464ebed9.NewValidationError("txtr", _validate_Options_txtr(o)))
-	errs.Add(errors461e464ebed9.NewValidationError("lg", _validate_Options_lg(o)))
 	return errs.AsError()
 }
 
@@ -80,13 +76,6 @@ func _validate_Options_jobsRepo(o *Options) error {
 func _validate_Options_txtr(o *Options) error {
 	if err := validator461e464ebed9.GetValidatorFor(o).Var(o.txtr, "required"); err != nil {
 		return fmt461e464ebed9.Errorf("field `txtr` did not pass the test: %w", err)
-	}
-	return nil
-}
-
-func _validate_Options_lg(o *Options) error {
-	if err := validator461e464ebed9.GetValidatorFor(o).Var(o.lg, "required"); err != nil {
-		return fmt461e464ebed9.Errorf("field `lg` did not pass the test: %w", err)
 	}
 	return nil
 }

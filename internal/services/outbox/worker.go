@@ -24,11 +24,11 @@ type WorkerOptions struct {
 	jobsRepo jobsRepository `option:"mandatory" validate:"required"`
 	jobsReg  jobsRegistry   `option:"mandatory" validate:"required"`
 	txtr     transactor     `option:"mandatory" validate:"required"`
-	lg       *zap.Logger    `option:"mandatory" validate:"required"`
 }
 
 type Worker struct {
 	WorkerOptions
+	lg *zap.Logger
 }
 
 func newWorkers(options WorkerOptions, count int) ([]*Worker, error) {
@@ -38,7 +38,7 @@ func newWorkers(options WorkerOptions, count int) ([]*Worker, error) {
 	}
 	res := make([]*Worker, 0, count)
 	for i := 0; i < count; i++ {
-		res = append(res, &Worker{options})
+		res = append(res, &Worker{WorkerOptions: options, lg: zap.L().Named(fmt.Sprintf("outbox-worker-%d", i))})
 	}
 
 	return res, nil

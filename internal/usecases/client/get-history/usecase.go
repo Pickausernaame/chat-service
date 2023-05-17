@@ -31,18 +31,18 @@ type messagesRepository interface {
 //go:generate options-gen -out-filename=usecase_options.gen.go -from-struct=Options
 type Options struct {
 	msgRepo messagesRepository `option:"mandatory" validate:"required"`
-	lg      *zap.Logger
 }
 
 type UseCase struct {
 	Options
+	lg *zap.Logger
 }
 
 func New(opts Options) (UseCase, error) {
 	if err := opts.Validate(); err != nil {
 		return UseCase{}, fmt.Errorf("validating: %v", err)
 	}
-	return UseCase{Options: opts}, nil
+	return UseCase{Options: opts, lg: zap.L().Named("gethistory-usecase")}, nil
 }
 
 func (u UseCase) Handle(ctx context.Context, req Request) (Response, error) {

@@ -14,6 +14,7 @@ import (
 	serverclient "github.com/Pickausernaame/chat-service/internal/server-client"
 	"github.com/Pickausernaame/chat-service/internal/server-client/errhandler"
 	clientv1 "github.com/Pickausernaame/chat-service/internal/server-client/v1"
+	"github.com/Pickausernaame/chat-service/internal/services/outbox"
 	gethistory "github.com/Pickausernaame/chat-service/internal/usecases/client/get-history"
 	sendmessage "github.com/Pickausernaame/chat-service/internal/usecases/client/send-message"
 )
@@ -31,6 +32,7 @@ func initServerClient(
 	chatRepo *chatsrepo.Repo,
 	problemRepo *problemsrepo.Repo,
 	txtr Transactor,
+	outbox *outbox.Service,
 ) (*serverclient.Server, error) {
 	lg := zap.L().Named(nameServerClient)
 
@@ -48,13 +50,13 @@ func initServerClient(
 
 	// creating useCases
 	// initialization getHistory useCase
-	getHistoryUC, err := gethistory.New(gethistory.NewOptions(msgRepo, gethistory.WithLg(lg)))
+	getHistoryUC, err := gethistory.New(gethistory.NewOptions(msgRepo))
 	if err != nil {
 		return nil, fmt.Errorf("init getHistory usecase: %v", err)
 	}
 
 	// initialization sendMessage useCase
-	sendMessageUC, err := sendmessage.New(sendmessage.NewOptions(chatRepo, msgRepo, problemRepo, txtr, sendmessage.WithLg(lg)))
+	sendMessageUC, err := sendmessage.New(sendmessage.NewOptions(chatRepo, msgRepo, outbox, problemRepo, txtr))
 	if err != nil {
 		return nil, fmt.Errorf("init sendMessage usecase: %v", err)
 	}
