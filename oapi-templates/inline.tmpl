@@ -1,0 +1,9 @@
+// Base64 encoded, gzipped, json marshaled Swagger object
+var SwaggerSpec = []string{
+{{range .SpecParts}}
+    "{{.}}",{{end}}
+}
+
+func GetSwagger() (swagger *openapi3.T, err error) {
+	return server.GetSwagger(SwaggerSpec)
+}

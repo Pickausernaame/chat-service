@@ -141,7 +141,11 @@ tasks:
 
   gen:api:
     cmds:
-      - oapi-codegen --old-config-style -generate server,spec,types -package clientv1 ./api/client.v1.swagger.yml > ./internal/server-client/v1/server.gen.go
+      - echo "Generate client server..."
+      - oapi-codegen --old-config-style -templates oapi-templates/ -generate server,types,spec -package clientv1 ./api/client.v1.swagger.yml > ./internal/server-client/v1/server.gen.go
+      - echo "Generate manager server..."
+      - oapi-codegen --old-config-style -templates oapi-templates/ -generate server,types,spec -package managerv1 ./api/manager.v1.swagger.yml > ./internal/server-manager/v1/server.gen.go
+
 
   gen:e2e:
     cmds:
