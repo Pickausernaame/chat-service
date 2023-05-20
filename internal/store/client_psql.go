@@ -52,8 +52,7 @@ func NewPgxDB(opts PgxOptions) (*sql.DB, error) {
 		return nil, fmt.Errorf("validate pgx options: %v", err)
 	}
 
-	db, err := sql.Open("pgx",
-		fmt.Sprintf("postgresql://%s:%s@%s/%s", opts.username, opts.password, opts.address, opts.database))
+	db, err := NewPgxDB(opts)
 	if err != nil {
 		return nil, fmt.Errorf("open db conn: %v", err)
 	}
