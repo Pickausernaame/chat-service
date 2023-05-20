@@ -16,7 +16,7 @@ func ZapLogger(log *zap.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(eCtx echo.Context) error {
 			start := time.Now()
-			code := -1
+			code := 0
 			err := next(eCtx)
 			if err != nil {
 				code = errors.GetServerErrorCode(err)
@@ -28,7 +28,7 @@ func ZapLogger(log *zap.Logger) echo.MiddlewareFunc {
 				return nil
 			}
 			res := eCtx.Response()
-			if code == -1 {
+			if err == nil {
 				code = res.Status
 			}
 

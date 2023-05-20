@@ -37,5 +37,9 @@ func (h Handler) Handle(err error, eCtx echo.Context) {
 		details = ""
 	}
 
-	_ = eCtx.JSON(http.StatusOK, h.responseBuilder(code, msg, details))
+	err = eCtx.JSON(http.StatusOK, h.responseBuilder(code, msg, details))
+	if err != nil {
+		h.lg.Error("creating response error", zap.Error(err), zap.Int("code", code),
+			zap.String("msg", msg), zap.String("details", details))
+	}
 }

@@ -27,30 +27,30 @@ func NewDatabase(client *Client) *Database {
 // If there is already a transaction in the context, then the method uses it.
 func (db *Database) RunInTx(ctx context.Context, f func(context.Context) error) error {
 	tx := TxFromContext(ctx)
-    if tx == nil {
-    	tx, err = db.client.Tx(ctx)
-    	if err != nil {
-    		return fmt.Errorf("creating transaction: %v", err)
-    	}
-    }
+	if tx == nil {
+		tx, err = db.client.Tx(ctx)
+		if err != nil {
+			return fmt.Errorf("creating transaction: %v", err)
+		}
+	}
 
-    defer func() {
-    	if er := recover(); er != nil {
-    		err = tx.Rollback()
-    		panic(er)
-    	}
-    }()
+	defer func() {
+		if er := recover(); er != nil {
+			err = tx.Rollback()
+			panic(er)
+		}
+	}()
 
-    if err := f(NewTxContext(ctx, tx)); err != nil {
-    	if rerr := tx.Rollback(); rerr != nil {
-    		err = fmt.Errorf("%w: rolling back transaction: %v", err, rerr)
-    	}
-    	return err
-    }
+	if err := f(NewTxContext(ctx, tx)); err != nil {
+		if rerr := tx.Rollback(); rerr != nil {
+			err = fmt.Errorf("%w: rolling back transaction: %v", err, rerr)
+		}
+		return err
+	}
 
-    if err := tx.Commit(); err != nil {
-    	return fmt.Errorf("committing transaction: %v", err)
-    }
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("committing transaction: %v", err)
+	}
 
 	return nil
 }
