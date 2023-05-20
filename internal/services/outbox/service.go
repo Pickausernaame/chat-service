@@ -76,11 +76,10 @@ func (s *Service) Run(ctx context.Context) error {
 	wg := conc.NewWaitGroup()
 
 	// starting workers
-	for i, w := range s.workers {
+	for _, w := range s.workers {
 		w := w
-		i := i
 		wg.Go(func() {
-			w.Run(ctx, i)
+			w.Run(ctx)
 		})
 	}
 

@@ -44,7 +44,7 @@ func newWorkers(options WorkerOptions, count int) ([]*Worker, error) {
 	return res, nil
 }
 
-func (w *Worker) Run(ctx context.Context, id int) {
+func (w *Worker) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -102,7 +102,7 @@ func (w *Worker) Run(ctx context.Context, id int) {
 				}
 
 				if err != nil {
-					w.lg.Error("executing job error", zap.Error(err), zap.Int("worker_id", id))
+					w.lg.Error("executing job error", zap.Error(err))
 					return
 				}
 			}()
