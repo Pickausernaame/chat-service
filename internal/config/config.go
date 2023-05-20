@@ -33,15 +33,16 @@ type LogConfig struct {
 }
 
 type ServersConfig struct {
-	Debug  DebugServerConfig   `toml:"debug"`
-	Client ServersClientConfig `toml:"client"`
+	Debug   DebugServerConfig   `toml:"debug"`
+	Client  ServersCommonConfig `toml:"client"`
+	Manager ServersCommonConfig `toml:"manager"`
 }
 
 type DebugServerConfig struct {
 	Addr string `toml:"addr" validate:"required,hostname_port"`
 }
 
-type ServersClientConfig struct {
+type ServersCommonConfig struct {
 	Addr           string                            `toml:"addr" validate:"required,hostname_port"`
 	AllowsOrigins  []string                          `toml:"allow_origins" validate:"required,min=1"`
 	RequiredAccess ServersClientRequiredAccessConfig `toml:"required_access"`
@@ -78,8 +79,9 @@ type PSQLClientConfig struct {
 }
 
 type ServiceConfig struct {
-	MsgSender MsgSenderServiceConfig `toml:"msg_producer"`
-	Outbox    OutboxServiceConfig    `toml:"outbox"`
+	MsgSender   MsgSenderServiceConfig   `toml:"msg_producer"`
+	Outbox      OutboxServiceConfig      `toml:"outbox"`
+	ManagerLoad ManagerLoadServiceConfig `toml:"manager_load"`
 }
 
 type MsgSenderServiceConfig struct {
@@ -93,4 +95,8 @@ type OutboxServiceConfig struct {
 	Workers     int           `toml:"workers" validate:"required,min=1"`
 	Idle        time.Duration `toml:"idle_time" validate:"required,min=1s"`
 	ReservedFor time.Duration `toml:"reserve_for" validate:"required,min=1s"`
+}
+
+type ManagerLoadServiceConfig struct {
+	MaxProblemsAtSameTime int `toml:"max_problems_at_same_time" validate:"required,min=1"`
 }

@@ -13,7 +13,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/goleak"
-	"go.uber.org/zap"
 
 	jobsrepo "github.com/Pickausernaame/chat-service/internal/repositories/jobs"
 	"github.com/Pickausernaame/chat-service/internal/services/outbox"
@@ -53,7 +52,6 @@ func (s *OutboxServiceSuite) SetupSuite() {
 		reserveFor,
 		jobsRepo,
 		s.Database,
-		zap.L(),
 	))
 	s.Require().NoError(err)
 }

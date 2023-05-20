@@ -6,11 +6,12 @@ import (
 	"testing"
 	"time"
 
-	problemsrepo "github.com/myname/chat-service/internal/repositories/problems"
-	storeproblem "github.com/myname/chat-service/internal/store/problem"
-	"github.com/myname/chat-service/internal/testingh"
-	"github.com/myname/chat-service/internal/types"
 	"github.com/stretchr/testify/suite"
+
+	problemsrepo "github.com/Pickausernaame/chat-service/internal/repositories/problems"
+	storeproblem "github.com/Pickausernaame/chat-service/internal/store/problem"
+	"github.com/Pickausernaame/chat-service/internal/testingh"
+	"github.com/Pickausernaame/chat-service/internal/types"
 )
 
 type ProblemsRepoSuite struct {
@@ -61,7 +62,7 @@ func (s *ProblemsRepoSuite) Test_CreateIfNotExists() {
 		problem, err := s.Database.Problem(s.Ctx).Create().
 			SetChatID(chat.ID).
 			SetManagerID(types.NewUserID()).
-			SetResolvedAt(time.Now()).Save(s.Ctx)
+			SetResolveAt(time.Now()).Save(s.Ctx)
 		s.Require().NoError(err)
 
 		problemID, err := s.repo.CreateIfNotExists(s.Ctx, chat.ID)
@@ -126,7 +127,7 @@ func (s *ProblemsRepoSuite) Test_GetManagerOpenProblemsCount() {
 			_, err := s.Database.Problem(s.Ctx).
 				Update().
 				Where(storeproblem.ID(pID)).
-				SetResolvedAt(time.Now()).
+				SetResolveAt(time.Now()).
 				Save(s.Ctx)
 			s.Require().NoError(err)
 		}

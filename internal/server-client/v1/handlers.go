@@ -24,16 +24,16 @@ type sendMessageUseCase interface {
 type Options struct {
 	getHistory  getHistoryUseCase  `option:"mandatory" validate:"required"`
 	sendMessage sendMessageUseCase `option:"mandatory" validate:"required"`
-	lg          *zap.Logger
 }
 
 type Handlers struct {
 	Options
+	lg *zap.Logger
 }
 
 func NewHandlers(opts Options) (Handlers, error) {
 	if err := opts.Validate(); err != nil {
 		return Handlers{}, fmt.Errorf("validate options: %v", err)
 	}
-	return Handlers{Options: opts}, nil
+	return Handlers{Options: opts, lg: zap.L().Named("clientv1-handler")}, nil
 }

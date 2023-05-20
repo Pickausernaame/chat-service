@@ -8,6 +8,19 @@ servers:
     description: Development server
 
 paths:
+  /getFreeHandsBtnAvailability:
+    post:
+      description: Check free hands availability.
+      parameters:
+        - $ref: "#/components/parameters/XRequestIDHeader"
+      responses:
+        '200':
+          description: Check availability result.
+          content:
+            application/json:
+             schema:
+               $ref: "#/components/schemas/PostGetFreeHandsBtnAvailabilityResponse"
+
 
 security:
   - bearerAuth: [ ]
@@ -19,8 +32,32 @@ components:
       scheme: bearer
       bearerFormat: JWT
 
+
+  parameters:
+    XRequestIDHeader:
+      in: header
+      name: X-Request-ID
+      schema:
+        type: string
+        format: uuid
+        x-go-type: types.RequestID
+        x-go-type-import:
+          path: "github.com/Pickausernaame/chat-service/internal/types"
+      required: true
+
   schemas:
     # Common.
+    PostGetFreeHandsBtnAvailabilityResponse:
+      properties:
+        data:
+          $ref: "#/components/schemas/ManagerAvailability"
+        error:
+          $ref: "#/components/schemas/Error"
+
+    ManagerAvailability:
+      properties:
+        available:
+          type: boolean
 
     Error:
       required: [ message, code ]

@@ -21,6 +21,8 @@ import (
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
 	problemsrepo "github.com/Pickausernaame/chat-service/internal/repositories/problems"
 	serverdebug "github.com/Pickausernaame/chat-service/internal/server-debug"
+	managerload "github.com/Pickausernaame/chat-service/internal/services/manager-load"
+	inmemmanagerpool "github.com/Pickausernaame/chat-service/internal/services/manager-pool/in-mem"
 	msgproducer "github.com/Pickausernaame/chat-service/internal/services/msg-producer"
 	"github.com/Pickausernaame/chat-service/internal/services/outbox"
 	sendclientmessagejob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/send-client-message"
@@ -131,6 +133,15 @@ func run() (errReturned error) {
 		return fmt.Errorf("registration send msg job: %v", err)
 	}
 
+	// initialization manager pool service
+	manPoolService := inmemmanagerpool.New()
+
+	// initialization manager load service
+	manLoadService, err := managerload.New(managerload.NewOptions(cfg.Service.ManagerLoad.MaxProblemsAtSameTime, problemRepo))
+	if err != nil {
+		return fmt.Errorf("init outbox service: %v", err)
+	}
+
 	// creating servers
 	// initialization debug server
 	srvDebug, err := serverdebug.New(serverdebug.NewOptions(cfg.Servers.Debug.Addr))
@@ -144,6 +155,12 @@ func run() (errReturned error) {
 		return fmt.Errorf("init server client: %v", err)
 	}
 
+	// initialization manager server
+	srvManager, err := initServerManager(cfg, kc, manLoadService, manPoolService)
+	if err != nil {
+		return fmt.Errorf("init server manager: %v", err)
+	}
+
 	eg, ctx := errgroup.WithContext(ctx)
 	// Run servers.
 	// debug server
@@ -151,6 +168,9 @@ func run() (errReturned error) {
 
 	// server client
 	eg.Go(func() error { return srvClient.Run(ctx) })
+
+	// server manager
+	eg.Go(func() error { return srvManager.Run(ctx) })
 
 	// Run services.
 	// outbox run

@@ -1,99 +1,115 @@
 package server
 
 import (
-	"bytes"
-	"compress/gzip"
-	"encoding/base64"
+	"context"
+	"errors"
 	"fmt"
-	"net/url"
-	"path"
-	"strings"
+	"net/http"
+	"time"
 
+	oapimdlwr "github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
+
+	keycloakclient "github.com/Pickausernaame/chat-service/internal/clients/keycloak"
+	"github.com/Pickausernaame/chat-service/internal/middlewares"
+	"github.com/Pickausernaame/chat-service/internal/validator"
 )
 
-// This is a simple interface which specifies echo.Route addition functions which
-// are present on both echo.Echo and echo.Group, since we want to allow using
-// either of them for path registration
-type EchoRouter interface {
-	CONNECT(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
-	DELETE(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
-	GET(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
-	HEAD(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
-	OPTIONS(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
-	PATCH(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
-	POST(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
-	PUT(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
-	TRACE(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+const (
+	readHeaderTimeout = time.Second
+	shutdownTimeout   = 3 * time.Second
+)
+
+//go:generate options-gen -out-filename=server_options.gen.go -from-struct=Options
+type Options struct {
+	logger         *zap.Logger            `option:"mandatory" validate:"required"`
+	addr           string                 `option:"mandatory" validate:"required,hostname_port"`
+	allowOrigins   []string               `option:"mandatory" validate:"min=1"`
+	v1Swagger      *openapi3.T            `option:"mandatory" validate:"required"`
+	reg            func(v *echo.Group)    `option:"mandatory" validate:"required"`
+	keycloakClient *keycloakclient.Client `option:"mandatory" validate:"required"`
+	resource       string                 `option:"mandatory" validate:"required"`
+	role           string                 `option:"mandatory" validate:"required"`
+	errHandler     echo.HTTPErrorHandler  `option:"mandatory" validate:"required"`
 }
 
-// GetSwagger returns the content of the embedded swagger specification file
-// or error if failed to decode
-func decodeSpec(swaggerSpec []string) ([]byte, error) {
-	zipped, err := base64.StdEncoding.DecodeString(strings.Join(swaggerSpec, ""))
-	if err != nil {
-		return nil, fmt.Errorf("error base64 decoding spec: %s", err)
-	}
-	zr, err := gzip.NewReader(bytes.NewReader(zipped))
-	if err != nil {
-		return nil, fmt.Errorf("error decompressing spec: %s", err)
-	}
-	var buf bytes.Buffer
-	_, err = buf.ReadFrom(zr)
-	if err != nil {
-		return nil, fmt.Errorf("error decompressing spec: %s", err)
-	}
-
-	return buf.Bytes(), nil
+type Server struct {
+	lg  *zap.Logger
+	srv *http.Server
 }
 
-// a naive cached of a decoded swagger spec
-func decodeSpecCached(swaggerSpec []string) func() ([]byte, error) {
-	data, err := decodeSpec(swaggerSpec)
-	return func() ([]byte, error) {
-		return data, err
-	}
-}
-
-// Constructs a synthetic filesystem for resolving external references when loading openapi specifications.
-func PathToRawSpec(pathToFile string, swaggerSpec []string) map[string]func() ([]byte, error) {
-	var res = make(map[string]func() ([]byte, error))
-	if len(pathToFile) > 0 {
-		res[pathToFile] = decodeSpecCached(swaggerSpec)
+func New(opts Options) (*Server, error) {
+	if err := validator.Validator.Struct(opts); err != nil {
+		return nil, fmt.Errorf("options validation error: %v", err)
 	}
 
-	return res
+	e := echo.New()
+	e.HTTPErrorHandler = opts.errHandler
+
+	e.Use(
+		middleware.RecoverWithConfig(middleware.RecoverConfig{
+			Skipper:           middleware.DefaultSkipper,
+			StackSize:         4 << 10,
+			DisableStackAll:   false,
+			DisablePrintStack: false,
+			LogErrorFunc:      middlewares.RecoveryLogFunc,
+		}),
+		middlewares.ZapLogger(opts.logger.Named("middleware")),
+		// (165(size of message without body) + 3000*4(max size of body)) * 1(count of messages per 1 request) * 2 (
+		// margin factor) --> 24Kb
+		middleware.BodyLimit("24K"),
+		middleware.CORSWithConfig(
+			middleware.CORSConfig{
+				AllowOrigins: opts.allowOrigins,
+				AllowMethods: []string{"POST"},
+			}),
+		middlewares.NewKeycloakTokenAuth(opts.keycloakClient, opts.resource, opts.role),
+	)
+
+	v1 := e.Group("v1", oapimdlwr.OapiRequestValidatorWithOptions(opts.v1Swagger, &oapimdlwr.Options{
+		Options: openapi3filter.Options{
+			ExcludeRequestBody:  false,
+			ExcludeResponseBody: true,
+			AuthenticationFunc:  openapi3filter.NoopAuthenticationFunc,
+		},
+	}))
+
+	opts.reg(v1)
+
+	return &Server{
+		lg: opts.logger,
+		srv: &http.Server{
+			Addr:              opts.addr,
+			Handler:           e,
+			ReadHeaderTimeout: readHeaderTimeout,
+		},
+	}, nil
 }
 
-// GetSwagger returns the Swagger specification corresponding to the generated code
-// in this file. The external references of Swagger specification are resolved.
-// The logic of resolving external references is tightly connected to "import-mapping" feature.
-// Externally referenced files must be embedded in the corresponding golang packages.
-// Urls can be supported but this task was out of the scope.
-func GetSwagger(swaggerSpec []string) (swagger *openapi3.T, err error) {
-	var resolvePath = PathToRawSpec("", swaggerSpec)
+func (s *Server) Run(ctx context.Context) error {
+	eg, ctx := errgroup.WithContext(ctx)
 
-	loader := openapi3.NewLoader()
-	loader.IsExternalRefsAllowed = true
-	loader.ReadFromURIFunc = func(loader *openapi3.Loader, url *url.URL) ([]byte, error) {
-		var pathToFile = url.String()
-		pathToFile = path.Clean(pathToFile)
-		getSpec, ok := resolvePath[pathToFile]
-		if !ok {
-			err1 := fmt.Errorf("path not found: %s", pathToFile)
-			return nil, err1
+	eg.Go(func() error {
+		<-ctx.Done()
+
+		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+
+		return s.srv.Shutdown(ctx)
+	})
+
+	eg.Go(func() error {
+		s.lg.Info("listen and serve", zap.String("addr", s.srv.Addr))
+		if err := s.srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			return fmt.Errorf("listen and serve: %v", err)
 		}
-		return getSpec()
-	}
-	var specData []byte
-	specData, err = decodeSpecCached(swaggerSpec)()
-	if err != nil {
-		return
-	}
-	swagger, err = loader.LoadFromData(specData)
-	if err != nil {
-		return
-	}
-	return
+		return nil
+	})
+
+	return eg.Wait()
 }

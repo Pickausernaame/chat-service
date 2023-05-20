@@ -15,6 +15,13 @@ allow_origins = ["http://localhost:3011", "http://localhost:3000"]
 resource = "chat-ui-client"
 role = "support-chat-client"
 
+[servers.manager]
+addr = ":8081"
+allow_origins = ["http://localhost:3011", "http://localhost:3001"]
+[servers.manager.required_access]
+resource = "chat-ui-manager"
+role = "support-chat-manager"
+
 [clients]
 [clients.keycloak]
 base_path = "http://localhost:3010"
@@ -28,6 +35,10 @@ user_name = "chat-service"
 password = "chat-service"
 db_name = "chat-service"
 debug = true
+
+[services]
+[services.manager_load]
+max_problems_at_same_time = 5
 
 [services.msg_producer]
 brokers = ["localhost:9092"]
@@ -43,3 +54,4 @@ reserve_for = "5m"
 
 [sentry]
 dsn = "http://7dc894a2773a424780da7a0464bd3241@127.0.0.1:9000/2"
+

@@ -1,4 +1,4 @@
-package manager_load_test
+package managerload_test
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	manager_load "github.com/Pickausernaame/chat-service/internal/services/manager-load"
+	managerload "github.com/Pickausernaame/chat-service/internal/services/manager-load"
 	managerloadmocks "github.com/Pickausernaame/chat-service/internal/services/manager-load/mocks"
 	"github.com/Pickausernaame/chat-service/internal/testingh"
 	"github.com/Pickausernaame/chat-service/internal/types"
@@ -20,7 +20,7 @@ type ServiceSuite struct {
 	ctrl *gomock.Controller
 
 	problemsRepo *managerloadmocks.MockproblemsRepository
-	managerLoad  *manager_load.Service
+	managerLoad  *managerload.Service
 }
 
 func TestServiceSuite(t *testing.T) {
@@ -61,7 +61,7 @@ func (s *ServiceSuite) SetupTest() {
 		},
 	}
 	for _, c := range cases {
-		_, err := manager_load.New(manager_load.NewOptions(c.maxProblems, s.problemsRepo))
+		_, err := managerload.New(managerload.NewOptions(c.maxProblems, s.problemsRepo))
 		if c.wantErr {
 			s.Require().Error(err)
 		} else {
@@ -69,7 +69,7 @@ func (s *ServiceSuite) SetupTest() {
 		}
 	}
 
-	s.managerLoad, err = manager_load.New(manager_load.NewOptions(2, s.problemsRepo))
+	s.managerLoad, err = managerload.New(managerload.NewOptions(2, s.problemsRepo))
 	s.Require().NoError(err)
 
 	s.ContextSuite.SetupTest()

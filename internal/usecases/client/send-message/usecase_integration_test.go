@@ -9,16 +9,17 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	chatsrepo "github.com/myname/chat-service/internal/repositories/chats"
-	jobsrepo "github.com/myname/chat-service/internal/repositories/jobs"
-	messagesrepo "github.com/myname/chat-service/internal/repositories/messages"
-	problemsrepo "github.com/myname/chat-service/internal/repositories/problems"
-	"github.com/myname/chat-service/internal/services/outbox"
-	"github.com/myname/chat-service/internal/testingh"
-	"github.com/myname/chat-service/internal/types"
-	sendmessage "github.com/myname/chat-service/internal/usecases/client/send-message"
-	sendmessagemocks "github.com/myname/chat-service/internal/usecases/client/send-message/mocks"
 	"github.com/stretchr/testify/suite"
+
+	chatsrepo "github.com/Pickausernaame/chat-service/internal/repositories/chats"
+	jobsrepo "github.com/Pickausernaame/chat-service/internal/repositories/jobs"
+	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
+	problemsrepo "github.com/Pickausernaame/chat-service/internal/repositories/problems"
+	"github.com/Pickausernaame/chat-service/internal/services/outbox"
+	"github.com/Pickausernaame/chat-service/internal/testingh"
+	"github.com/Pickausernaame/chat-service/internal/types"
+	sendmessage "github.com/Pickausernaame/chat-service/internal/usecases/client/send-message"
+	sendmessagemocks "github.com/Pickausernaame/chat-service/internal/usecases/client/send-message/mocks"
 )
 
 type UseCaseIntegrationSuite struct {

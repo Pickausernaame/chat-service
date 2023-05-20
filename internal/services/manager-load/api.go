@@ -1,4 +1,4 @@
-package manager_load
+package managerload
 
 import (
 	"context"
