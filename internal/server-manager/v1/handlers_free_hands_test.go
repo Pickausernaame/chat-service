@@ -59,7 +59,8 @@ func (s *HandlersSuite) TestPostFreeHands_Usecase_OverloadError() {
 	s.setReadyReceiveProblems.EXPECT().
 		Handle(eCtx.Request().Context(), setreadyreceiveproblems.Request{
 			ID:        reqID,
-			ManagerID: s.managerID}).
+			ManagerID: s.managerID,
+		}).
 		Return(setreadyreceiveproblems.Response{}, setreadyreceiveproblems.ErrManagerOverload)
 
 	// Action.
@@ -80,7 +81,8 @@ func (s *HandlersSuite) TestPostFreeHands_Usecase_SomeError() {
 	s.setReadyReceiveProblems.EXPECT().
 		Handle(eCtx.Request().Context(), setreadyreceiveproblems.Request{
 			ID:        reqID,
-			ManagerID: s.managerID}).
+			ManagerID: s.managerID,
+		}).
 		Return(setreadyreceiveproblems.Response{}, errors.New("some error"))
 
 	// Action.
@@ -98,7 +100,8 @@ func (s *HandlersSuite) TestPostFreeHands_Usecase_Success() {
 	s.setReadyReceiveProblems.EXPECT().
 		Handle(eCtx.Request().Context(), setreadyreceiveproblems.Request{
 			ID:        reqID,
-			ManagerID: s.managerID}).
+			ManagerID: s.managerID,
+		}).
 		Return(setreadyreceiveproblems.Response{}, nil)
 
 	// Action.
