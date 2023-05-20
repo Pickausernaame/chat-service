@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	canreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/can-receive-problems"
+	setreadyreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/set-ready-receive-problems"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -48,4 +49,42 @@ func (m *MockcanReceiveProblemsUseCase) Handle(ctx context.Context, req canrecei
 func (mr *MockcanReceiveProblemsUseCaseMockRecorder) Handle(ctx, req interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Handle", reflect.TypeOf((*MockcanReceiveProblemsUseCase)(nil).Handle), ctx, req)
+}
+
+// MocksetReadyReceiveProblemsUseCase is a mock of setReadyReceiveProblemsUseCase interface.
+type MocksetReadyReceiveProblemsUseCase struct {
+	ctrl     *gomock.Controller
+	recorder *MocksetReadyReceiveProblemsUseCaseMockRecorder
+}
+
+// MocksetReadyReceiveProblemsUseCaseMockRecorder is the mock recorder for MocksetReadyReceiveProblemsUseCase.
+type MocksetReadyReceiveProblemsUseCaseMockRecorder struct {
+	mock *MocksetReadyReceiveProblemsUseCase
+}
+
+// NewMocksetReadyReceiveProblemsUseCase creates a new mock instance.
+func NewMocksetReadyReceiveProblemsUseCase(ctrl *gomock.Controller) *MocksetReadyReceiveProblemsUseCase {
+	mock := &MocksetReadyReceiveProblemsUseCase{ctrl: ctrl}
+	mock.recorder = &MocksetReadyReceiveProblemsUseCaseMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MocksetReadyReceiveProblemsUseCase) EXPECT() *MocksetReadyReceiveProblemsUseCaseMockRecorder {
+	return m.recorder
+}
+
+// Handle mocks base method.
+func (m *MocksetReadyReceiveProblemsUseCase) Handle(ctx context.Context, req setreadyreceiveproblems.Request) (setreadyreceiveproblems.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Handle", ctx, req)
+	ret0, _ := ret[0].(setreadyreceiveproblems.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Handle indicates an expected call of Handle.
+func (mr *MocksetReadyReceiveProblemsUseCaseMockRecorder) Handle(ctx, req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Handle", reflect.TypeOf((*MocksetReadyReceiveProblemsUseCase)(nil).Handle), ctx, req)
 }

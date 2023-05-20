@@ -14,6 +14,7 @@ import (
 	manager_load "github.com/Pickausernaame/chat-service/internal/services/manager-load"
 	managerpool "github.com/Pickausernaame/chat-service/internal/services/manager-pool"
 	canreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/can-receive-problems"
+	setreadyreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/set-ready-receive-problems"
 )
 
 func initServerManager(
@@ -43,8 +44,14 @@ func initServerManager(
 		return nil, fmt.Errorf("init canReciveProblems usecase: %v", err)
 	}
 
+	// initialization setReadyReceiveProblems useCase
+	setReadyReceiveProblems, err := setreadyreceiveproblems.New(setreadyreceiveproblems.NewOptions(managerLoadService, managerPool))
+	if err != nil {
+		return nil, fmt.Errorf("init setReadyReceiveProblems usecase: %v", err)
+	}
+
 	// initialization v1 handlers
-	v1Handlers, err := managerv1.NewHandlers(managerv1.NewOptions(canReciveProblems))
+	v1Handlers, err := managerv1.NewHandlers(managerv1.NewOptions(canReciveProblems, setReadyReceiveProblems))
 	if err != nil {
 		return nil, fmt.Errorf("create v1 handlers: %v", err)
 	}

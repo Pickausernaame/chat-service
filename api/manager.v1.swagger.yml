@@ -10,17 +10,29 @@ servers:
 paths:
   /getFreeHandsBtnAvailability:
     post:
-      description: Check free hands availability.
+      description: Checks free hands availability.
       parameters:
         - $ref: "#/components/parameters/XRequestIDHeader"
       responses:
         '200':
-          description: Check availability result.
+          description: Checks availability result.
           content:
             application/json:
              schema:
                $ref: "#/components/schemas/PostGetFreeHandsBtnAvailabilityResponse"
 
+  /freeHands:
+    post:
+      description: Sets availability for new clients.
+      parameters:
+        - $ref: "#/components/parameters/XRequestIDHeader"
+      responses:
+        '200':
+          description: Sets availability for new clients result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostFreeHandsResponse"
 
 security:
   - bearerAuth: [ ]
@@ -54,6 +66,14 @@ components:
         error:
           $ref: "#/components/schemas/Error"
 
+    PostFreeHandsResponse:
+      properties:
+        data:
+          type: string
+          nullable: true
+        error:
+          $ref: "#/components/schemas/Error"
+
     ManagerAvailability:
       properties:
         available:
@@ -72,4 +92,6 @@ components:
     ErrorCode:
       type: integer
       description: contains HTTP error codes and specific business logic error codes (the last must be >= 1000).
+      enum: [ 5000 ]
+      x-enum-varnames: [ ErrorCodeManagerOverloadedError ]
       minimum: 400

@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	canreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/can-receive-problems"
+	setreadyreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/set-ready-receive-problems"
 )
 
 var _ ServerInterface = (*Handlers)(nil)
@@ -17,9 +18,14 @@ type canReceiveProblemsUseCase interface {
 	Handle(ctx context.Context, req canreceiveproblems.Request) (canreceiveproblems.Response, error)
 }
 
+type setReadyReceiveProblemsUseCase interface {
+	Handle(ctx context.Context, req setreadyreceiveproblems.Request) (setreadyreceiveproblems.Response, error)
+}
+
 //go:generate options-gen -out-filename=handlers.gen.go -from-struct=Options
 type Options struct {
-	canReceiveProblemsUseCase canReceiveProblemsUseCase `option:"mandatory" validate:"required"`
+	canReceiveProblemsUseCase      canReceiveProblemsUseCase      `option:"mandatory" validate:"required"`
+	setReadyReceiveProblemsUseCase setReadyReceiveProblemsUseCase `option:"mandatory" validate:"required"`
 }
 
 type Handlers struct {
