@@ -22,6 +22,8 @@ const (
 	FieldProblemID = "problem_id"
 	// FieldAuthorID holds the string denoting the author_id field in the database.
 	FieldAuthorID = "author_id"
+	// FieldInitialRequestID holds the string denoting the initial_request_id field in the database.
+	FieldInitialRequestID = "initial_request_id"
 	// FieldIsVisibleForClient holds the string denoting the is_visible_for_client field in the database.
 	FieldIsVisibleForClient = "is_visible_for_client"
 	// FieldIsVisibleForManager holds the string denoting the is_visible_for_manager field in the database.
@@ -64,6 +66,7 @@ var Columns = []string{
 	FieldChatID,
 	FieldProblemID,
 	FieldAuthorID,
+	FieldInitialRequestID,
 	FieldIsVisibleForClient,
 	FieldIsVisibleForManager,
 	FieldBody,
@@ -95,7 +98,7 @@ var (
 	// DefaultIsService holds the default value on creation for the "is_service" field.
 	DefaultIsService bool
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
-	DefaultCreatedAt time.Time
+	DefaultCreatedAt func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() types.MessageID
 )
@@ -121,6 +124,11 @@ func ByProblemID(opts ...sql.OrderTermOption) OrderOption {
 // ByAuthorID orders the results by the author_id field.
 func ByAuthorID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAuthorID, opts...).ToFunc()
+}
+
+// ByInitialRequestID orders the results by the initial_request_id field.
+func ByInitialRequestID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInitialRequestID, opts...).ToFunc()
 }
 
 // ByIsVisibleForClient orders the results by the is_visible_for_client field.

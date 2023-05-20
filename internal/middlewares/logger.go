@@ -8,15 +8,18 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/Pickausernaame/chat-service/internal/errors"
 )
 
 func ZapLogger(log *zap.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(eCtx echo.Context) error {
 			start := time.Now()
-
+			code := 0
 			err := next(eCtx)
 			if err != nil {
+				code = errors.GetServerErrorCode(err)
 				eCtx.Error(err)
 			}
 
@@ -25,6 +28,9 @@ func ZapLogger(log *zap.Logger) echo.MiddlewareFunc {
 				return nil
 			}
 			res := eCtx.Response()
+			if err == nil {
+				code = res.Status
+			}
 
 			fields := []zapcore.Field{
 				zap.String("remote_ip", eCtx.RealIP()),
@@ -34,7 +40,7 @@ func ZapLogger(log *zap.Logger) echo.MiddlewareFunc {
 				zap.String("path", req.RequestURI),
 				zap.String("user_agent", req.UserAgent()),
 				zap.Int64("size", res.Size),
-				zap.Int("status", res.Status),
+				zap.Int("status", code),
 			}
 
 			uID, ok := UserID(eCtx)

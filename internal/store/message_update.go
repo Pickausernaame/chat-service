@@ -14,6 +14,7 @@ import (
 
 	"github.com/Pickausernaame/chat-service/internal/store/message"
 	"github.com/Pickausernaame/chat-service/internal/store/predicate"
+	"github.com/Pickausernaame/chat-service/internal/types"
 )
 
 // MessageUpdate is the builder for updating Message entities.
@@ -26,6 +27,26 @@ type MessageUpdate struct {
 // Where appends a list predicates to the MessageUpdate builder.
 func (mu *MessageUpdate) Where(ps ...predicate.Message) *MessageUpdate {
 	mu.mutation.Where(ps...)
+	return mu
+}
+
+// SetInitialRequestID sets the "initial_request_id" field.
+func (mu *MessageUpdate) SetInitialRequestID(ti types.RequestID) *MessageUpdate {
+	mu.mutation.SetInitialRequestID(ti)
+	return mu
+}
+
+// SetNillableInitialRequestID sets the "initial_request_id" field if the given value is not nil.
+func (mu *MessageUpdate) SetNillableInitialRequestID(ti *types.RequestID) *MessageUpdate {
+	if ti != nil {
+		mu.SetInitialRequestID(*ti)
+	}
+	return mu
+}
+
+// ClearInitialRequestID clears the value of the "initial_request_id" field.
+func (mu *MessageUpdate) ClearInitialRequestID() *MessageUpdate {
+	mu.mutation.ClearInitialRequestID()
 	return mu
 }
 
@@ -117,6 +138,11 @@ func (mu *MessageUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (mu *MessageUpdate) check() error {
+	if v, ok := mu.mutation.InitialRequestID(); ok {
+		if err := v.Validate(); err != nil {
+			return &ValidationError{Name: "initial_request_id", err: fmt.Errorf(`store: validator failed for field "Message.initial_request_id": %w`, err)}
+		}
+	}
 	if v, ok := mu.mutation.Body(); ok {
 		if err := message.BodyValidator(v); err != nil {
 			return &ValidationError{Name: "body", err: fmt.Errorf(`store: validator failed for field "Message.body": %w`, err)}
@@ -142,6 +168,15 @@ func (mu *MessageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if mu.mutation.AuthorIDCleared() {
+		_spec.ClearField(message.FieldAuthorID, field.TypeUUID)
+	}
+	if value, ok := mu.mutation.InitialRequestID(); ok {
+		_spec.SetField(message.FieldInitialRequestID, field.TypeUUID, value)
+	}
+	if mu.mutation.InitialRequestIDCleared() {
+		_spec.ClearField(message.FieldInitialRequestID, field.TypeUUID)
 	}
 	if value, ok := mu.mutation.Body(); ok {
 		_spec.SetField(message.FieldBody, field.TypeString, value)
@@ -176,6 +211,26 @@ type MessageUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *MessageMutation
+}
+
+// SetInitialRequestID sets the "initial_request_id" field.
+func (muo *MessageUpdateOne) SetInitialRequestID(ti types.RequestID) *MessageUpdateOne {
+	muo.mutation.SetInitialRequestID(ti)
+	return muo
+}
+
+// SetNillableInitialRequestID sets the "initial_request_id" field if the given value is not nil.
+func (muo *MessageUpdateOne) SetNillableInitialRequestID(ti *types.RequestID) *MessageUpdateOne {
+	if ti != nil {
+		muo.SetInitialRequestID(*ti)
+	}
+	return muo
+}
+
+// ClearInitialRequestID clears the value of the "initial_request_id" field.
+func (muo *MessageUpdateOne) ClearInitialRequestID() *MessageUpdateOne {
+	muo.mutation.ClearInitialRequestID()
+	return muo
 }
 
 // SetBody sets the "body" field.
@@ -279,6 +334,11 @@ func (muo *MessageUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (muo *MessageUpdateOne) check() error {
+	if v, ok := muo.mutation.InitialRequestID(); ok {
+		if err := v.Validate(); err != nil {
+			return &ValidationError{Name: "initial_request_id", err: fmt.Errorf(`store: validator failed for field "Message.initial_request_id": %w`, err)}
+		}
+	}
 	if v, ok := muo.mutation.Body(); ok {
 		if err := message.BodyValidator(v); err != nil {
 			return &ValidationError{Name: "body", err: fmt.Errorf(`store: validator failed for field "Message.body": %w`, err)}
@@ -321,6 +381,15 @@ func (muo *MessageUpdateOne) sqlSave(ctx context.Context) (_node *Message, err e
 				ps[i](selector)
 			}
 		}
+	}
+	if muo.mutation.AuthorIDCleared() {
+		_spec.ClearField(message.FieldAuthorID, field.TypeUUID)
+	}
+	if value, ok := muo.mutation.InitialRequestID(); ok {
+		_spec.SetField(message.FieldInitialRequestID, field.TypeUUID, value)
+	}
+	if muo.mutation.InitialRequestIDCleared() {
+		_spec.ClearField(message.FieldInitialRequestID, field.TypeUUID)
 	}
 	if value, ok := muo.mutation.Body(); ok {
 		_spec.SetField(message.FieldBody, field.TypeString, value)
