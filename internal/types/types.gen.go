@@ -350,3 +350,52 @@ func (t *FailedJobID) scan(v any) error {
 func (t FailedJobID) string() string {
 	return uuid.UUID(t).String()
 }
+
+type EventID uuid.UUID
+
+var EventIDNil EventID
+
+func NewEventID() EventID {
+	return EventID(uuid.New())
+}
+
+func (t EventID) IsZero() bool { return t.isZero() }
+
+func (t EventID) MarshalText() ([]byte, error) {
+	return []byte(t.string()), nil
+}
+
+func (t EventID) Matches(x interface{}) bool {
+	value, ok := x.(EventID)
+	if !ok {
+		return false
+	}
+	return t.String() == value.String()
+}
+
+func (t EventID) String() string { return t.string() }
+
+func (t EventID) Validate() error {
+	if t.isZero() {
+		return errors.New("empty value")
+	}
+	return nil
+}
+
+func (t EventID) Value() (driver.Value, error) { return t.string(), nil }
+
+func (t *EventID) Scan(src any) error { return t.scan(src) }
+
+func (t *EventID) UnmarshalText(text []byte) error { return t.scan(text) }
+
+func (t *EventID) isZero() bool {
+	return t == nil || (uuid.UUID)(*t) == uuid.Nil
+}
+
+func (t *EventID) scan(v any) error {
+	return (*uuid.UUID)(t).Scan(v)
+}
+
+func (t EventID) string() string {
+	return uuid.UUID(t).String()
+}
