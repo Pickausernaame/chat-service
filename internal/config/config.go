@@ -45,6 +45,7 @@ type DebugServerConfig struct {
 type ServersCommonConfig struct {
 	Addr           string                            `toml:"addr" validate:"required,hostname_port"`
 	AllowsOrigins  []string                          `toml:"allow_origins" validate:"required,min=1"`
+	SecWsProtocol  string                            `toml:"sec_ws_protocol" validate:"required"`
 	RequiredAccess ServersClientRequiredAccessConfig `toml:"required_access"`
 }
 

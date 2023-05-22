@@ -17,7 +17,9 @@ import (
 
 	keycloakclient "github.com/Pickausernaame/chat-service/internal/clients/keycloak"
 	"github.com/Pickausernaame/chat-service/internal/middlewares"
+	"github.com/Pickausernaame/chat-service/internal/services/event-stream/dummy"
 	"github.com/Pickausernaame/chat-service/internal/validator"
+	websocketstream "github.com/Pickausernaame/chat-service/internal/websocket-stream"
 )
 
 const (
@@ -27,7 +29,7 @@ const (
 
 //go:generate options-gen -out-filename=server_options.gen.go -from-struct=Options
 type Options struct {
-	logger         *zap.Logger            `option:"mandatory" validate:"required"`
+	serverName     string                 `option:"mandatory" validate:"required"`
 	addr           string                 `option:"mandatory" validate:"required,hostname_port"`
 	allowOrigins   []string               `option:"mandatory" validate:"min=1"`
 	v1Swagger      *openapi3.T            `option:"mandatory" validate:"required"`
@@ -35,12 +37,14 @@ type Options struct {
 	keycloakClient *keycloakclient.Client `option:"mandatory" validate:"required"`
 	resource       string                 `option:"mandatory" validate:"required"`
 	role           string                 `option:"mandatory" validate:"required"`
+	secWsProtocol  string                 `option:"mandatory" validate:"required"`
 	errHandler     echo.HTTPErrorHandler  `option:"mandatory" validate:"required"`
 }
 
 type Server struct {
-	lg  *zap.Logger
-	srv *http.Server
+	lg         *zap.Logger
+	srv        *http.Server
+	shutdownCh chan struct{}
 }
 
 func New(opts Options) (*Server, error) {
@@ -59,7 +63,7 @@ func New(opts Options) (*Server, error) {
 			DisablePrintStack: false,
 			LogErrorFunc:      middlewares.RecoveryLogFunc,
 		}),
-		middlewares.ZapLogger(opts.logger.Named("middleware")),
+		middlewares.ZapLogger(zap.L().Named(opts.serverName+" middleware")),
 		// (165(size of message without body) + 3000*4(max size of body)) * 1(count of messages per 1 request) * 2 (
 		// margin factor) --> 24Kb
 		middleware.BodyLimit("24K"),
@@ -78,16 +82,34 @@ func New(opts Options) (*Server, error) {
 			AuthenticationFunc:  openapi3filter.NoopAuthenticationFunc,
 		},
 	}))
+	shutdownCh := make(chan struct{})
+
+	wsHandler, err := websocketstream.NewHTTPHandler(
+		websocketstream.NewOptions(
+			dummy.DummyEventStream{},
+			websocketstream.DummyAdapter{},
+			websocketstream.JSONEventWriter{},
+			websocketstream.NewUpgrader(opts.allowOrigins, opts.secWsProtocol),
+			shutdownCh))
+	if err != nil {
+		return nil, fmt.Errorf("making ws handler: %v", err)
+	}
+
+	e.GET("/ws", func(eCtx echo.Context) error {
+		wsHandler.Serve(eCtx)
+		return nil
+	})
 
 	opts.reg(v1)
 
 	return &Server{
-		lg: opts.logger,
+		lg: zap.L().Named(opts.serverName),
 		srv: &http.Server{
 			Addr:              opts.addr,
 			Handler:           e,
 			ReadHeaderTimeout: readHeaderTimeout,
 		},
+		shutdownCh: shutdownCh,
 	}, nil
 }
 
@@ -99,7 +121,7 @@ func (s *Server) Run(ctx context.Context) error {
 
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
-
+		close(s.shutdownCh)
 		return s.srv.Shutdown(ctx)
 	})
 

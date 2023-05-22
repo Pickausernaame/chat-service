@@ -48,6 +48,5 @@ func ProcessServerError(err error) (code int, msg string, details string) {
 	if errors.As(err, &echoErr) {
 		return echoErr.Code, echoErr.Message.(string), echoErr.Error()
 	}
-
 	return http.StatusInternalServerError, "something went wrong", err.Error()
 }

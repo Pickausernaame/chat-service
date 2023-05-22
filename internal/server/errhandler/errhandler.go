@@ -13,7 +13,7 @@ var _ echo.HTTPErrorHandler = Handler{}.Handle
 
 //go:generate options-gen -out-filename=errhandler_options.gen.go -from-struct=Options
 type Options struct {
-	logger          *zap.Logger                                    `option:"mandatory" validate:"required"`
+	serverName      string                                         `option:"mandatory" validate:"required"`
 	productionMode  bool                                           `option:"mandatory"`
 	responseBuilder func(code int, msg string, details string) any `option:"mandatory" validate:"required"`
 }
@@ -28,7 +28,10 @@ func New(opts Options) (Handler, error) {
 	if err := opts.Validate(); err != nil {
 		return Handler{}, err
 	}
-	return Handler{lg: opts.logger, productionMode: opts.productionMode, responseBuilder: opts.responseBuilder}, nil
+	return Handler{
+		lg:             zap.L().Named(opts.serverName + " errhandler"),
+		productionMode: opts.productionMode, responseBuilder: opts.responseBuilder,
+	}, nil
 }
 
 func (h Handler) Handle(err error, eCtx echo.Context) {

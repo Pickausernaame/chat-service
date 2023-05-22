@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/labstack/echo/v4"
-	"go.uber.org/zap"
 
 	keycloakclient "github.com/Pickausernaame/chat-service/internal/clients/keycloak"
 	"github.com/Pickausernaame/chat-service/internal/config"
@@ -17,14 +16,16 @@ import (
 	setreadyreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/set-ready-receive-problems"
 )
 
+const (
+	nameServerManager = "server-client"
+)
+
 func initServerManager(
 	cfg config.Config,
 	keycloakClient *keycloakclient.Client,
 	managerLoadService *manager_load.Service,
 	managerPool managerpool.Pool,
 ) (*server.Server, error) {
-	lg := zap.L().Named(nameServerClient)
-
 	// getting specification
 	v1Swagger, err := managerv1.GetSwagger()
 	if err != nil {
@@ -32,7 +33,8 @@ func initServerManager(
 	}
 
 	// initialization errorHandler
-	errHandler, err := errhandler.New(errhandler.NewOptions(lg, cfg.Global.IsProd(), errhandler.ResponseBuilder))
+	errHandler, err := errhandler.New(
+		errhandler.NewOptions(nameServerManager, cfg.Global.IsProd(), errhandler.ResponseBuilder))
 	if err != nil {
 		return nil, fmt.Errorf("init errror handler: %v", err)
 	}
@@ -45,7 +47,8 @@ func initServerManager(
 	}
 
 	// initialization setReadyReceiveProblems useCase
-	setReadyReceiveProblems, err := setreadyreceiveproblems.New(setreadyreceiveproblems.NewOptions(managerLoadService, managerPool))
+	setReadyReceiveProblems, err := setreadyreceiveproblems.New(
+		setreadyreceiveproblems.NewOptions(managerLoadService, managerPool))
 	if err != nil {
 		return nil, fmt.Errorf("init setReadyReceiveProblems usecase: %v", err)
 	}
@@ -59,7 +62,7 @@ func initServerManager(
 	// initialization server
 	srv, err := server.New(
 		server.NewOptions(
-			lg,
+			nameServerManager,
 			cfg.Servers.Manager.Addr,
 			cfg.Servers.Manager.AllowsOrigins,
 			v1Swagger,
@@ -69,6 +72,7 @@ func initServerManager(
 			keycloakClient,
 			cfg.Servers.Manager.RequiredAccess.Resource,
 			cfg.Servers.Manager.RequiredAccess.Role,
+			cfg.Servers.Manager.SecWsProtocol,
 			errHandler.Handle,
 		))
 	if err != nil {

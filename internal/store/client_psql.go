@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"time"
 
 	"entgo.io/ent/dialect"
@@ -52,7 +53,13 @@ func NewPgxDB(opts PgxOptions) (*sql.DB, error) {
 		return nil, fmt.Errorf("validate pgx options: %v", err)
 	}
 
-	db, err := NewPgxDB(opts)
+	dsn := (&url.URL{
+		Scheme: "postgresql",
+		User:   url.UserPassword(opts.username, opts.password),
+		Host:   opts.address,
+		Path:   opts.database,
+	}).String()
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open db conn: %v", err)
 	}

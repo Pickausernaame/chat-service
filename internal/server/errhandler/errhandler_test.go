@@ -12,7 +12,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 
 	internalerrors "github.com/Pickausernaame/chat-service/internal/errors"
 	"github.com/Pickausernaame/chat-service/internal/server/errhandler"
@@ -48,7 +47,7 @@ func TestHandler_Handle_InDevMode(t *testing.T) {
 		},
 	}
 
-	h, err := errhandler.New(errhandler.NewOptions(zap.L(), productionMode, respBuilder))
+	h, err := errhandler.New(errhandler.NewOptions("tests", productionMode, respBuilder))
 	require.NoError(t, err)
 
 	for _, tt := range cases {
@@ -94,7 +93,7 @@ func TestHandler_Handle_InProductionMode(t *testing.T) {
 		},
 	}
 
-	h, err := errhandler.New(errhandler.NewOptions(zap.L(), productionMode, respBuilder))
+	h, err := errhandler.New(errhandler.NewOptions("tests", productionMode, respBuilder))
 	require.NoError(t, err)
 
 	for _, tt := range cases {

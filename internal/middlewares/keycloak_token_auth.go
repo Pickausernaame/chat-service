@@ -15,7 +15,10 @@ import (
 
 //go:generate mockgen -source=$GOFILE -destination=mocks/introspector_mock.gen.go -package=middlewaresmocks Introspector
 
-const tokenCtxKey = "user-token"
+const (
+	tokenCtxKey     = "user-token"
+	websocketHeader = "Sec-WebSocket-Protocol"
+)
 
 var ErrNoRequiredResourceRole = errors.New("no required resource role")
 
@@ -26,54 +29,72 @@ type Introspector interface {
 // NewKeycloakTokenAuth returns a middleware that implements "active" authentication:
 // each request is verified by the Keycloak server.
 func NewKeycloakTokenAuth(introspector Introspector, resource, role string) echo.MiddlewareFunc {
-	return middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
-		KeyLookup:  "header:" + echo.HeaderAuthorization,
-		AuthScheme: "Bearer",
-		Validator: func(tokenStr string, eCtx echo.Context) (bool, error) {
-			res, err := introspector.IntrospectToken(eCtx.Request().Context(), tokenStr)
-			if err != nil {
-				return false, err
-			}
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
 
-			if !res.Active {
-				return false, errors.New("token is inactive")
+			if v := c.Request().Header.Get(websocketHeader); v != "" {
+				return middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+					KeyLookup: "header:" + websocketHeader + ":chat-service-protocol",
+					Validator: Validator(introspector, resource, role),
+				})(next)(c)
 			}
+			return middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+				KeyLookup:  "header:" + echo.HeaderAuthorization,
+				AuthScheme: "Bearer",
+				Validator:  Validator(introspector, resource, role),
+			})(next)(c)
+		}
+	}
+}
 
-			cl := &claims{}
-			token, _, err := new(jwt.Parser).ParseUnverified(tokenStr, cl)
-			if err != nil {
-				return false, fmt.Errorf("parsing token error: %v", err)
-			}
+func Validator(introspector Introspector, resource, role string) middleware.KeyAuthValidator {
+	return func(tokenStr string, eCtx echo.Context) (bool, error) {
+		if v := eCtx.Request().Header.Get(websocketHeader); v != "" {
+			tokenStr = tokenStr[2:]
+		}
+		res, err := introspector.IntrospectToken(eCtx.Request().Context(), tokenStr)
+		if err != nil {
+			return false, err
+		}
 
-			if err := cl.Valid(); err != nil {
-				return false, err
-			}
+		if !res.Active {
+			return false, errors.New("token is inactive")
+		}
 
-			data, ok := cl.AllowedResources[resource]
-			if !ok {
-				return false, ErrNoRequiredResourceRole
-			}
+		cl := &claims{}
+		token, _, err := new(jwt.Parser).ParseUnverified(tokenStr, cl)
+		if err != nil {
+			return false, fmt.Errorf("parsing token error: %v", err)
+		}
 
-			roles, ok := data["roles"]
-			if !ok {
-				return false, ErrNoRequiredResourceRole
-			}
-			ok = false
-			for _, r := range roles {
-				if r == role {
-					ok = true
-					break
-				}
-			}
+		if err := cl.Valid(); err != nil {
+			return false, err
+		}
 
-			if !ok {
-				return false, ErrNoRequiredResourceRole
-			}
+		data, ok := cl.AllowedResources[resource]
+		if !ok {
+			return false, ErrNoRequiredResourceRole
+		}
 
-			eCtx.Set(tokenCtxKey, token)
-			return true, nil
-		},
-	})
+		roles, ok := data["roles"]
+		if !ok {
+			return false, ErrNoRequiredResourceRole
+		}
+		ok = false
+		for _, r := range roles {
+			if r == role {
+				ok = true
+				break
+			}
+		}
+
+		if !ok {
+			return false, ErrNoRequiredResourceRole
+		}
+
+		eCtx.Set(tokenCtxKey, token)
+		return true, nil
+	}
 }
 
 func MustUserID(eCtx echo.Context) types.UserID {
