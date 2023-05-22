@@ -40,10 +40,10 @@ func NewUpgrader(allowOrigins []string, secWsProtocol string) Upgrader {
 			}
 			return false
 		},
-		HandshakeTimeout: time.Second * 30,
-		//ReadBufferSize:  3000 * 4 * 2,
-		//WriteBufferSize: 3000 * 4 * 2,
-		Subprotocols: []string{secWsProtocol},
+		HandshakeTimeout: time.Second * 10,
+		ReadBufferSize:   3000 * 4 * 2,
+		WriteBufferSize:  3000 * 4 * 2,
+		Subprotocols:     []string{secWsProtocol},
 	}
 	return &upgraderImpl{
 		upgrader: upgrader,
