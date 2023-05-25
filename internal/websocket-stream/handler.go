@@ -110,7 +110,7 @@ func (h *HTTPHandler) writeLoop(ctx context.Context, ws Websocket, events <-chan
 		case <-ctx.Done():
 			return nil
 		case e := <-events:
-			h.lg.Info("income event", zap.Any("event", e))
+			h.lg.Debug("income event", zap.Any("event", e))
 			err := ws.SetWriteDeadline(time.Now().Add(writeTimeout))
 			if err != nil {
 				return fmt.Errorf("setting write deadline for event: %v", err)
