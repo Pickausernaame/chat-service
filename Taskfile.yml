@@ -38,6 +38,9 @@ vars:
   CLIENT_V1_PKG: clientv1
   E2E_CLIENT_V1_DST: ./tests/e2e/api/client/v1/client.gen.go
   E2E_CLIENT_V1_PKG: apiclientv1
+  CLIENT_EVENTS_SRC: ./api/client.events.swagger.yml
+  CLIENT_EVENTS_DST: ./internal/server-client/events/events.gen.go
+  CLIENT_EVENTS_PKG: clientevents
 
 tasks:
   default:
@@ -146,6 +149,8 @@ tasks:
       - oapi-codegen --old-config-style -templates oapi-templates/ -generate server,types,spec -package clientv1 ./api/client.v1.swagger.yml > ./internal/server-client/v1/server.gen.go
       - echo "Generate manager server..."
       - oapi-codegen --old-config-style -templates oapi-templates/ -generate server,types,spec -package managerv1 ./api/manager.v1.swagger.yml > ./internal/server-manager/v1/server.gen.go
+      - echo "Generate client events..."
+      - oapi-codegen --old-config-style -generate skip-prune,types,spec -package {{.CLIENT_EVENTS_PKG}} {{.CLIENT_EVENTS_SRC}} > {{.CLIENT_EVENTS_DST}}
 
 
   gen:e2e:

@@ -21,12 +21,15 @@ import (
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
 	problemsrepo "github.com/Pickausernaame/chat-service/internal/repositories/problems"
 	serverdebug "github.com/Pickausernaame/chat-service/internal/server-debug"
+	eventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream"
+	inmemeventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream/in-mem"
 	managerload "github.com/Pickausernaame/chat-service/internal/services/manager-load"
 	inmemmanagerpool "github.com/Pickausernaame/chat-service/internal/services/manager-pool/in-mem"
 	msgproducer "github.com/Pickausernaame/chat-service/internal/services/msg-producer"
 	"github.com/Pickausernaame/chat-service/internal/services/outbox"
 	sendclientmessagejob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/send-client-message"
 	"github.com/Pickausernaame/chat-service/internal/store"
+	"github.com/Pickausernaame/chat-service/internal/types"
 )
 
 var configPath = flag.String("с", "configs/config.toml", "Path to config file")
@@ -35,6 +38,10 @@ func main() {
 	if err := run(); err != nil {
 		log.Fatalf("run app: %v", err)
 	}
+}
+
+type eventSubscriber interface {
+	Subscribe(ctx context.Context, userID types.UserID) (<-chan eventstream.Event, error)
 }
 
 func run() (errReturned error) {
@@ -122,8 +129,9 @@ func run() (errReturned error) {
 		return fmt.Errorf("init outbox service: %v", err)
 	}
 
+	eventStream := inmemeventstream.New()
 	// initialization sendMsg job
-	sendMsgJob, err := sendclientmessagejob.New(sendclientmessagejob.NewOptions(msgProdService, msgRepo))
+	sendMsgJob, err := sendclientmessagejob.New(sendclientmessagejob.NewOptions(msgProdService, msgRepo, eventStream))
 	if err != nil {
 		return fmt.Errorf("init send msg job: %v", err)
 	}
@@ -150,13 +158,13 @@ func run() (errReturned error) {
 	}
 
 	// initialization client server
-	srvClient, err := initServerClient(cfg, kc, msgRepo, chatRepo, problemRepo, db, obox)
+	srvClient, err := initServerClient(cfg, kc, msgRepo, chatRepo, problemRepo, db, obox, eventStream)
 	if err != nil {
 		return fmt.Errorf("init server client: %v", err)
 	}
 
 	// initialization manager server
-	srvManager, err := initServerManager(cfg, kc, manLoadService, manPoolService)
+	srvManager, err := initServerManager(cfg, kc, manLoadService, manPoolService, eventStream)
 	if err != nil {
 		return fmt.Errorf("init server manager: %v", err)
 	}

@@ -33,6 +33,7 @@ func initServerClient(
 	problemRepo *problemsrepo.Repo,
 	txtr Transactor,
 	outbox *outbox.Service,
+	subscriber eventSubscriber,
 ) (*server.Server, error) {
 	// getting specification
 	v1Swagger, err := clientv1.GetSwagger()
@@ -77,6 +78,7 @@ func initServerClient(
 			cfg.Servers.Client.RequiredAccess.Resource,
 			cfg.Servers.Client.RequiredAccess.Role,
 			cfg.Servers.Client.SecWsProtocol,
+			subscriber,
 			errHandler.Handle,
 		))
 	if err != nil {

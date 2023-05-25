@@ -17,7 +17,9 @@ import (
 
 	keycloakclient "github.com/Pickausernaame/chat-service/internal/clients/keycloak"
 	"github.com/Pickausernaame/chat-service/internal/middlewares"
-	"github.com/Pickausernaame/chat-service/internal/services/event-stream/dummy"
+	clientevents "github.com/Pickausernaame/chat-service/internal/server-client/events"
+	eventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream"
+	"github.com/Pickausernaame/chat-service/internal/types"
 	"github.com/Pickausernaame/chat-service/internal/validator"
 	websocketstream "github.com/Pickausernaame/chat-service/internal/websocket-stream"
 )
@@ -27,18 +29,23 @@ const (
 	shutdownTimeout   = 3 * time.Second
 )
 
+type eventStream interface {
+	Subscribe(ctx context.Context, userID types.UserID) (<-chan eventstream.Event, error)
+}
+
 //go:generate options-gen -out-filename=server_options.gen.go -from-struct=Options
 type Options struct {
-	serverName     string                 `option:"mandatory" validate:"required"`
-	addr           string                 `option:"mandatory" validate:"required,hostname_port"`
-	allowOrigins   []string               `option:"mandatory" validate:"min=1"`
-	v1Swagger      *openapi3.T            `option:"mandatory" validate:"required"`
-	reg            func(v *echo.Group)    `option:"mandatory" validate:"required"`
-	keycloakClient *keycloakclient.Client `option:"mandatory" validate:"required"`
-	resource       string                 `option:"mandatory" validate:"required"`
-	role           string                 `option:"mandatory" validate:"required"`
-	secWsProtocol  string                 `option:"mandatory" validate:"required"`
-	errHandler     echo.HTTPErrorHandler  `option:"mandatory" validate:"required"`
+	serverName      string                 `option:"mandatory" validate:"required"`
+	addr            string                 `option:"mandatory" validate:"required,hostname_port"`
+	allowOrigins    []string               `option:"mandatory" validate:"min=1"`
+	v1Swagger       *openapi3.T            `option:"mandatory" validate:"required"`
+	reg             func(v *echo.Group)    `option:"mandatory" validate:"required"`
+	keycloakClient  *keycloakclient.Client `option:"mandatory" validate:"required"`
+	resource        string                 `option:"mandatory" validate:"required"`
+	role            string                 `option:"mandatory" validate:"required"`
+	secWsProtocol   string                 `option:"mandatory" validate:"required"`
+	eventSubscriber eventStream            `option:"mandatory" validate:"required"`
+	errHandler      echo.HTTPErrorHandler  `option:"mandatory" validate:"required"`
 }
 
 type Server struct {
@@ -86,8 +93,8 @@ func New(opts Options) (*Server, error) {
 
 	wsHandler, err := websocketstream.NewHTTPHandler(
 		websocketstream.NewOptions(
-			dummy.DummyEventStream{},
-			websocketstream.DummyAdapter{},
+			opts.eventSubscriber,
+			clientevents.Adapter{},
 			websocketstream.JSONEventWriter{},
 			websocketstream.NewUpgrader(opts.allowOrigins, opts.secWsProtocol),
 			shutdownCh))

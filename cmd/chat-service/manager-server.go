@@ -25,6 +25,7 @@ func initServerManager(
 	keycloakClient *keycloakclient.Client,
 	managerLoadService *manager_load.Service,
 	managerPool managerpool.Pool,
+	subscriber eventSubscriber,
 ) (*server.Server, error) {
 	// getting specification
 	v1Swagger, err := managerv1.GetSwagger()
@@ -73,6 +74,7 @@ func initServerManager(
 			cfg.Servers.Manager.RequiredAccess.Resource,
 			cfg.Servers.Manager.RequiredAccess.Role,
 			cfg.Servers.Manager.SecWsProtocol,
+			subscriber,
 			errHandler.Handle,
 		))
 	if err != nil {

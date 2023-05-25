@@ -93,7 +93,7 @@ func (w *Worker) Run(ctx context.Context) {
 					if nil == err {
 						break
 					}
-
+					w.lg.Error("executing job error", zap.Error(err), zap.Any("job", jobMeta))
 					jobMeta.Attempts++
 					if j.MaxAttempts() < jobMeta.Attempts {
 						err = fmt.Errorf("attempts limit exceeded. job = %q attempts=%d", jobMeta.ID, jobMeta.Attempts)

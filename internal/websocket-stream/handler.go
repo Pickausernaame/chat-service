@@ -110,6 +110,7 @@ func (h *HTTPHandler) writeLoop(ctx context.Context, ws Websocket, events <-chan
 		case <-ctx.Done():
 			return nil
 		case e := <-events:
+			h.lg.Info("income event", zap.Any("event", e))
 			err := ws.SetWriteDeadline(time.Now().Add(writeTimeout))
 			if err != nil {
 				return fmt.Errorf("setting write deadline for event: %v", err)
@@ -120,7 +121,12 @@ func (h *HTTPHandler) writeLoop(ctx context.Context, ws Websocket, events <-chan
 				return fmt.Errorf("getting next writer: %v", err)
 			}
 
-			if err = h.eventWriter.Write(e, wr); err != nil {
+			res, err := h.eventAdapter.Adapt(e)
+			if err != nil {
+				return fmt.Errorf("adapting event: %v", err)
+			}
+
+			if err = h.eventWriter.Write(res, wr); err != nil {
 				return fmt.Errorf("writing message: %v", err)
 			}
 		case <-ticker.C:

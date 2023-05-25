@@ -49,7 +49,6 @@ func (s *Service) Subscribe(ctx context.Context, userID types.UserID) (<-chan ev
 			delete(s.subs[userID], ch)
 			close(ch)
 		}
-
 	}()
 
 	return ch, nil
