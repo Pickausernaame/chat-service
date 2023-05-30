@@ -21,6 +21,7 @@ vars:
     ./deploy/local/docker-compose.yaml
     ./deploy/local/docker-compose.sentry.yaml
     ./deploy/local/docker-compose.swagger-ui.yaml
+    ./deploy/local/docker-compose.kafka-ui.yaml
   TYPES: |
     ChatID
     MessageID
@@ -38,6 +39,8 @@ vars:
   CLIENT_V1_PKG: clientv1
   E2E_CLIENT_V1_DST: ./tests/e2e/api/client/v1/client.gen.go
   E2E_CLIENT_V1_PKG: apiclientv1
+  E2E_CLIENT_EVENTS_DST: ./tests/e2e/api/client/events/events.gen.go
+  E2E_CLIENT_EVENTS_PKG: apiclientevents
   CLIENT_EVENTS_SRC: ./api/client.events.swagger.yml
   CLIENT_EVENTS_DST: ./internal/server-client/events/events.gen.go
   CLIENT_EVENTS_PKG: clientevents
@@ -102,20 +105,22 @@ tasks:
       - echo "- Tests"
       - go test -tags integration -race ./...
 
+
   tests:e2e:
-    env:
-      E2E_CLIENT_V1_API_ENDPOINT: http://localhost:8080/v1
-      E2E_KEYCLOAK_BASE_PATH: http://localhost:3010
-      E2E_KEYCLOAK_REALM: Bank
-      E2E_KEYCLOAK_CLIENT_ID: e2e-testing
-      E2E_KEYCLOAK_CLIENT_SECRET: BVg0D8oeOQfGgQVvQMKeMtezvl4WvA4D
-      E2E_KEYCLOAK_CLIENTS: e2e-user,e2e-user2
-      E2E_KEYCLOAK_CLIENT_DEBUG: false
-    cmds:
-      - echo "- End-to-end tests..."
-      # NOTE: It's important to run tests serial (without `-p` flag) – for correct `clientsPool` sharing.
-      - "ginkgo --fail-fast --timeout=1m --tags e2e {{.CLI_ARGS}} ./tests/e2e"
-  
+      env:
+        E2E_CLIENT_V1_API_ENDPOINT: http://localhost:8080/v1
+        E2E_CLIENT_WS_ENDPOINT: ws://localhost:8080/ws
+        E2E_CLIENT_WS_SEC_PROTOCOL: chat-service-protocol
+        E2E_CLIENT_WS_ORIGIN: http://localhost:3000 # Emulate client UI.
+        E2E_KEYCLOAK_BASE_PATH: http://localhost:3010
+        E2E_KEYCLOAK_REALM: Bank
+        E2E_KEYCLOAK_CLIENT_ID: e2e-testing                              # <- FIXME
+        E2E_KEYCLOAK_CLIENT_SECRET: your-secret                          # <- FIXME
+        E2E_KEYCLOAK_CLIENT_DEBUG: false
+        E2E_KEYCLOAK_CLIENTS: e2e_client_0,e2e_client_1,e2e_client_2     # <- FIXME
+      cmds:
+        - echo "- End-to-end tests..."
+        - "ginkgo --fail-fast --timeout=1m --tags e2e {{.CLI_ARGS}} ./tests/e2e"
 
   build:
     cmds:
@@ -154,9 +159,12 @@ tasks:
 
 
   gen:e2e:
-    cmds:
-      - echo "[E2E] Generate client API..."
-      - oapi-codegen --old-config-style -generate types,client -package {{.E2E_CLIENT_V1_PKG}} {{.CLIENT_V1_SRC}} > {{.E2E_CLIENT_V1_DST}}
+    - echo "[E2E] Generate client API..."
+    - oapi-codegen --old-config-style -generate types,client -package {{.E2E_CLIENT_V1_PKG}} {{.CLIENT_V1_SRC}} > {{.E2E_CLIENT_V1_DST}}
+
+    - echo "[E2E] Generate client events..."
+    - oapi-codegen --old-config-style -generate skip-prune,types -package {{.E2E_CLIENT_EVENTS_PKG}} {{.CLIENT_EVENTS_SRC}} > {{.E2E_CLIENT_EVENTS_DST}}
+
 
   ent:new:
     cmds:

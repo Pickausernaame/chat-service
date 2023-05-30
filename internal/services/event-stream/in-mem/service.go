@@ -70,8 +70,8 @@ func (s *Service) Publish(_ context.Context, userID types.UserID, event eventstr
 			eventChan <- event
 			// кажется, что если не важен порядок, то можно отправлять эвенты в так же в горутине
 			// чтобы другие подписчики не ждали
-			//eventChan := eventChan
-			//go func() {
+			// eventChan := eventChan
+			// go func() {
 			//	eventChan <- event
 			//}()
 		}

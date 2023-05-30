@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// Matches checks if the actual event matches the expected event, ignoring the EventID field
+// Matches checks if the actual event matches the expected event, ignoring the EventID field.
 func (m *NewMessageEvent) Matches(x interface{}) bool {
 	actualEvent, ok := x.(*NewMessageEvent)
 	if !ok {

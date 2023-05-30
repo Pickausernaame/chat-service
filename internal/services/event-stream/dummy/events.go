@@ -7,9 +7,9 @@ import (
 	"github.com/Pickausernaame/chat-service/internal/types"
 )
 
-type DummyEventStream struct{}
+type EventStream struct{}
 
-func (DummyEventStream) Subscribe(ctx context.Context, _ types.UserID) (<-chan eventstream.Event, error) {
+func (EventStream) Subscribe(ctx context.Context, _ types.UserID) (<-chan eventstream.Event, error) {
 	events := make(chan eventstream.Event)
 	go func() {
 		defer close(events)

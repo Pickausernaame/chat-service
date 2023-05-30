@@ -103,7 +103,7 @@ func New(opts Options) (*Server, error) {
 	}
 
 	e.GET("/ws", func(eCtx echo.Context) error {
-		wsHandler.Serve(eCtx)
+		_ = wsHandler.Serve(eCtx)
 		return nil
 	})
 

@@ -54,9 +54,36 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_CREATE_TOPICS: "chat.messages:16:1"
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_CREATE_TOPICS: "chat.messages:16:1,afc.msg-verdicts:16:1,afc.msg-verdicts.dlq:1:1"
+      #KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
 
+  afc_emulator:
+    image: antonboom/writing-go-service.afc
+    depends_on:
+      - kafka
+    restart: on-failure
+    environment:
+      AFC_LOG_LEVEL: "DEBUG"
+      AFC_BROKER_ADDR: "kafka:29092"
+      AFC_MESSAGES_TOPIC: "chat.messages"
+      AFC_VERDICTS_TOPIC: "afc.msg-verdicts"
+      AFC_MSG_DECRYPTION_KEY: "73367639792442264529482B4D625165"
+      AFC_VERDICTS_SIGN_PRIVATE_KEY: |
+        -----BEGIN RSA PRIVATE KEY-----
+        MIICWgIBAAKBgEmpZJXuAn7fTOrEyxCaa5NBKWd+KMFmLaPmTc5nAeP8AL+wgcVf
+        fLtAm/ouA9DP+HN0sl+01subAz+r5AvXrIoALGk/ltXOwIT9DdAe+8HhRZyAhpKU
+        qkwI0TS1RK54lDg0v5QQJD2c+4cUA0umAhD53Qc9KPiLEpexQ09tQaa1AgMBAAEC
+        gYALhnN0ee7uBuYz/WKAUIjwW0utI7IgwGn3sPsPhlJnZ3B+jZFgXlZXvf4poLV8
+        IG4RMnsOOm85ICHb/nsJ107phZeqLVYUPubN/16o1E0OZ1z28N/ZZhsJ9JVcA+eI
+        0C6G0VwPyWjve+8mE0Fz/GdopT5vTiIanbdAsYF9QoAEKQJBAJLj9uEF2fzf/fG1
+        8y+bktueywrCTn6cqEzbKLjNVuvNJJV91EUOnVROqzTc+70j1uj6G0vACJbZV/Kx
+        aM9uTOMCQQCAYJHNKKMESCnRQZaoOdGKFhvDMOkclVo+f/F9ppwDbpKZ8S5BZ5d5
+        ZI63kMkY96pyLSgL8DvOB3Tz5HgEmmmHAkBtMhhiGWZ+jMkL+ZWpy34102rfOaj+
+        iFi4oac5EjTOoDbVBrBZEc81UDIH30soxM7LbLoD6uK3uSSfHvFqWnW/AkBGfL+R
+        dg6L+1N6ohimpZh3yUvVELXuC9NRHc7qvuBKwhuciuBq6QYykRQLlmPUYagkqMak
+        R3OO3GlKwNdlL6NhAkA0pwt/dxBH+1/UYG10M6Zo9g4IQBmaT/MFh9AUiCTcwSKE
+        jbETIXbkoM8S1HmyhaD/xwMUjp7p0CivDNZYDFdK
+        -----END RSA PRIVATE KEY-----
 
 volumes:
   postgresql-data:

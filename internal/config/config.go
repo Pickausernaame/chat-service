@@ -80,9 +80,10 @@ type PSQLClientConfig struct {
 }
 
 type ServiceConfig struct {
-	MsgSender   MsgSenderServiceConfig   `toml:"msg_producer"`
-	Outbox      OutboxServiceConfig      `toml:"outbox"`
-	ManagerLoad ManagerLoadServiceConfig `toml:"manager_load"`
+	MsgSender           MsgSenderServiceConfig            `toml:"msg_producer"`
+	Outbox              OutboxServiceConfig               `toml:"outbox"`
+	ManagerLoad         ManagerLoadServiceConfig          `toml:"manager_load"`
+	AvcVerdictProcessor AfcVerdictsProcessorServiceConfig `toml:"afc_verdicts_processor"`
 }
 
 type MsgSenderServiceConfig struct {
@@ -100,4 +101,20 @@ type OutboxServiceConfig struct {
 
 type ManagerLoadServiceConfig struct {
 	MaxProblemsAtSameTime int `toml:"max_problems_at_same_time" validate:"required,min=1"`
+}
+
+type MsgProducerServiceConfig struct {
+	Brokers    []string `toml:"brokers" validate:"required,min=1"`
+	Topic      string   `toml:"topic" validate:"required"`
+	BatchSize  int      `toml:"batch_size" validate:"required,min=1"`
+	EncryptKey string   `toml:"encrypt_key"`
+}
+
+type AfcVerdictsProcessorServiceConfig struct {
+	Brokers       []string `toml:"brokers" validate:"required,min=1"`
+	Consumers     int      `toml:"consumers" validate:"required,min=1"`
+	ConsumerGroup string   `toml:"consumer_group" validate:"required"`
+	VerdictsTopic string   `toml:"verdicts_topic" validate:"required"`
+	DlqTopic      string   `toml:"dlq_topic" validate:"required"`
+	EncryptKey    string   `toml:"verdicts_signing_public_key"`
 }

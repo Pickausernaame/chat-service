@@ -55,12 +55,12 @@ func NewNewMessageEvent(eventID types.EventID,
 	}
 }
 
-func (e *NewMessageEvent) Validate() error {
-	return validator.Validator.Struct(e)
+func (m *NewMessageEvent) Validate() error {
+	return validator.Validator.Struct(m)
 }
 
-func (e *NewMessageEvent) Type() string {
-	return e.EventType
+func (m *NewMessageEvent) Type() string {
+	return m.EventType
 }
 
 type MessageSentEvent struct {
@@ -90,5 +90,35 @@ func (e *MessageSentEvent) Validate() error {
 }
 
 func (e *MessageSentEvent) Type() string {
+	return e.EventType
+}
+
+type MessageBlockedEvent struct {
+	event
+	EventType string
+	EventID   types.EventID   `validate:"required"`
+	RequestID types.RequestID `validate:"required"`
+	MessageID types.MessageID `validate:"required"`
+}
+
+func NewMessageBlockedEvent(
+	eventID types.EventID,
+	requestID types.RequestID,
+	messageID types.MessageID,
+) *MessageBlockedEvent {
+	return &MessageBlockedEvent{
+		event:     event{},
+		EventID:   eventID,
+		RequestID: requestID,
+		MessageID: messageID,
+		EventType: EventTypeMessageSentEvent,
+	}
+}
+
+func (e *MessageBlockedEvent) Validate() error {
+	return validator.Validator.Struct(e)
+}
+
+func (e *MessageBlockedEvent) Type() string {
 	return e.EventType
 }
