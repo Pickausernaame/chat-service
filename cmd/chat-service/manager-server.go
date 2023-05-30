@@ -25,8 +25,6 @@ func initServerManager(
 	managerPool managerpool.Pool,
 	subscriber eventSubscriber,
 ) (*server.Server, error) {
-	lg := zap.L().Named(nameServerManager)
-
 	// getting specification
 	v1Swagger, err := managerv1.GetSwagger()
 	if err != nil {

@@ -232,7 +232,6 @@ func (c *Chat) HandleEvent(_ context.Context, data []byte) error {
 			return fmt.Errorf("unmarshal event: %v", err)
 		}
 
-		//apiclientevents.NewMessageEvent
 		msg := &Message{
 			ID:        pointer.Indirect(vv.MessageId),
 			Body:      pointer.Indirect(vv.Body),

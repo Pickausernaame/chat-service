@@ -73,7 +73,7 @@ func (s *Service) Publish(_ context.Context, userID types.UserID, event eventstr
 			// eventChan := eventChan
 			// go func() {
 			//	eventChan <- event
-			//}()
+			// }()
 		}
 	}
 
