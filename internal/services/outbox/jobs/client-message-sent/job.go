@@ -3,7 +3,6 @@ package clientmessagesentjob
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"go.uber.org/zap"
 
@@ -32,6 +31,7 @@ type Options struct {
 type Job struct {
 	Options
 	lg *zap.Logger
+	outbox.DefaultJob
 }
 
 func New(opts Options) (*Job, error) {
@@ -64,21 +64,5 @@ func (j *Job) Handle(ctx context.Context, payload string) error {
 		return fmt.Errorf("publishing event: %v", err)
 	}
 
-	//newMessageEv := eventstream.NewNewMessageEvent(types.NewEventID(), msg.InitialRequestID,
-	//	msg.ChatID, msg.ID, msg.AuthorID, msg.CreatedAt, msg.Body, msg.IsService)
-	//
-	//err = j.eventStream.Publish(ctx, msg.AuthorID, newMessageEv)
-	//if err != nil {
-	//	return fmt.Errorf("publishing event: %v", err)
-	//}
-
 	return nil
-}
-
-func (j *Job) ExecutionTimeout() time.Duration {
-	return outbox.DefaultJob{}.ExecutionTimeout()
-}
-
-func (j *Job) MaxAttempts() int {
-	return outbox.DefaultJob{}.MaxAttempts()
 }

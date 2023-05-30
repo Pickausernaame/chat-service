@@ -3,7 +3,6 @@ package clientmessageblockedjob
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"go.uber.org/zap"
 
@@ -34,6 +33,7 @@ type Options struct {
 type Job struct {
 	Options
 	lg *zap.Logger
+	outbox.DefaultJob
 }
 
 func New(opts Options) (*Job, error) {
@@ -67,12 +67,4 @@ func (j *Job) Handle(ctx context.Context, payload string) error {
 	}
 
 	return nil
-}
-
-func (j *Job) ExecutionTimeout() time.Duration {
-	return outbox.DefaultJob{}.ExecutionTimeout()
-}
-
-func (j *Job) MaxAttempts() int {
-	return outbox.DefaultJob{}.MaxAttempts()
 }
