@@ -43,7 +43,7 @@ func (h Handlers) PostFreeHands(eCtx echo.Context, params PostFreeHandsParams) e
 	})
 	if err != nil {
 		if errors.Is(err, setreadyreceiveproblems.ErrManagerOverload) {
-			return srverr.NewServerError(5000, "invalid cursor", err)
+			return srverr.NewServerError(int(ErrorCodeManagerOverloadedError), "manager overload", err)
 		}
 		return err
 	}

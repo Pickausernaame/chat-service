@@ -180,6 +180,15 @@ func run() (errReturned error) {
 		return fmt.Errorf("wait app stop: %v", err)
 	}
 
+	// close
+	if err := msgProdService.Close(); err != nil {
+		zap.L().Error("closing msgProdService error", zap.Error(err))
+	}
+
+	if err := kw.Close(); err != nil {
+		zap.L().Error("closing kafka writer error", zap.Error(err))
+	}
+
 	return nil
 }
 

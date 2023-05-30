@@ -17,13 +17,15 @@ import (
 	setreadyreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/set-ready-receive-problems"
 )
 
+const nameServerManager = "server-manager"
+
 func initServerManager(
 	cfg config.Config,
 	keycloakClient *keycloakclient.Client,
 	managerLoadService *manager_load.Service,
 	managerPool managerpool.Pool,
 ) (*server.Server, error) {
-	lg := zap.L().Named(nameServerClient)
+	lg := zap.L().Named(nameServerManager)
 
 	// getting specification
 	v1Swagger, err := managerv1.GetSwagger()
