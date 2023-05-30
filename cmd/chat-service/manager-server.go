@@ -16,9 +16,7 @@ import (
 	setreadyreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/set-ready-receive-problems"
 )
 
-const (
-	nameServerManager = "server-client"
-)
+const nameServerManager = "server-manager"
 
 func initServerManager(
 	cfg config.Config,
@@ -27,6 +25,8 @@ func initServerManager(
 	managerPool managerpool.Pool,
 	subscriber eventSubscriber,
 ) (*server.Server, error) {
+	lg := zap.L().Named(nameServerManager)
+
 	// getting specification
 	v1Swagger, err := managerv1.GetSwagger()
 	if err != nil {

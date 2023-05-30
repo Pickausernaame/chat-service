@@ -36,7 +36,7 @@ type Options struct {
 }
 
 type Service struct {
-	workers  []*Worker
+	workers  []*worker
 	reg      *registry
 	jobsRepo jobsRepository
 	lg       *zap.Logger

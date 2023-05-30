@@ -3,7 +3,6 @@ package sendclientmessagejob
 import (
 	"context"
 	"fmt"
-	"time"
 
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
 	eventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream"
@@ -37,6 +36,7 @@ type Options struct {
 
 type Job struct {
 	Options
+	outbox.DefaultJob
 }
 
 func New(opts Options) (*Job, error) {
@@ -44,7 +44,7 @@ func New(opts Options) (*Job, error) {
 		return nil, fmt.Errorf("validations opts: %v", err)
 	}
 
-	return &Job{opts}, nil
+	return &Job{Options: opts}, nil
 }
 
 func (j *Job) Name() string {
@@ -81,12 +81,4 @@ func (j *Job) Handle(ctx context.Context, payload string) error {
 	}
 
 	return nil
-}
-
-func (j *Job) ExecutionTimeout() time.Duration {
-	return outbox.DefaultJob{}.ExecutionTimeout()
-}
-
-func (j *Job) MaxAttempts() int {
-	return outbox.DefaultJob{}.MaxAttempts()
 }
