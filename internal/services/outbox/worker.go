@@ -26,25 +26,25 @@ type WorkerOptions struct {
 	txtr     transactor     `option:"mandatory" validate:"required"`
 }
 
-type Worker struct {
+type worker struct {
 	WorkerOptions
 	lg *zap.Logger
 }
 
-func newWorkers(options WorkerOptions, count int) ([]*Worker, error) {
+func newWorkers(options WorkerOptions, count int) ([]*worker, error) {
 	err := options.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("creating worker: %v", err)
 	}
-	res := make([]*Worker, 0, count)
+	res := make([]*worker, 0, count)
 	for i := 0; i < count; i++ {
-		res = append(res, &Worker{WorkerOptions: options, lg: zap.L().Named(fmt.Sprintf("outbox-worker-%d", i))})
+		res = append(res, &worker{WorkerOptions: options, lg: zap.L().Named(fmt.Sprintf("outbox-worker-%d", i))})
 	}
 
 	return res, nil
 }
 
-func (w *Worker) Run(ctx context.Context) {
+func (w *worker) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -113,7 +113,7 @@ func (w *Worker) Run(ctx context.Context) {
 // postJobProcessing - it is post job processing
 // if job exists - delete it
 // if error exists - mark this job like failed.
-func (w *Worker) postJobProcessing(ctx context.Context, jobMeta jobsrepo.Job, jobProcessingErr error) error {
+func (w *worker) postJobProcessing(ctx context.Context, jobMeta jobsrepo.Job, jobProcessingErr error) error {
 	//nolint:nestif
 	if jobMeta.Name != "" || jobProcessingErr != nil {
 		err := w.txtr.RunInTx(ctx, func(ctx context.Context) error {

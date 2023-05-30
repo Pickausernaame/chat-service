@@ -26,7 +26,7 @@ const findAndReserveJobQuery = `WITH cte AS (
     AND (reserved_until < NOW() OR reserved_until IS NULL)
     AND attempts < $1
   LIMIT 1
-  FOR UPDATE
+  FOR UPDATE SKIP LOCKED
 )
 UPDATE jobs
 SET attempts = attempts + 1,

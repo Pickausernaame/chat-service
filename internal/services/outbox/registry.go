@@ -3,24 +3,19 @@ package outbox
 import (
 	"errors"
 	"fmt"
-	"sync"
 )
 
 type registry struct {
-	mtx         sync.RWMutex
 	jobRegistry map[string]Job
 }
 
 func newRegistry() *registry {
 	return &registry{
-		mtx:         sync.RWMutex{},
 		jobRegistry: map[string]Job{},
 	}
 }
 
 func (r *registry) set(job Job) error {
-	r.mtx.Lock()
-	defer r.mtx.Unlock()
 	if _, ok := r.jobRegistry[job.Name()]; ok {
 		return errors.New("job with same name already exists")
 	}
@@ -29,8 +24,6 @@ func (r *registry) set(job Job) error {
 }
 
 func (r *registry) get(name string) (Job, error) {
-	r.mtx.RLock()
-	defer r.mtx.RUnlock()
 	if _, ok := r.jobRegistry[name]; !ok {
 		return nil, fmt.Errorf("job with name %q does not exists", name)
 	}
