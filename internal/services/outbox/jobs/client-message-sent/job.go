@@ -64,13 +64,13 @@ func (j *Job) Handle(ctx context.Context, payload string) error {
 		return fmt.Errorf("publishing event: %v", err)
 	}
 
-	newMessageEv := eventstream.NewNewMessageEvent(types.NewEventID(), msg.InitialRequestID,
-		msg.ChatID, msg.ID, msg.AuthorID, msg.CreatedAt, msg.Body, msg.IsService)
-
-	err = j.eventStream.Publish(ctx, msg.AuthorID, newMessageEv)
-	if err != nil {
-		return fmt.Errorf("publishing event: %v", err)
-	}
+	//newMessageEv := eventstream.NewNewMessageEvent(types.NewEventID(), msg.InitialRequestID,
+	//	msg.ChatID, msg.ID, msg.AuthorID, msg.CreatedAt, msg.Body, msg.IsService)
+	//
+	//err = j.eventStream.Publish(ctx, msg.AuthorID, newMessageEv)
+	//if err != nil {
+	//	return fmt.Errorf("publishing event: %v", err)
+	//}
 
 	return nil
 }

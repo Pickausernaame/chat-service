@@ -114,10 +114,10 @@ tasks:
         E2E_CLIENT_WS_ORIGIN: http://localhost:3000 # Emulate client UI.
         E2E_KEYCLOAK_BASE_PATH: http://localhost:3010
         E2E_KEYCLOAK_REALM: Bank
-        E2E_KEYCLOAK_CLIENT_ID: e2e-testing                              # <- FIXME
-        E2E_KEYCLOAK_CLIENT_SECRET: your-secret                          # <- FIXME
+        E2E_KEYCLOAK_CLIENT_ID: e2e-testing
+        E2E_KEYCLOAK_CLIENT_SECRET: BVg0D8oeOQfGgQVvQMKeMtezvl4WvA4D
         E2E_KEYCLOAK_CLIENT_DEBUG: false
-        E2E_KEYCLOAK_CLIENTS: e2e_client_0,e2e_client_1,e2e_client_2     # <- FIXME
+        E2E_KEYCLOAK_CLIENTS: e2e-user,e2e-user1,e2e-user2
       cmds:
         - echo "- End-to-end tests..."
         - "ginkgo --fail-fast --timeout=1m --tags e2e {{.CLI_ARGS}} ./tests/e2e"

@@ -10,6 +10,7 @@ import (
 
 	"github.com/onsi/ginkgo/v2"
 
+	eventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream"
 	"github.com/Pickausernaame/chat-service/internal/types"
 	"github.com/Pickausernaame/chat-service/pkg/pointer"
 	apiclientevents "github.com/Pickausernaame/chat-service/tests/e2e/api/client/events"
@@ -215,13 +216,23 @@ func (c *Chat) SendMessage(ctx context.Context, body string, opts ...SendMessage
 func (c *Chat) HandleEvent(_ context.Context, data []byte) error {
 	ginkgo.GinkgoWriter.Println("chat client: new event: ", string(data))
 
-	var event any
-	if err := json.Unmarshal(data, &event); err != nil {
+	type EventType struct {
+		EventType string `json:"eventType"`
+	}
+
+	eType := &EventType{}
+	if err := json.Unmarshal(data, eType); err != nil {
 		return fmt.Errorf("unmarshal event: %v", err)
 	}
 
-	switch vv := event.(type) {
-	case apiclientevents.NewMessageEvent:
+	switch eType.EventType {
+	case eventstream.EventTypeNewMessageEvent:
+		vv := &apiclientevents.NewMessageEvent{}
+		if err := json.Unmarshal(data, vv); err != nil {
+			return fmt.Errorf("unmarshal event: %v", err)
+		}
+
+		//apiclientevents.NewMessageEvent
 		msg := &Message{
 			ID:        pointer.Indirect(vv.MessageId),
 			Body:      pointer.Indirect(vv.Body),
@@ -234,7 +245,12 @@ func (c *Chat) HandleEvent(_ context.Context, data []byte) error {
 
 		c.addMessageToEnd(msg)
 
-	case apiclientevents.BaseEvent:
+	default:
+		vv := &apiclientevents.BaseEvent{}
+		if err := json.Unmarshal(data, vv); err != nil {
+			return fmt.Errorf("unmarshal event: %v", err)
+		}
+
 		c.msgMu.Lock()
 		defer c.msgMu.Unlock()
 

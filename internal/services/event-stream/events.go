@@ -111,7 +111,7 @@ func NewMessageBlockedEvent(
 		EventID:   eventID,
 		RequestID: requestID,
 		MessageID: messageID,
-		EventType: EventTypeMessageSentEvent,
+		EventType: EventTypeMessageBlockedEvent,
 	}
 }
 

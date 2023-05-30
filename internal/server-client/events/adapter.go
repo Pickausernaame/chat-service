@@ -20,6 +20,9 @@ func (Adapter) Adapt(ev eventstream.Event) (any, error) {
 	case eventstream.EventTypeMessageSentEvent:
 		res := ev.(*eventstream.MessageSentEvent)
 		return toMessageSentEvent(res), nil
+	case eventstream.EventTypeMessageBlockedEvent:
+		res := ev.(*eventstream.MessageBlockedEvent)
+		return toMessageBlockedEvent(res), nil
 	}
 	return nil, errors.New("invalid event")
 }
@@ -41,6 +44,15 @@ func toMessageSentEvent(ev *eventstream.MessageSentEvent) *MessageSentEvent {
 	return &MessageSentEvent{
 		EventId:   pointer.PtrWithZeroAsNil(ev.EventID),
 		EventType: pointer.PtrWithZeroAsNil(BaseEventEventTypeMessageSentEvent),
+		MessageId: pointer.PtrWithZeroAsNil(ev.MessageID),
+		RequestId: pointer.PtrWithZeroAsNil(ev.RequestID),
+	}
+}
+
+func toMessageBlockedEvent(ev *eventstream.MessageBlockedEvent) *MessageBlockedEvent {
+	return &MessageBlockedEvent{
+		EventId:   pointer.PtrWithZeroAsNil(ev.EventID),
+		EventType: pointer.PtrWithZeroAsNil(BaseEventEventTypeMessageBlockedEvent),
 		MessageId: pointer.PtrWithZeroAsNil(ev.MessageID),
 		RequestId: pointer.PtrWithZeroAsNil(ev.RequestID),
 	}
