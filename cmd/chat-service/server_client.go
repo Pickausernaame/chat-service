@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 
 	keycloakclient "github.com/Pickausernaame/chat-service/internal/clients/keycloak"
@@ -11,9 +12,10 @@ import (
 	chatsrepo "github.com/Pickausernaame/chat-service/internal/repositories/chats"
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
 	problemsrepo "github.com/Pickausernaame/chat-service/internal/repositories/problems"
-	serverclient "github.com/Pickausernaame/chat-service/internal/server-client"
-	"github.com/Pickausernaame/chat-service/internal/server-client/errhandler"
+	"github.com/Pickausernaame/chat-service/internal/server"
 	clientv1 "github.com/Pickausernaame/chat-service/internal/server-client/v1"
+	"github.com/Pickausernaame/chat-service/internal/server/errhandler"
+	"github.com/Pickausernaame/chat-service/internal/services/outbox"
 	gethistory "github.com/Pickausernaame/chat-service/internal/usecases/client/get-history"
 	sendmessage "github.com/Pickausernaame/chat-service/internal/usecases/client/send-message"
 )
@@ -31,7 +33,8 @@ func initServerClient(
 	chatRepo *chatsrepo.Repo,
 	problemRepo *problemsrepo.Repo,
 	txtr Transactor,
-) (*serverclient.Server, error) {
+	outbox *outbox.Service,
+) (*server.Server, error) {
 	lg := zap.L().Named(nameServerClient)
 
 	// getting specification
@@ -48,13 +51,13 @@ func initServerClient(
 
 	// creating useCases
 	// initialization getHistory useCase
-	getHistoryUC, err := gethistory.New(gethistory.NewOptions(msgRepo, gethistory.WithLg(lg)))
+	getHistoryUC, err := gethistory.New(gethistory.NewOptions(msgRepo))
 	if err != nil {
 		return nil, fmt.Errorf("init getHistory usecase: %v", err)
 	}
 
 	// initialization sendMessage useCase
-	sendMessageUC, err := sendmessage.New(sendmessage.NewOptions(chatRepo, msgRepo, problemRepo, txtr, sendmessage.WithLg(lg)))
+	sendMessageUC, err := sendmessage.New(sendmessage.NewOptions(chatRepo, msgRepo, outbox, problemRepo, txtr))
 	if err != nil {
 		return nil, fmt.Errorf("init sendMessage usecase: %v", err)
 	}
@@ -66,13 +69,13 @@ func initServerClient(
 	}
 
 	// initialization server
-	srv, err := serverclient.New(
-		serverclient.NewOptions(
+	srv, err := server.New(
+		server.NewOptions(
 			lg,
 			cfg.Servers.Client.Addr,
 			cfg.Servers.Client.AllowsOrigins,
 			v1Swagger,
-			v1Handlers,
+			func(router *echo.Group) { clientv1.RegisterHandlers(router, v1Handlers) },
 			keycloakClient,
 			cfg.Servers.Client.RequiredAccess.Resource,
 			cfg.Servers.Client.RequiredAccess.Role,

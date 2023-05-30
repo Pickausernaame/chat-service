@@ -252,3 +252,101 @@ func (t *RequestID) scan(v any) error {
 func (t RequestID) string() string {
 	return uuid.UUID(t).String()
 }
+
+type JobID uuid.UUID
+
+var JobIDNil JobID
+
+func NewJobID() JobID {
+	return JobID(uuid.New())
+}
+
+func (t JobID) IsZero() bool { return t.isZero() }
+
+func (t JobID) MarshalText() ([]byte, error) {
+	return []byte(t.string()), nil
+}
+
+func (t JobID) Matches(x interface{}) bool {
+	value, ok := x.(JobID)
+	if !ok {
+		return false
+	}
+	return t.String() == value.String()
+}
+
+func (t JobID) String() string { return t.string() }
+
+func (t JobID) Validate() error {
+	if t.isZero() {
+		return errors.New("empty value")
+	}
+	return nil
+}
+
+func (t JobID) Value() (driver.Value, error) { return t.string(), nil }
+
+func (t *JobID) Scan(src any) error { return t.scan(src) }
+
+func (t *JobID) UnmarshalText(text []byte) error { return t.scan(text) }
+
+func (t *JobID) isZero() bool {
+	return t == nil || (uuid.UUID)(*t) == uuid.Nil
+}
+
+func (t *JobID) scan(v any) error {
+	return (*uuid.UUID)(t).Scan(v)
+}
+
+func (t JobID) string() string {
+	return uuid.UUID(t).String()
+}
+
+type FailedJobID uuid.UUID
+
+var FailedJobIDNil FailedJobID
+
+func NewFailedJobID() FailedJobID {
+	return FailedJobID(uuid.New())
+}
+
+func (t FailedJobID) IsZero() bool { return t.isZero() }
+
+func (t FailedJobID) MarshalText() ([]byte, error) {
+	return []byte(t.string()), nil
+}
+
+func (t FailedJobID) Matches(x interface{}) bool {
+	value, ok := x.(FailedJobID)
+	if !ok {
+		return false
+	}
+	return t.String() == value.String()
+}
+
+func (t FailedJobID) String() string { return t.string() }
+
+func (t FailedJobID) Validate() error {
+	if t.isZero() {
+		return errors.New("empty value")
+	}
+	return nil
+}
+
+func (t FailedJobID) Value() (driver.Value, error) { return t.string(), nil }
+
+func (t *FailedJobID) Scan(src any) error { return t.scan(src) }
+
+func (t *FailedJobID) UnmarshalText(text []byte) error { return t.scan(text) }
+
+func (t *FailedJobID) isZero() bool {
+	return t == nil || (uuid.UUID)(*t) == uuid.Nil
+}
+
+func (t *FailedJobID) scan(v any) error {
+	return (*uuid.UUID)(t).Scan(v)
+}
+
+func (t FailedJobID) string() string {
+	return uuid.UUID(t).String()
+}

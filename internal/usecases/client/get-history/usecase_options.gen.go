@@ -6,7 +6,6 @@ import (
 
 	errors461e464ebed9 "github.com/kazhuravlev/options-gen/pkg/errors"
 	validator461e464ebed9 "github.com/kazhuravlev/options-gen/pkg/validator"
-	"go.uber.org/zap"
 )
 
 type OptOptionsSetter func(o *Options)
@@ -25,12 +24,6 @@ func NewOptions(
 		opt(&o)
 	}
 	return o
-}
-
-func WithLg(opt *zap.Logger) OptOptionsSetter {
-	return func(o *Options) {
-		o.lg = opt
-	}
 }
 
 func (o *Options) Validate() error {

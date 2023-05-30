@@ -16,3 +16,7 @@ func (r *Repo) CreateIfNotExists(ctx context.Context, chatID types.ChatID) (type
 			sql.ConflictWhere(sql.IsNull(problem.FieldResolveAt)),
 		).Ignore().ID(ctx)
 }
+
+func (r *Repo) GetManagerOpenProblemsCount(ctx context.Context, managerID types.UserID) (int, error) {
+	return r.db.Problem(ctx).Query().Where(problem.And(problem.ManagerIDEQ(managerID), problem.ResolveAtIsNil())).Count(ctx)
+}

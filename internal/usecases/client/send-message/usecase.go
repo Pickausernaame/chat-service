@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"go.uber.org/zap"
 
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
+	sendclientmessagejob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/send-client-message"
 	"github.com/Pickausernaame/chat-service/internal/types"
 	"github.com/Pickausernaame/chat-service/internal/validator"
 )
@@ -19,6 +21,10 @@ var (
 	ErrChatNotCreated    = errors.New("chat not created")
 	ErrProblemNotCreated = errors.New("problem not created")
 )
+
+type outboxService interface {
+	Put(ctx context.Context, name, payload string, availableAt time.Time) (types.JobID, error)
+}
 
 type chatsRepository interface {
 	CreateIfNotExists(ctx context.Context, userID types.UserID) (types.ChatID, error)
@@ -48,17 +54,18 @@ type transactor interface {
 type Options struct {
 	chatRepo    chatsRepository    `option:"mandatory" validate:"required"`
 	msgRepo     messagesRepository `option:"mandatory" validate:"required"`
+	outbox      outboxService      `option:"mandatory" validate:"required"`
 	problemRepo problemsRepository `option:"mandatory" validate:"required"`
 	txr         transactor         `option:"mandatory" validate:"required"`
-	lg          *zap.Logger
 }
 
 type UseCase struct {
 	Options
+	lg *zap.Logger
 }
 
 func New(opts Options) (UseCase, error) {
-	return UseCase{Options: opts}, opts.Validate()
+	return UseCase{Options: opts, lg: zap.L().Named("send-message-usecase")}, opts.Validate()
 }
 
 func (u UseCase) Handle(ctx context.Context, req Request) (Response, error) {
@@ -101,6 +108,12 @@ func (u UseCase) Handle(ctx context.Context, req Request) (Response, error) {
 		if err != nil {
 			return fmt.Errorf("message.CreateClientVisible error: %v", err)
 		}
+
+		_, err = u.outbox.Put(ctx, sendclientmessagejob.Name, msg.ID.String(), time.Now())
+		if err != nil {
+			return fmt.Errorf("creating send msg job error: %v", err)
+		}
+
 		return nil
 	})
 	if err != nil {

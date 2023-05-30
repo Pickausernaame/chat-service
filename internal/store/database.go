@@ -94,3 +94,13 @@ func (db *Database) Message(ctx context.Context) *MessageClient {
 func (db *Database) Problem(ctx context.Context) *ProblemClient {
 	return db.loadClient(ctx).Problem
 }
+
+// Problem is the client for interacting with the Problem builders.
+func (db *Database) Job(ctx context.Context) *JobClient {
+	return db.loadClient(ctx).Job
+}
+
+// Problem is the client for interacting with the Problem builders.
+func (db *Database) FailedJob(ctx context.Context) *FailedJobClient {
+	return db.loadClient(ctx).FailedJob
+}

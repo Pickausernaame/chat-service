@@ -17,9 +17,15 @@ import (
 	"github.com/Pickausernaame/chat-service/internal/config"
 	"github.com/Pickausernaame/chat-service/internal/logger"
 	chatsrepo "github.com/Pickausernaame/chat-service/internal/repositories/chats"
+	jobsrepo "github.com/Pickausernaame/chat-service/internal/repositories/jobs"
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
 	problemsrepo "github.com/Pickausernaame/chat-service/internal/repositories/problems"
 	serverdebug "github.com/Pickausernaame/chat-service/internal/server-debug"
+	managerload "github.com/Pickausernaame/chat-service/internal/services/manager-load"
+	inmemmanagerpool "github.com/Pickausernaame/chat-service/internal/services/manager-pool/in-mem"
+	msgproducer "github.com/Pickausernaame/chat-service/internal/services/msg-producer"
+	"github.com/Pickausernaame/chat-service/internal/services/outbox"
+	sendclientmessagejob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/send-client-message"
 	"github.com/Pickausernaame/chat-service/internal/store"
 )
 
@@ -89,7 +95,52 @@ func run() (errReturned error) {
 		return fmt.Errorf("init problem repo error: %v", err)
 	}
 
+	// initialization job repo
+	jobRepo, err := jobsrepo.New(jobsrepo.NewOptions(db))
+	if err != nil {
+		return fmt.Errorf("init job repo error: %v", err)
+	}
+
 	// ... other repos
+
+	// creating services
+	// initialization msgProducer service
+	// initialization kafka writer
+	kw := msgproducer.NewKafkaWriter(cfg.Service.MsgSender.Brokers,
+		cfg.Service.MsgSender.Topic, cfg.Service.MsgSender.BatchSize)
+
+	msgProdService, err := msgproducer.New(
+		msgproducer.NewOptions(kw, msgproducer.WithEncryptKey(cfg.Service.MsgSender.EncryptionKey)))
+	if err != nil {
+		return fmt.Errorf("init msg sender service: %v", err)
+	}
+
+	// initialization outbox service
+	obox, err := outbox.New(outbox.NewOptions(cfg.Service.Outbox.Workers, cfg.Service.Outbox.Idle,
+		cfg.Service.Outbox.ReservedFor, jobRepo, db))
+	if err != nil {
+		return fmt.Errorf("init outbox service: %v", err)
+	}
+
+	// initialization sendMsg job
+	sendMsgJob, err := sendclientmessagejob.New(sendclientmessagejob.NewOptions(msgProdService, msgRepo))
+	if err != nil {
+		return fmt.Errorf("init send msg job: %v", err)
+	}
+
+	err = obox.RegisterJob(sendMsgJob)
+	if err != nil {
+		return fmt.Errorf("registration send msg job: %v", err)
+	}
+
+	// initialization manager pool service
+	manPoolService := inmemmanagerpool.New()
+
+	// initialization manager load service
+	manLoadService, err := managerload.New(managerload.NewOptions(cfg.Service.ManagerLoad.MaxProblemsAtSameTime, problemRepo))
+	if err != nil {
+		return fmt.Errorf("init outbox service: %v", err)
+	}
 
 	// creating servers
 	// initialization debug server
@@ -99,9 +150,15 @@ func run() (errReturned error) {
 	}
 
 	// initialization client server
-	srvClient, err := initServerClient(cfg, kc, msgRepo, chatRepo, problemRepo, db)
+	srvClient, err := initServerClient(cfg, kc, msgRepo, chatRepo, problemRepo, db, obox)
 	if err != nil {
 		return fmt.Errorf("init server client: %v", err)
+	}
+
+	// initialization manager server
+	srvManager, err := initServerManager(cfg, kc, manLoadService, manPoolService)
+	if err != nil {
+		return fmt.Errorf("init server manager: %v", err)
 	}
 
 	eg, ctx := errgroup.WithContext(ctx)
@@ -112,12 +169,24 @@ func run() (errReturned error) {
 	// server client
 	eg.Go(func() error { return srvClient.Run(ctx) })
 
+	// server manager
+	eg.Go(func() error { return srvManager.Run(ctx) })
+
 	// Run services.
-	// Ждут своего часа.
-	// ...
+	// outbox run
+	eg.Go(func() error { return obox.Run(ctx) })
 
 	if err = eg.Wait(); err != nil && !errors.Is(err, context.Canceled) {
 		return fmt.Errorf("wait app stop: %v", err)
+	}
+
+	// close
+	if err := msgProdService.Close(); err != nil {
+		zap.L().Error("closing msgProdService error", zap.Error(err))
+	}
+
+	if err := kw.Close(); err != nil {
+		zap.L().Error("closing kafka writer error", zap.Error(err))
 	}
 
 	return nil
