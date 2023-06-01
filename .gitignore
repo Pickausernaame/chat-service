@@ -1,7 +1,6 @@
 .DS_Store
 .idea/
 .vscode/
-.run/
 .env
 
 *.out

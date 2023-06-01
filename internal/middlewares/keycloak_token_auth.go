@@ -34,19 +34,19 @@ func NewKeycloakTokenAuth(introspector Introspector, resource, role string) echo
 			if v := c.Request().Header.Get(websocketHeader); v != "" {
 				return middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
 					KeyLookup: "header:" + websocketHeader + ":chat-service-protocol",
-					Validator: Validator(introspector, resource, role),
+					Validator: validator(introspector, resource, role),
 				})(next)(c)
 			}
 			return middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
 				KeyLookup:  "header:" + echo.HeaderAuthorization,
 				AuthScheme: "Bearer",
-				Validator:  Validator(introspector, resource, role),
+				Validator:  validator(introspector, resource, role),
 			})(next)(c)
 		}
 	}
 }
 
-func Validator(introspector Introspector, resource, role string) middleware.KeyAuthValidator {
+func validator(introspector Introspector, resource, role string) middleware.KeyAuthValidator {
 	return func(tokenStr string, eCtx echo.Context) (bool, error) {
 		if v := eCtx.Request().Header.Get(websocketHeader); v != "" {
 			tokenStr = tokenStr[2:]

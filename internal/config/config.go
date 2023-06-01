@@ -89,7 +89,7 @@ type ServiceConfig struct {
 type MsgSenderServiceConfig struct {
 	Brokers       []string `toml:"brokers" validate:"required,min=1"`
 	Topic         string   `toml:"topic" validate:"required"`
-	BatchSize     int      `toml:"batch_size" validate:"required,min=1"`
+	BatchSize     int      `toml:"batch_size" validate:"required,min=1,max=100"`
 	EncryptionKey string   `toml:"encrypt_key" validate:"omitempty,hexadecimal"`
 }
 
@@ -100,14 +100,7 @@ type OutboxServiceConfig struct {
 }
 
 type ManagerLoadServiceConfig struct {
-	MaxProblemsAtSameTime int `toml:"max_problems_at_same_time" validate:"required,min=1"`
-}
-
-type MsgProducerServiceConfig struct {
-	Brokers    []string `toml:"brokers" validate:"required,min=1"`
-	Topic      string   `toml:"topic" validate:"required"`
-	BatchSize  int      `toml:"batch_size" validate:"required,min=1"`
-	EncryptKey string   `toml:"encrypt_key"`
+	MaxProblemsAtSameTime int `toml:"max_problems_at_same_time" validate:"required,min=1,max=30"`
 }
 
 type AfcVerdictsProcessorServiceConfig struct {

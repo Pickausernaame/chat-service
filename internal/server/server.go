@@ -102,10 +102,7 @@ func New(opts Options) (*Server, error) {
 		return nil, fmt.Errorf("making ws handler: %v", err)
 	}
 
-	e.GET("/ws", func(eCtx echo.Context) error {
-		_ = wsHandler.Serve(eCtx)
-		return nil
-	})
+	e.GET("/ws", wsHandler.Serve)
 
 	opts.reg(v1)
 
@@ -123,12 +120,14 @@ func New(opts Options) (*Server, error) {
 func (s *Server) Run(ctx context.Context) error {
 	eg, ctx := errgroup.WithContext(ctx)
 
+	s.srv.RegisterOnShutdown(func() {
+		close(s.shutdownCh)
+	})
+
 	eg.Go(func() error {
 		<-ctx.Done()
-
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
-		close(s.shutdownCh)
 		return s.srv.Shutdown(ctx)
 	})
 

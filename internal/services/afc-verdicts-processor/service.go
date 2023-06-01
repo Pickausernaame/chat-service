@@ -3,14 +3,13 @@ package afcverdictsprocessor
 import (
 	"context"
 	"crypto/rsa"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
-	"strings"
+	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/golang-jwt/jwt"
 	"github.com/segmentio/kafka-go"
 	"go.uber.org/zap"
@@ -23,7 +22,9 @@ import (
 )
 
 const (
-	serviceName = "afc-verdict-processor"
+	serviceName           = "afc-verdict-processor"
+	suspiciousVerdictType = "suspicious"
+	okVerdictType         = "ok"
 )
 
 //go:generate mockgen -source=$GOFILE -destination=mocks/service_mock.gen.go -package=afcverdictsprocessormocks
@@ -93,7 +94,6 @@ func New(opts Options) (*Service, error) {
 }
 
 func (s *Service) Run(ctx context.Context) error {
-	time.Sleep(time.Millisecond)
 	defer func() {
 		if err := s.dlqWriter.Close(); err != nil {
 			s.lg.Error("closing dqlPublisher error", zap.Error(err))
@@ -115,11 +115,10 @@ func (s *Service) Run(ctx context.Context) error {
 				case <-ctx.Done():
 					return nil
 				default:
+					wg := sync.WaitGroup{}
 					var msgs []kafka.Message
 					for i := 0; i < s.processBatchSize; i++ {
-						ctx, cancel := context.WithTimeout(ctx, time.Second)
 						msg, err := consumer.FetchMessage(ctx)
-						cancel()
 						if err != nil {
 							if errors.Is(err, context.DeadlineExceeded) {
 								continue
@@ -134,30 +133,50 @@ func (s *Service) Run(ctx context.Context) error {
 						v, err := s.extractVerdict(msg.Value)
 						if err != nil {
 							s.lg.Error("extract verdict error", zap.Error(err))
-							err = s.dlqWriter.WriteMessages(ctx, prepareDLQMessage(msg, err))
-							if err != nil {
-								s.lg.Error("dlqWriter error", zap.Error(err))
-							}
+							wg.Add(1)
+							go func() {
+								defer wg.Done()
+								err = s.dlqWriter.WriteMessages(ctx, prepareDLQMessage(msg, err))
+								if err != nil {
+									s.lg.Error("dlqWriter error", zap.Error(err))
+								}
+							}()
 							continue
 						}
 
 						switch v.Status {
-						case "suspicious":
+						case suspiciousVerdictType:
 							s.lg.Error("verdict is suspicious", zap.Any("verdict", v))
-							err := s.retryWithExponentialBackoff(ctx, 1, time.Now(), msg, s.handleSuspicious(v.MessageID), nil)
+							err := backoff.Retry(s.handleSuspicious(ctx, v.MessageID), backoff.WithContext(s.newBackoff(), ctx))
 							if err != nil {
 								s.lg.Error("handle suspicious error", zap.Error(err))
-								return err
+								wg.Add(1)
+								go func() {
+									defer wg.Done()
+									err = s.dlqWriter.WriteMessages(ctx, prepareDLQMessage(msg, err))
+									if err != nil {
+										s.lg.Error("dlqWriter error", zap.Error(err))
+									}
+								}()
+								continue
 							}
-						case "ok":
-							err := s.retryWithExponentialBackoff(ctx, 1, time.Now(), msg, s.handleOk(v.MessageID), nil)
+						case okVerdictType:
+							err := backoff.Retry(s.handleOk(ctx, v.MessageID), backoff.WithContext(s.newBackoff(), ctx))
 							if err != nil {
 								s.lg.Error("retry with exponential backoff error", zap.Error(err))
-								return err
+								wg.Add(1)
+								go func() {
+									defer wg.Done()
+									err = s.dlqWriter.WriteMessages(ctx, prepareDLQMessage(msg, err))
+									if err != nil {
+										s.lg.Error("dlqWriter error", zap.Error(err))
+									}
+								}()
+								continue
 							}
 						}
 					}
-
+					wg.Wait()
 					err := consumer.CommitMessages(ctx, msgs...)
 					if err != nil {
 						s.lg.Error("commit msg error", zap.Error(err))
@@ -175,28 +194,24 @@ func (s *Service) Run(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) extractVerdict(msg []byte) (*Verdict, error) {
-	payload := msg
+func (s *Service) extractVerdict(msg []byte) (*verdict, error) {
+	v := &verdict{}
 	if s.pubKey != nil {
-		parts := strings.Split(string(msg), ".")
-		if len(parts) != 3 {
-			return nil, errors.New("invalid jwt")
+		cl := &jwt.MapClaims{}
+		_, err := jwt.ParseWithClaims(string(msg), cl, func(token *jwt.Token) (interface{}, error) {
+			return s.pubKey, nil
+		})
+		if err != nil {
+			return nil, fmt.Errorf("parsing token: %v", err)
 		}
 
-		err := jwt.SigningMethodRS256.Verify(strings.Join(parts[0:2], "."), parts[2], s.pubKey)
+		msg, err = json.Marshal(cl)
 		if err != nil {
-			return nil, fmt.Errorf("signing method RS256: %v", err)
+			return nil, fmt.Errorf("failed to marshal claims: %v", err)
 		}
-
-		payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
-		if err != nil {
-			return nil, fmt.Errorf("decoding bytes: %v", err)
-		}
-		payload = payloadBytes
 	}
 
-	v := &Verdict{}
-	if err := json.Unmarshal(payload, v); err != nil {
+	if err := json.Unmarshal(msg, v); err != nil {
 		return nil, fmt.Errorf("unmarshaling payload to verdict: %v", err)
 	}
 
@@ -207,57 +222,44 @@ func (s *Service) extractVerdict(msg []byte) (*Verdict, error) {
 	return v, nil
 }
 
-func (s *Service) retryWithExponentialBackoff(ctx context.Context,
-	attempt int, startedAt time.Time, msg kafka.Message, f func(ctx context.Context) error, lastErr error,
-) error {
-	if time.Now().UnixNano() > startedAt.Add(s.backoffMaxElapsedTime).UnixNano() {
-		if lastErr == nil { // panic defence
-			lastErr = errors.New("backoff timeout")
-		}
+func (s *Service) handleSuspicious(ctx context.Context, msgID types.MessageID) func() error {
+	return func() error {
+		return s.txtor.RunInTx(ctx, func(ctx context.Context) error {
+			err := s.msgRepo.BlockMessage(ctx, msgID)
+			if err != nil {
+				return fmt.Errorf("blocking msg: %v", err)
+			}
 
-		err := s.dlqWriter.WriteMessages(ctx, prepareDLQMessage(msg, lastErr))
-		if err != nil {
-			s.lg.Error("write dlq error", zap.Error(err))
-		}
-		return err
-	}
-
-	err := s.txtor.RunInTx(ctx, f)
-	if err != nil {
-		delay := s.backoffInitialInterval * time.Duration(math.Pow(2, float64(attempt-1)))
-		time.Sleep(delay)
-		s.lg.Error("tx error", zap.Error(err))
-		return s.retryWithExponentialBackoff(ctx, attempt+1, startedAt, msg, f, err)
-	}
-	return nil
-}
-
-func (s *Service) handleSuspicious(msgID types.MessageID) func(context.Context) error {
-	return func(ctx context.Context) error {
-		err := s.msgRepo.BlockMessage(ctx, msgID)
-		if err != nil {
-			return fmt.Errorf("blocking msg: %v", err)
-		}
-
-		_, err = s.outBox.Put(ctx, clientmessageblockedjob.Name, msgID.String(), time.Now())
-		if err != nil {
-			return fmt.Errorf("putting %s job: %v", clientmessageblockedjob.Name, err)
-		}
-		return nil
+			_, err = s.outBox.Put(ctx, clientmessageblockedjob.Name, msgID.String(), time.Now())
+			if err != nil {
+				return fmt.Errorf("putting %s job: %v", clientmessageblockedjob.Name, err)
+			}
+			return nil
+		})
 	}
 }
 
-func (s *Service) handleOk(msgID types.MessageID) func(context.Context) error {
-	return func(ctx context.Context) error {
-		err := s.msgRepo.MarkAsVisibleForManager(ctx, msgID)
-		if err != nil {
-			return fmt.Errorf("marking visible for manager msg: %v", err)
-		}
+func (s *Service) handleOk(ctx context.Context, msgID types.MessageID) func() error {
+	return func() error {
+		return s.txtor.RunInTx(ctx, func(ctx context.Context) error {
+			err := s.msgRepo.MarkAsVisibleForManager(ctx, msgID)
+			if err != nil {
+				return fmt.Errorf("marking visible for manager msg: %v", err)
+			}
 
-		_, err = s.outBox.Put(ctx, clientmessagesentjob.Name, msgID.String(), time.Now())
-		if err != nil {
-			return fmt.Errorf("putting %s job: %v", clientmessagesentjob.Name, err)
-		}
-		return nil
+			_, err = s.outBox.Put(ctx, clientmessagesentjob.Name, msgID.String(), time.Now())
+			if err != nil {
+				return fmt.Errorf("putting %s job: %v", clientmessagesentjob.Name, err)
+			}
+			return nil
+		})
 	}
+}
+
+func (s *Service) newBackoff() *backoff.ExponentialBackOff {
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = s.backoffInitialInterval
+	bo.MaxElapsedTime = s.backoffMaxElapsedTime
+	bo.Reset()
+	return bo
 }

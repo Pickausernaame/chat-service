@@ -54,7 +54,7 @@ func (s *Service) Subscribe(ctx context.Context, userID types.UserID) (<-chan ev
 	return ch, nil
 }
 
-func (s *Service) Publish(_ context.Context, userID types.UserID, event eventstream.Event) error {
+func (s *Service) Publish(ctx context.Context, userID types.UserID, event eventstream.Event) error {
 	if err := event.Validate(); err != nil {
 		return fmt.Errorf("validating event: %v", err)
 	}
@@ -67,7 +67,12 @@ func (s *Service) Publish(_ context.Context, userID types.UserID, event eventstr
 
 	if subs, ok := s.subs[userID]; ok {
 		for eventChan := range subs {
-			eventChan <- event
+			select {
+			case <-ctx.Done():
+				return nil
+			case eventChan <- event:
+			}
+
 			// кажется, что если не важен порядок, то можно отправлять эвенты в так же в горутине
 			// чтобы другие подписчики не ждали
 			// eventChan := eventChan

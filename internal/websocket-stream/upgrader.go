@@ -3,6 +3,7 @@ package websocketstream
 import (
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	gorillaws "github.com/gorilla/websocket"
@@ -33,6 +34,20 @@ func NewUpgrader(allowOrigins []string, secWsProtocol string) Upgrader {
 	upgrader := &gorillaws.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			origin := r.Header.Get("Origin")
+
+			parsedURL, err := url.Parse(origin)
+			if err != nil {
+				return false
+			}
+
+			if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+				return false
+			}
+
+			if parsedURL.Host == "" {
+				return false
+			}
+
 			for _, allowedOrigin := range allowOrigins {
 				if origin == allowedOrigin {
 					return true
@@ -40,9 +55,9 @@ func NewUpgrader(allowOrigins []string, secWsProtocol string) Upgrader {
 			}
 			return false
 		},
-		HandshakeTimeout: time.Second * 10,
-		ReadBufferSize:   3000 * 4 * 2,
-		WriteBufferSize:  3000 * 4 * 2,
+		HandshakeTimeout: time.Second * 3,
+		ReadBufferSize:   3000 * 4 * 2, // message-size = 3000 * 4; safety factor = 2
+		WriteBufferSize:  3000 * 4 * 2, // message-size = 3000 * 4; safety factor = 2
 		Subprotocols:     []string{secWsProtocol},
 	}
 	return &upgraderImpl{

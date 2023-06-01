@@ -20,15 +20,7 @@ type EventWriter interface {
 type JSONEventWriter struct{}
 
 func (JSONEventWriter) Write(event any, out io.Writer) error {
-	payload, err := json.Marshal(event)
-	if err != nil {
-		return err
-	}
-	_, err = out.Write(payload)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.NewEncoder(out).Encode(event)
 }
 
 type DummyAdapter struct{}

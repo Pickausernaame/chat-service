@@ -13,7 +13,7 @@ var _ echo.HTTPErrorHandler = Handler{}.Handle
 
 //go:generate options-gen -out-filename=errhandler_options.gen.go -from-struct=Options
 type Options struct {
-	serverName      string                                         `option:"mandatory" validate:"required"`
+	serverName      string                                         `option:"mandatory"`
 	productionMode  bool                                           `option:"mandatory"`
 	responseBuilder func(code int, msg string, details string) any `option:"mandatory" validate:"required"`
 }

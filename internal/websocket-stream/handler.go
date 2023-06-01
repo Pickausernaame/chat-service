@@ -87,7 +87,7 @@ func (h *HTTPHandler) Serve(eCtx echo.Context) error {
 // readLoop listen PONGs.
 func (h *HTTPHandler) readLoop(_ context.Context, ws Websocket) error {
 	ws.SetPongHandler(func(string) error {
-		return ws.SetReadDeadline(time.Now().Add(h.pingPeriod))
+		return ws.SetReadDeadline(time.Now().Add(h.pingPeriod + 100*time.Millisecond))
 	})
 	for {
 		_, _, err := ws.NextReader()
@@ -130,7 +130,7 @@ func (h *HTTPHandler) writeLoop(ctx context.Context, ws Websocket, events <-chan
 				return fmt.Errorf("writing message: %v", err)
 			}
 		case <-ticker.C:
-			err := h.Ping(ws)
+			err := h.ping(ws)
 			if err != nil {
 				return err
 			}
@@ -138,7 +138,7 @@ func (h *HTTPHandler) writeLoop(ctx context.Context, ws Websocket, events <-chan
 	}
 }
 
-func (h *HTTPHandler) Ping(ws Websocket) error {
+func (h *HTTPHandler) ping(ws Websocket) error {
 	err := ws.SetWriteDeadline(time.Now().Add(writeTimeout))
 	if err != nil {
 		return fmt.Errorf("setting write deadline for event: %v", err)

@@ -24,13 +24,13 @@ vars:
     ./deploy/local/docker-compose.kafka-ui.yaml
   TYPES: |
     ChatID
+    EventID
+    FailedJobID
+    JobID
     MessageID
     ProblemID
-    UserID
     RequestID
-    JobID
-    FailedJobID
-    EventID
+    UserID
   TYPES_PKG: types
   TYPES_DST: ./internal/types/types.gen.go
   ENT_SCHEMA: ./internal/store/schema

@@ -10,18 +10,29 @@ import (
 
 var _ websocketstream.EventAdapter = Adapter{}
 
+var ErrInvalidEventType = errors.New("invalid type")
+
 type Adapter struct{}
 
 func (Adapter) Adapt(ev eventstream.Event) (any, error) {
 	switch ev.Type() {
 	case eventstream.EventTypeNewMessageEvent:
-		res := ev.(*eventstream.NewMessageEvent)
+		res, ok := ev.(*eventstream.NewMessageEvent)
+		if !ok {
+			return nil, ErrInvalidEventType
+		}
 		return toNewMessageEvent(res), nil
 	case eventstream.EventTypeMessageSentEvent:
-		res := ev.(*eventstream.MessageSentEvent)
+		res, ok := ev.(*eventstream.MessageSentEvent)
+		if !ok {
+			return nil, ErrInvalidEventType
+		}
 		return toMessageSentEvent(res), nil
 	case eventstream.EventTypeMessageBlockedEvent:
-		res := ev.(*eventstream.MessageBlockedEvent)
+		res, ok := ev.(*eventstream.MessageBlockedEvent)
+		if !ok {
+			return nil, ErrInvalidEventType
+		}
 		return toMessageBlockedEvent(res), nil
 	}
 	return nil, errors.New("invalid event")

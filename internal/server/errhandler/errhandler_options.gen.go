@@ -32,16 +32,8 @@ func NewOptions(
 
 func (o *Options) Validate() error {
 	errs := new(errors461e464ebed9.ValidationErrors)
-	errs.Add(errors461e464ebed9.NewValidationError("serverName", _validate_Options_serverName(o)))
 	errs.Add(errors461e464ebed9.NewValidationError("responseBuilder", _validate_Options_responseBuilder(o)))
 	return errs.AsError()
-}
-
-func _validate_Options_serverName(o *Options) error {
-	if err := validator461e464ebed9.GetValidatorFor(o).Var(o.serverName, "required"); err != nil {
-		return fmt461e464ebed9.Errorf("field `serverName` did not pass the test: %w", err)
-	}
-	return nil
 }
 
 func _validate_Options_responseBuilder(o *Options) error {
