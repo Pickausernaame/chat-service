@@ -41,30 +41,30 @@ func (Adapter) Adapt(ev eventstream.Event) (any, error) {
 func toNewMessageEvent(ev *eventstream.NewMessageEvent) *NewMessageEvent {
 	return &NewMessageEvent{
 		AuthorId:  pointer.PtrWithZeroAsNil(ev.UserID),
-		Body:      pointer.PtrWithZeroAsNil(ev.MessageBody),
-		CreatedAt: pointer.PtrWithZeroAsNil(ev.CreatedAt),
-		EventId:   pointer.PtrWithZeroAsNil(ev.EventID),
-		EventType: pointer.PtrWithZeroAsNil(NewMessageEventEventTypeNewMessageEvent),
-		IsService: pointer.PtrWithZeroAsNil(ev.IsService),
-		MessageId: pointer.PtrWithZeroAsNil(ev.MessageID),
-		RequestId: pointer.PtrWithZeroAsNil(ev.RequestID),
+		Body:      ev.MessageBody,
+		CreatedAt: ev.CreatedAt,
+		EventId:   ev.EventID,
+		EventType: NewMessageEventEventTypeNewMessageEvent,
+		IsService: ev.IsService,
+		MessageId: ev.MessageID,
+		RequestId: ev.RequestID,
 	}
 }
 
 func toMessageSentEvent(ev *eventstream.MessageSentEvent) *MessageSentEvent {
 	return &MessageSentEvent{
-		EventId:   pointer.PtrWithZeroAsNil(ev.EventID),
-		EventType: pointer.PtrWithZeroAsNil(BaseEventEventTypeMessageSentEvent),
-		MessageId: pointer.PtrWithZeroAsNil(ev.MessageID),
-		RequestId: pointer.PtrWithZeroAsNil(ev.RequestID),
+		EventId:   ev.EventID,
+		EventType: MessageSentEventEventTypeMessageSentEvent,
+		MessageId: ev.MessageID,
+		RequestId: ev.RequestID,
 	}
 }
 
 func toMessageBlockedEvent(ev *eventstream.MessageBlockedEvent) *MessageBlockedEvent {
 	return &MessageBlockedEvent{
-		EventId:   pointer.PtrWithZeroAsNil(ev.EventID),
-		EventType: pointer.PtrWithZeroAsNil(BaseEventEventTypeMessageBlockedEvent),
-		MessageId: pointer.PtrWithZeroAsNil(ev.MessageID),
-		RequestId: pointer.PtrWithZeroAsNil(ev.RequestID),
+		EventId:   ev.EventID,
+		EventType: MessageBlockedEventEventTypeMessageBlockedEvent,
+		MessageId: ev.MessageID,
+		RequestId: ev.RequestID,
 	}
 }

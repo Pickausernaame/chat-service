@@ -24,6 +24,20 @@ const (
 	BaseEventEventTypeNewMessageEvent     BaseEventEventType = "NewMessageEvent"
 )
 
+// Defines values for MessageBlockedEventEventType.
+const (
+	MessageBlockedEventEventTypeMessageBlockedEvent MessageBlockedEventEventType = "MessageBlockedEvent"
+	MessageBlockedEventEventTypeMessageSentEvent    MessageBlockedEventEventType = "MessageSentEvent"
+	MessageBlockedEventEventTypeNewMessageEvent     MessageBlockedEventEventType = "NewMessageEvent"
+)
+
+// Defines values for MessageSentEventEventType.
+const (
+	MessageSentEventEventTypeMessageBlockedEvent MessageSentEventEventType = "MessageBlockedEvent"
+	MessageSentEventEventTypeMessageSentEvent    MessageSentEventEventType = "MessageSentEvent"
+	MessageSentEventEventTypeNewMessageEvent     MessageSentEventEventType = "NewMessageEvent"
+)
+
 // Defines values for NewMessageEventEventType.
 const (
 	NewMessageEventEventTypeMessageBlockedEvent NewMessageEventEventType = "MessageBlockedEvent"
@@ -34,26 +48,54 @@ const (
 // BaseEvent defines model for BaseEvent.
 type BaseEvent struct {
 	// EventId Unique identifier for the event
-	EventId *types.EventID `json:"eventId,omitempty"`
+	EventId types.EventID `json:"eventId"`
 
 	// EventType Type of the event
-	EventType *BaseEventEventType `json:"eventType,omitempty"`
-
-	// MessageId Unique identifier for the message
-	MessageId *types.MessageID `json:"messageId,omitempty"`
+	EventType BaseEventEventType `json:"eventType"`
 
 	// RequestId Unique identifier for the request
-	RequestId *types.RequestID `json:"requestId,omitempty"`
+	RequestId types.RequestID `json:"requestId"`
 }
 
 // BaseEventEventType Type of the event
 type BaseEventEventType string
 
 // MessageBlockedEvent defines model for MessageBlockedEvent.
-type MessageBlockedEvent = BaseEvent
+type MessageBlockedEvent struct {
+	// EventId Unique identifier for the event
+	EventId types.EventID `json:"eventId"`
+
+	// EventType Type of the event
+	EventType MessageBlockedEventEventType `json:"eventType"`
+	MessageId types.MessageID              `json:"messageId"`
+
+	// RequestId Unique identifier for the request
+	RequestId types.RequestID `json:"requestId"`
+}
+
+// MessageBlockedEventEventType Type of the event
+type MessageBlockedEventEventType string
+
+// MessageId defines model for MessageId.
+type MessageId struct {
+	MessageId types.MessageID `json:"messageId"`
+}
 
 // MessageSentEvent defines model for MessageSentEvent.
-type MessageSentEvent = BaseEvent
+type MessageSentEvent struct {
+	// EventId Unique identifier for the event
+	EventId types.EventID `json:"eventId"`
+
+	// EventType Type of the event
+	EventType MessageSentEventEventType `json:"eventType"`
+	MessageId types.MessageID           `json:"messageId"`
+
+	// RequestId Unique identifier for the request
+	RequestId types.RequestID `json:"requestId"`
+}
+
+// MessageSentEventEventType Type of the event
+type MessageSentEventEventType string
 
 // NewMessageEvent defines model for NewMessageEvent.
 type NewMessageEvent struct {
@@ -61,25 +103,23 @@ type NewMessageEvent struct {
 	AuthorId *types.UserID `json:"authorId,omitempty"`
 
 	// Body Body of the message
-	Body *string `json:"body,omitempty"`
+	Body string `json:"body"`
 
 	// CreatedAt Date and time of event creation
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
 
 	// EventId Unique identifier for the event
-	EventId *types.EventID `json:"eventId,omitempty"`
+	EventId types.EventID `json:"eventId"`
 
 	// EventType Type of the event
-	EventType *NewMessageEventEventType `json:"eventType,omitempty"`
+	EventType NewMessageEventEventType `json:"eventType"`
 
 	// IsService Indicates if the event is a service event
-	IsService *bool `json:"isService,omitempty"`
-
-	// MessageId Unique identifier for the message
-	MessageId *types.MessageID `json:"messageId,omitempty"`
+	IsService bool            `json:"isService"`
+	MessageId types.MessageID `json:"messageId"`
 
 	// RequestId Unique identifier for the request
-	RequestId *types.RequestID `json:"requestId,omitempty"`
+	RequestId types.RequestID `json:"requestId"`
 }
 
 // NewMessageEventEventType Type of the event
@@ -88,16 +128,17 @@ type NewMessageEventEventType string
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7RUS0/jPBT9K9b9vqXbBLFB3k1hFkjz0jCsEAvXuWnu4Eewbwqo6n8f2QkDE7qhEqvE",
-	"x76Pc+5jBya4Pnj0nEDtIJkOnS6/K53w8xY950MfQ4+RCcsVZviyyb8NJhOpZwoeFFx7uh9QUIOeqSWM",
-	"og1RcIeimICENkSnGRQMAzUggZ96BAWJI/kNSHhcbMJiAvMnLUsOlxev7xbk+hDHxDR3oGBD3A3rpQmu",
-	"+kHmTg8Jo9faYWU6zYuEcUsGK/KccVsV17Dfy5HLrxJwziajIrT/5I9+cKBu4Bs+fMWU9GbSSMJ0vELP",
-	"M2hlg7nDZkRv55z3Etz47n2KTkZHaTol9nGqRrwfML2zRyajoxj9nAJ+EKPM6VA11Q60td9bUDc7+D9i",
-	"Cwr+q15mqpoGqnqZpv3t/kCzHOto3ofH+JHz+dYDdyG+r3ijzVG1u04YP64V16F5ektkFZqn59l+mSSn",
-	"H7+g3+SIp3VdS3Dkn4GTA4NrImrG5hO/DXChGYX2jWByZYuUDSKKRX7xSqhGMy7yMzgQgtLVyO1tiEvf",
-	"kNGMSdCrJSUoCS0mQf7urcnvOgSL2hdhJiisf6Mp3ZRB8m3IkZjY5tuV9nfiauhzOcR5p1mcW8pRSu8k",
-	"kLDFmMZ8tic54dCj1z2BgtPlybIGWUqYQPnBWgk5MYyp9OdMMdyiDb3L3sdXIGGIFhQ8JFVVNhhtu5BY",
-	"ndVndfWQcs5/AgAA//8YHbTTwQYAAA==",
+	"H4sIAAAAAAAC/7xUTW/jOAz9KwJ3j0qcopdCt027hwDzhen0VPSgWHTMqSy5Ep22CPLfB5KdiesWA7RA",
+	"5mSLkvj4nh65g9I3rXfoOILaQSxrbHT+XeqI/2/RcVq0wbcYmDBvYQqvTPo1GMtALZN3oODG0UOHggw6",
+	"poowiMoHwTWKfAUkVD40mkFB15EBCfzcIiiIHMhtQMLTbONnQzB94jzXsLoa782oaX3oC9Ncg4INcd2t",
+	"56Vvim9U3usuYnBaN1iUteZZxLClEgtynOK2yKlhv5c9lx8ZcMomRYWvXtSPrmtA3cIXfPyMMerNoJGE",
+	"YXmNjiehpfXlPZo+ejflvJcQ8KHD+E5Fh0sf0vT7AHgiVQdKFNAkrQ52GYs9Jn23f1sqtQNt7dcK1O0O",
+	"/g1YgYJ/iqNhi8GtxdGqe/nnkwPMysB+hNoL/9LjzXjr/QofMv8dhY/FjlgdnXh6IaftcFpEOX0s3XHt",
+	"w/v6p7/zofa5iRhON5HW3jy/JrL05vkwjIbnBgmNfvqEbpMQzxeLhYSG3CFw9sakKQNqRvMfvwa40oxC",
+	"OyOYmjz2crOKfCOdGAllNOMsHYM3IChe99xeQ6ycoVIzRkGjqSooCi0GQX4P2iHv2nuL2sHU8VmkMZ8x",
+	"8HHG+vVPLDl5NCUgV/lUFRPbtLvU7l5cd216OnFZaxaXllJF2ZERJGwxxL727Vki51t0uiVQcD4/my9A",
+	"5ueOoFxnrYREAkPMrp+oi1u0vm1S9v4USOiCBQWPURWF9aW2tY+sLhYXi+Ixppp/BQAA//8zgQW6ngcA",
+	"AA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

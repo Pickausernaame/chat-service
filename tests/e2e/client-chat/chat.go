@@ -233,19 +233,18 @@ func (c *Chat) HandleEvent(_ context.Context, data []byte) error {
 		}
 
 		msg := &Message{
-			ID:        pointer.Indirect(vv.MessageId),
-			Body:      pointer.Indirect(vv.Body),
-			IsService: pointer.Indirect(vv.IsService),
-			CreatedAt: pointer.Indirect(vv.CreatedAt),
+			ID:        vv.MessageId,
+			Body:      vv.Body,
+			IsService: vv.IsService,
+			CreatedAt: vv.CreatedAt,
 		}
 		if uid := vv.AuthorId; uid != nil {
 			msg.AuthorID = *uid
 		}
 
 		c.addMessageToEnd(msg)
-
-	default:
-		vv := &apiclientevents.BaseEvent{}
+	case eventstream.EventTypeMessageSentEvent:
+		vv := &apiclientevents.NewMessageEvent{}
 		if err := json.Unmarshal(data, vv); err != nil {
 			return fmt.Errorf("unmarshal event: %v", err)
 		}
@@ -253,18 +252,26 @@ func (c *Chat) HandleEvent(_ context.Context, data []byte) error {
 		c.msgMu.Lock()
 		defer c.msgMu.Unlock()
 
-		msg, ok := c.messagesByID[pointer.Indirect(vv.MessageId)]
+		msg, ok := c.messagesByID[vv.MessageId]
 		if !ok {
 			return fmt.Errorf("unknown message: %v", vv.MessageId)
 		}
+		msg.IsReceived = true
 
-		//nolint:exhaustive
-		switch pointer.Indirect(vv.EventType) {
-		case "MessageSentEvent":
-			msg.IsReceived = true
-		case "MessageBlockedEvent":
-			msg.IsBlocked = true
+	case eventstream.EventTypeMessageBlockedEvent:
+		vv := &apiclientevents.MessageBlockedEvent{}
+		if err := json.Unmarshal(data, vv); err != nil {
+			return fmt.Errorf("unmarshal event: %v", err)
 		}
+
+		c.msgMu.Lock()
+		defer c.msgMu.Unlock()
+
+		msg, ok := c.messagesByID[vv.MessageId]
+		if !ok {
+			return fmt.Errorf("unknown message: %v", vv.MessageId)
+		}
+		msg.IsBlocked = true
 	}
 
 	return nil
