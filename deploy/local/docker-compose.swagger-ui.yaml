@@ -7,6 +7,6 @@ services:
     ports:
       - "127.0.0.1:3011:8080"
     environment:
-      URLS: "[{ url: 'docs/client.v1.swagger.yml', name: 'client-v1' }, {url: 'docs/manager.v1.swagger.yml', name: 'manager-v1'}, {url: 'docs/client.events.swagger.yml', name: 'events'}]"
+      URLS: "[{ url: 'docs/client.v1.swagger.yml', name: 'client-v1' }, {url: 'docs/manager.v1.swagger.yml', name: 'manager-v1'}, {url: 'docs/client.events.swagger.yml', name: 'client-events'}, {url: 'docs/manager.events.swagger.yml', name: 'manager-events'}]"
     volumes:
       - ../../api:/usr/share/nginx/html/docs/

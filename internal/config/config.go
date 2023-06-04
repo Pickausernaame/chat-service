@@ -84,6 +84,7 @@ type ServiceConfig struct {
 	Outbox              OutboxServiceConfig               `toml:"outbox"`
 	ManagerLoad         ManagerLoadServiceConfig          `toml:"manager_load"`
 	AvcVerdictProcessor AfcVerdictsProcessorServiceConfig `toml:"afc_verdicts_processor"`
+	ManagerScheduler    ManagerSchedulerServiceConfig     `toml:"manager_scheduler"`
 }
 
 type MsgSenderServiceConfig struct {
@@ -110,4 +111,8 @@ type AfcVerdictsProcessorServiceConfig struct {
 	VerdictsTopic string   `toml:"verdicts_topic" validate:"required"`
 	DlqTopic      string   `toml:"dlq_topic" validate:"required"`
 	EncryptKey    string   `toml:"verdicts_signing_public_key"`
+}
+
+type ManagerSchedulerServiceConfig struct {
+	Period time.Duration `toml:"period" validate:"required,min=1s"`
 }

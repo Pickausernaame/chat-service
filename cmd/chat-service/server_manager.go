@@ -8,6 +8,7 @@ import (
 	keycloakclient "github.com/Pickausernaame/chat-service/internal/clients/keycloak"
 	"github.com/Pickausernaame/chat-service/internal/config"
 	"github.com/Pickausernaame/chat-service/internal/server"
+	managerevents "github.com/Pickausernaame/chat-service/internal/server-manager/events"
 	managerv1 "github.com/Pickausernaame/chat-service/internal/server-manager/v1"
 	"github.com/Pickausernaame/chat-service/internal/server/errhandler"
 	manager_load "github.com/Pickausernaame/chat-service/internal/services/manager-load"
@@ -74,6 +75,7 @@ func initServerManager(
 			cfg.Servers.Manager.SecWsProtocol,
 			subscriber,
 			errHandler.Handle,
+			managerevents.Adapter{},
 		))
 	if err != nil {
 		return nil, fmt.Errorf("init server: %v", err)

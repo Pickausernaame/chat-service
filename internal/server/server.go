@@ -17,7 +17,6 @@ import (
 
 	keycloakclient "github.com/Pickausernaame/chat-service/internal/clients/keycloak"
 	"github.com/Pickausernaame/chat-service/internal/middlewares"
-	clientevents "github.com/Pickausernaame/chat-service/internal/server-client/events"
 	eventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream"
 	"github.com/Pickausernaame/chat-service/internal/types"
 	"github.com/Pickausernaame/chat-service/internal/validator"
@@ -33,6 +32,10 @@ type eventStream interface {
 	Subscribe(ctx context.Context, userID types.UserID) (<-chan eventstream.Event, error)
 }
 
+type adapter interface {
+	Adapt(event eventstream.Event) (any, error)
+}
+
 //go:generate options-gen -out-filename=server_options.gen.go -from-struct=Options
 type Options struct {
 	serverName      string                 `option:"mandatory" validate:"required"`
@@ -46,6 +49,7 @@ type Options struct {
 	secWsProtocol   string                 `option:"mandatory" validate:"required"`
 	eventSubscriber eventStream            `option:"mandatory" validate:"required"`
 	errHandler      echo.HTTPErrorHandler  `option:"mandatory" validate:"required"`
+	adapter         adapter                `option:"mandatory" validate:"required"`
 }
 
 type Server struct {
@@ -94,7 +98,7 @@ func New(opts Options) (*Server, error) {
 	wsHandler, err := websocketstream.NewHTTPHandler(
 		websocketstream.NewOptions(
 			opts.eventSubscriber,
-			clientevents.Adapter{},
+			opts.adapter,
 			websocketstream.JSONEventWriter{},
 			websocketstream.NewUpgrader(opts.allowOrigins, opts.secWsProtocol),
 			shutdownCh))

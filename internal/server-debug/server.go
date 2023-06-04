@@ -18,7 +18,9 @@ import (
 	"github.com/Pickausernaame/chat-service/internal/buildinfo"
 	"github.com/Pickausernaame/chat-service/internal/logger"
 	"github.com/Pickausernaame/chat-service/internal/middlewares"
+	clientevents "github.com/Pickausernaame/chat-service/internal/server-client/events"
 	clientv1 "github.com/Pickausernaame/chat-service/internal/server-client/v1"
+	managerevents "github.com/Pickausernaame/chat-service/internal/server-manager/events"
 	managerv1 "github.com/Pickausernaame/chat-service/internal/server-manager/v1"
 )
 
@@ -70,6 +72,8 @@ func New(opts Options) (*Server, error) {
 	index.addPage("/debug/error", "Debug sentry error event")
 	index.addPage("/schema/client", "Get client openAPI specification")
 	index.addPage("/schema/manager", "Get client openAPI specification")
+	index.addPage("/schema/client-events", "Get client events openAPI specification")
+	index.addPage("/schema/manager-events", "Get manager events openAPI specification")
 
 	e.GET("/", index.handler)
 	e.GET("/version", s.Version)
@@ -78,6 +82,8 @@ func New(opts Options) (*Server, error) {
 	e.GET("/debug/error", s.error)
 	e.GET("/schema/client", s.clientSchema)
 	e.GET("/schema/manager", s.managerSchema)
+	e.GET("/schema/client-events", s.clientEventsSchema)
+	e.GET("/schema/manager-events", s.managerEventsSchema)
 
 	pprof.Register(e, "/debug/pprof")
 
@@ -148,6 +154,22 @@ func (s *Server) clientSchema(eCtx echo.Context) error {
 
 func (s *Server) managerSchema(eCtx echo.Context) error {
 	spec, err := managerv1.GetSwagger()
+	if err != nil {
+		eCtx.Error(err)
+	}
+	return eCtx.JSON(http.StatusOK, spec)
+}
+
+func (s *Server) clientEventsSchema(eCtx echo.Context) error {
+	spec, err := clientevents.GetSwagger()
+	if err != nil {
+		eCtx.Error(err)
+	}
+	return eCtx.JSON(http.StatusOK, spec)
+}
+
+func (s *Server) managerEventsSchema(eCtx echo.Context) error {
+	spec, err := managerevents.GetSwagger()
 	if err != nil {
 		eCtx.Error(err)
 	}

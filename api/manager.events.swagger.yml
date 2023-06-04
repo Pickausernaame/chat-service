@@ -9,16 +9,6 @@ servers:
 
 components:
   schemas:
-    MessageId:
-      required: [ messageId ]
-      properties:
-        messageId:
-          type: string
-          format: uuid
-          x-go-type: types.MessageID
-          x-go-type-import:
-            path: "github.com/Pickausernaame/chat-service/internal/types"
-
     BaseEvent:
       required: [ eventId, eventType, requestId ]
       properties:
@@ -32,9 +22,7 @@ components:
         eventType:
           type: string
           enum:
-            - NewMessageEvent
-            - MessageSentEvent
-            - MessageBlockedEvent
+            - NewChatEvent
           description: Type of the event
         requestId:
           type: string
@@ -44,39 +32,28 @@ components:
             path: "github.com/Pickausernaame/chat-service/internal/types"
           description: Unique identifier for the request
 
-    NewMessageEvent:
+    NewChatEvent:
       allOf:
         - $ref: '#/components/schemas/BaseEvent'
-        - $ref: '#/components/schemas/MessageId'
         - type: object
-          required: [ body, createdAt, isService ]
+          required: [ clientId, chatId, canTakeMoreProblems ]
           properties:
-            authorId:
+            clientId:
               type: string
               format: uuid
               x-go-type: types.UserID
               x-go-type-import:
                 path: "github.com/Pickausernaame/chat-service/internal/types"
-              description: Unique identifier for the author
-            body:
+              description: Unique identifier for the client
+            chatId:
               type: string
-              minLength: 1
-              maxLength: 3000
-              description: Body of the message
-            createdAt:
-              type: string
-              format: date-time
-              description: Date and time of event creation
-            isService:
+              format: uuid
+              x-go-type: types.ChatID
+              x-go-type-import:
+                path: "github.com/Pickausernaame/chat-service/internal/types"
+              description: Unique identifier for the chat
+            canTakeMoreProblems:
               type: boolean
-              description: Indicates if the event is a service event
+              description: Indicates if manager can take more problems
 
-    MessageSentEvent:
-      allOf:
-        - $ref: '#/components/schemas/BaseEvent'
-        - $ref: '#/components/schemas/MessageId'
 
-    MessageBlockedEvent:
-      allOf:
-        - $ref: '#/components/schemas/BaseEvent'
-        - $ref: '#/components/schemas/MessageId'

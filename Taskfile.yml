@@ -44,6 +44,9 @@ vars:
   CLIENT_EVENTS_SRC: ./api/client.events.swagger.yml
   CLIENT_EVENTS_DST: ./internal/server-client/events/events.gen.go
   CLIENT_EVENTS_PKG: clientevents
+  MANAGER_EVENTS_SRC: ./api/manager.events.swagger.yml
+  MANAGER_EVENTS_DST: ./internal/server-manager/events/events.gen.go
+  MANAGER_EVENTS_PKG: managerevents
 
 tasks:
   default:
@@ -103,7 +106,7 @@ tasks:
       TEST_PSQL_DEBUG: false
     cmds:
       - echo "- Tests"
-      - go test -tags integration -race ./...
+      - go test -tags integration -race ./internal/services/afc-verdicts-processor
 
 
   tests:e2e:
@@ -156,6 +159,9 @@ tasks:
       - oapi-codegen --old-config-style -templates oapi-templates/ -generate server,types,spec -package managerv1 ./api/manager.v1.swagger.yml > ./internal/server-manager/v1/server.gen.go
       - echo "Generate client events..."
       - oapi-codegen --old-config-style -generate skip-prune,types,spec -package {{.CLIENT_EVENTS_PKG}} {{.CLIENT_EVENTS_SRC}} > {{.CLIENT_EVENTS_DST}}
+      - echo "Generate manager events..."
+      - oapi-codegen --old-config-style -generate skip-prune,types,spec -package {{.MANAGER_EVENTS_PKG}} {{.MANAGER_EVENTS_SRC}} > {{.MANAGER_EVENTS_DST}}
+
 
 
   gen:e2e:

@@ -56,3 +56,31 @@ func (r *Repo) CreateClientVisible(
 	}
 	return adaptStoreMessage(m), nil
 }
+
+func (r *Repo) MessageForManagerByChatID(ctx context.Context, id types.ChatID) (*Message, error) {
+	m, err := r.db.Message(ctx).Query().
+		Where(
+			message.ChatID(id),
+			message.IsVisibleForManager(true),
+			message.IsBlocked(false)).
+		Order(message.ByCreatedAt()).First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting message visible msg: %v", err)
+	}
+	return adaptStoreMessage(m), nil
+}
+
+func (r *Repo) CreateProblemAssignedMessage(
+	ctx context.Context,
+	id types.ChatID,
+	managerID types.UserID,
+	problemID types.ProblemID,
+) (*store.Message, error) {
+	return r.db.Message(ctx).Create().
+		SetChatID(id).
+		SetIsVisibleForClient(true).
+		SetIsService(true).
+		SetProblemID(problemID).
+		SetBody(fmt.Sprintf("Manager %s will answer you", managerID.String())).
+		Save(ctx)
+}

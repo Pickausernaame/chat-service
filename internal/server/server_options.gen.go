@@ -25,6 +25,7 @@ func NewOptions(
 	secWsProtocol string,
 	eventSubscriber eventStream,
 	errHandler echo.HTTPErrorHandler,
+	adapter adapter,
 	options ...OptOptionsSetter,
 ) Options {
 	o := Options{}
@@ -42,6 +43,7 @@ func NewOptions(
 	o.secWsProtocol = secWsProtocol
 	o.eventSubscriber = eventSubscriber
 	o.errHandler = errHandler
+	o.adapter = adapter
 
 	for _, opt := range options {
 		opt(&o)
@@ -62,6 +64,7 @@ func (o *Options) Validate() error {
 	errs.Add(errors461e464ebed9.NewValidationError("secWsProtocol", _validate_Options_secWsProtocol(o)))
 	errs.Add(errors461e464ebed9.NewValidationError("eventSubscriber", _validate_Options_eventSubscriber(o)))
 	errs.Add(errors461e464ebed9.NewValidationError("errHandler", _validate_Options_errHandler(o)))
+	errs.Add(errors461e464ebed9.NewValidationError("adapter", _validate_Options_adapter(o)))
 	return errs.AsError()
 }
 
@@ -138,6 +141,13 @@ func _validate_Options_eventSubscriber(o *Options) error {
 func _validate_Options_errHandler(o *Options) error {
 	if err := validator461e464ebed9.GetValidatorFor(o).Var(o.errHandler, "required"); err != nil {
 		return fmt461e464ebed9.Errorf("field `errHandler` did not pass the test: %w", err)
+	}
+	return nil
+}
+
+func _validate_Options_adapter(o *Options) error {
+	if err := validator461e464ebed9.GetValidatorFor(o).Var(o.adapter, "required"); err != nil {
+		return fmt461e464ebed9.Errorf("field `adapter` did not pass the test: %w", err)
 	}
 	return nil
 }

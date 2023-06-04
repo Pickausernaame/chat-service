@@ -26,10 +26,12 @@ import (
 	inmemeventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream/in-mem"
 	managerload "github.com/Pickausernaame/chat-service/internal/services/manager-load"
 	inmemmanagerpool "github.com/Pickausernaame/chat-service/internal/services/manager-pool/in-mem"
+	managerscheduler "github.com/Pickausernaame/chat-service/internal/services/manager-scheduler"
 	msgproducer "github.com/Pickausernaame/chat-service/internal/services/msg-producer"
 	"github.com/Pickausernaame/chat-service/internal/services/outbox"
 	clientmessageblockedjob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/client-message-blocked"
 	clientmessagesentjob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/client-message-sent"
+	managerassignedtoproblemjob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/manager-assigned-to-problem"
 	sendclientmessagejob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/send-client-message"
 	"github.com/Pickausernaame/chat-service/internal/store"
 	"github.com/Pickausernaame/chat-service/internal/types"
@@ -171,7 +173,22 @@ func run() (errReturned error) {
 	// initialization manager load service
 	manLoadService, err := managerload.New(managerload.NewOptions(cfg.Service.ManagerLoad.MaxProblemsAtSameTime, problemRepo))
 	if err != nil {
-		return fmt.Errorf("init outbox service: %v", err)
+		return fmt.Errorf("init manLoadService service: %v", err)
+	}
+
+	mngrAssignedJob, err := managerassignedtoproblemjob.New(managerassignedtoproblemjob.NewOptions(msgRepo, manLoadService, eventStream))
+	if err != nil {
+		return fmt.Errorf("init manager assigned job: %v", err)
+	}
+
+	err = obox.RegisterJob(mngrAssignedJob)
+	if err != nil {
+		return fmt.Errorf("registration manager assigned job: %v", err)
+	}
+
+	mngrScheduler, err := managerscheduler.New(managerscheduler.NewOptions(cfg.Service.ManagerScheduler.Period, manPoolService, msgRepo, obox, problemRepo, db))
+	if err != nil {
+		return fmt.Errorf("init manager scheduler error: %v", err)
 	}
 
 	// initialization afc-verdicts-processor service
@@ -227,6 +244,8 @@ func run() (errReturned error) {
 	eg.Go(func() error { return obox.Run(ctx) })
 
 	eg.Go(func() error { return afcProcessor.Run(ctx) })
+
+	eg.Go(func() error { return mngrScheduler.Run(ctx) })
 
 	if err = eg.Wait(); err != nil && !errors.Is(err, context.Canceled) {
 		return fmt.Errorf("wait app stop: %v", err)

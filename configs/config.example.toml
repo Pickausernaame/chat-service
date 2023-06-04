@@ -68,6 +68,8 @@ KPiLEpexQ09tQaa1AgMBAAE=
 -----END PUBLIC KEY-----
 """
 
+[services.manager_scheduler]
+period = "1s"
 
 [sentry]
 dsn = "http://7dc894a2773a424780da7a0464bd3241@127.0.0.1:9000/2"
