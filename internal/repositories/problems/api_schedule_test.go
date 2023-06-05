@@ -33,7 +33,6 @@ func (s *ProblemsSchedulerRepoSuite) SetupSuite() {
 }
 
 func (s *ProblemsSchedulerRepoSuite) Test_GetUnassignedProblems() {
-
 	chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(types.NewUserID()).Save(s.Ctx)
 	s.Require().NoError(err)
 

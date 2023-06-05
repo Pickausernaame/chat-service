@@ -138,6 +138,40 @@ func (s *ProblemsRepoSuite) Test_GetManagerOpenProblemsCount() {
 	})
 }
 
+func (s *ProblemsRepoSuite) Test_GetAssignedUnsolvedProblems() {
+	s.Run("problem does not exist, should be created", func() {
+		managerID := types.NewUserID()
+		problems := make([]*problemsrepo.Problem, 0, 10)
+
+		for i := 0; i < 10; i++ {
+			clientID := types.NewUserID()
+			chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
+			s.Require().NoError(err)
+
+			problem, err := s.Database.Problem(s.Ctx).Create().SetChatID(chat.ID).SetManagerID(managerID).Save(s.Ctx)
+			s.Require().NoError(err)
+
+			p := &problemsrepo.Problem{
+				ID:        problem.ID,
+				ChatID:    problem.ChatID,
+				ManagerID: problem.ManagerID,
+				ResolveAt: problem.ResolveAt,
+				CreatedAt: problem.CreatedAt,
+			}
+			problems = append(problems, p)
+		}
+
+		res, err := s.repo.GetAssignedUnsolvedProblems(s.Ctx, managerID)
+		s.Require().NoError(err)
+		s.Equal(len(problems), len(res))
+		for i := 0; i < 10; i++ {
+			s.Equal(problems[i].ChatID, res[i].ChatID)
+			s.Equal(problems[i].ID, res[i].ID)
+			s.Equal(problems[i].ManagerID, res[i].ManagerID)
+		}
+	})
+}
+
 func (s *ProblemsRepoSuite) createChatWithProblemAssignedTo(managerID types.UserID) (types.ChatID, types.ProblemID) {
 	s.T().Helper()
 

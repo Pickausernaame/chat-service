@@ -20,10 +20,11 @@ import (
 type HandlersSuite struct {
 	testingh.ContextSuite
 
-	ctrl                      *gomock.Controller
-	canReceiveProblemsUseCase *managerv1mocks.MockcanReceiveProblemsUseCase
-	setReadyReceiveProblems   *managerv1mocks.MocksetReadyReceiveProblemsUseCase
-	handlers                  managerv1.Handlers
+	ctrl                       *gomock.Controller
+	canReceiveProblemsUseCase  *managerv1mocks.MockcanReceiveProblemsUseCase
+	setReadyReceiveProblems    *managerv1mocks.MocksetReadyReceiveProblemsUseCase
+	getAssignedProblemsUseCase *managerv1mocks.MockgetAssignedProblemsUseCase
+	handlers                   managerv1.Handlers
 
 	managerID types.UserID
 }
@@ -37,9 +38,11 @@ func (s *HandlersSuite) SetupTest() {
 	s.ctrl = gomock.NewController(s.T())
 	s.canReceiveProblemsUseCase = managerv1mocks.NewMockcanReceiveProblemsUseCase(s.ctrl)
 	s.setReadyReceiveProblems = managerv1mocks.NewMocksetReadyReceiveProblemsUseCase(s.ctrl)
+	s.getAssignedProblemsUseCase = managerv1mocks.NewMockgetAssignedProblemsUseCase(s.ctrl)
 	{
 		var err error
-		s.handlers, err = managerv1.NewHandlers(managerv1.NewOptions(s.canReceiveProblemsUseCase, s.setReadyReceiveProblems))
+		s.handlers, err = managerv1.NewHandlers(managerv1.NewOptions(s.canReceiveProblemsUseCase,
+			s.setReadyReceiveProblems, s.getAssignedProblemsUseCase))
 		s.Require().NoError(err)
 	}
 	s.managerID = types.NewUserID()

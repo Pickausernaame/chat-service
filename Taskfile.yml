@@ -106,7 +106,7 @@ tasks:
       TEST_PSQL_DEBUG: false
     cmds:
       - echo "- Tests"
-      - go test -tags integration -race ./internal/services/afc-verdicts-processor
+      - go test -tags integration -race ./...
 
 
   tests:e2e:

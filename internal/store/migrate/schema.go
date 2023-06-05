@@ -135,6 +135,11 @@ var (
 					Where: "resolve_at IS NULL",
 				},
 			},
+			{
+				Name:    "problem_manager_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProblemsColumns[1]},
+			},
 		},
 	}
 	// Tables holds all the tables in the schema.

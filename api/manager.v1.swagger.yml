@@ -34,6 +34,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/PostFreeHandsResponse"
 
+  /getChats:
+    post:
+      description: Get open problems assigned to manager
+      responses:
+        '200':
+          description: List of chats with problems
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostGetChatsResponse"
+
 security:
   - bearerAuth: [ ]
 
@@ -74,10 +85,42 @@ components:
         error:
           $ref: "#/components/schemas/Error"
 
+    PostGetChatsResponse:
+      properties:
+        data:
+          $ref: "#/components/schemas/ChatList"
+        error:
+          $ref: "#/components/schemas/Error"
+
     ManagerAvailability:
       properties:
         available:
           type: boolean
+
+    ChatList:
+      required: [chats]
+      properties:
+        chats:
+          type: array
+          items:
+            $ref: '#/components/schemas/Chat'
+
+    Chat:
+      type: object
+      required: [chatId, clientId]
+      properties:
+        chatId:
+          type: string
+          format: uuid
+          x-go-type: types.ChatID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+        clientId:
+          type: string
+          format: uuid
+          x-go-type: types.UserID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
 
     Error:
       required: [ message, code ]

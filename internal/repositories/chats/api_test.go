@@ -53,3 +53,16 @@ func (s *ChatsRepoSuite) Test_CreateIfNotExists() {
 		s.Equal(chat.ID, chatID)
 	})
 }
+
+func (s *ChatsRepoSuite) Test_ClientIDByID() {
+	s.Run("get clientID by chatID", func() {
+		clientID := types.NewUserID()
+
+		chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
+		s.Require().NoError(err)
+
+		res, err := s.repo.ClientIDByID(s.Ctx, chat.ID)
+		s.Require().NoError(err)
+		s.Equal(clientID, res)
+	})
+}

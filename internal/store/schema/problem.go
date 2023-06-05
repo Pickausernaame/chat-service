@@ -45,5 +45,6 @@ func (Problem) Indexes() []ent.Index {
 			Annotations(
 				entsql.IndexWhere(problem.FieldResolveAt + " IS NULL"),
 			).Unique(),
+		index.Fields(problem.FieldManagerID),
 	}
 }

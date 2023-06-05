@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
+	problemsrepo "github.com/Pickausernaame/chat-service/internal/repositories/problems"
 	managerpool "github.com/Pickausernaame/chat-service/internal/services/manager-pool"
 	managerassignedtoproblemjob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/manager-assigned-to-problem"
 	"github.com/Pickausernaame/chat-service/internal/store"
@@ -18,7 +19,7 @@ import (
 const serviceName = "manager-scheduler"
 
 type problemRepository interface {
-	GetUnassignedProblems(ctx context.Context) ([]*store.Problem, error)
+	GetUnassignedProblems(ctx context.Context) ([]*problemsrepo.Problem, error)
 	AssignManager(ctx context.Context, problemID types.ProblemID, managerID types.UserID) error
 	ResolveProblem(ctx context.Context, problemID types.ProblemID) error
 }

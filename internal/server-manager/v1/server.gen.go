@@ -23,6 +23,17 @@ const (
 	ErrorCodeManagerOverloadedError ErrorCode = 5000
 )
 
+// Chat defines model for Chat.
+type Chat struct {
+	ChatId   types.ChatID `json:"chatId"`
+	ClientId types.UserID `json:"clientId"`
+}
+
+// ChatList defines model for ChatList.
+type ChatList struct {
+	Chats []Chat `json:"chats"`
+}
+
 // Error defines model for Error.
 type Error struct {
 	// Code contains HTTP error codes and specific business logic error codes (the last must be >= 1000).
@@ -43,6 +54,12 @@ type ManagerAvailability struct {
 type PostFreeHandsResponse struct {
 	Data  *string `json:"data"`
 	Error *Error  `json:"error,omitempty"`
+}
+
+// PostGetChatsResponse defines model for PostGetChatsResponse.
+type PostGetChatsResponse struct {
+	Data  *ChatList `json:"data,omitempty"`
+	Error *Error    `json:"error,omitempty"`
 }
 
 // PostGetFreeHandsBtnAvailabilityResponse defines model for PostGetFreeHandsBtnAvailabilityResponse.
@@ -69,6 +86,9 @@ type ServerInterface interface {
 
 	// (POST /freeHands)
 	PostFreeHands(ctx echo.Context, params PostFreeHandsParams) error
+
+	// (POST /getChats)
+	PostGetChats(ctx echo.Context) error
 
 	// (POST /getFreeHandsBtnAvailability)
 	PostGetFreeHandsBtnAvailability(ctx echo.Context, params PostGetFreeHandsBtnAvailabilityParams) error
@@ -109,6 +129,17 @@ func (w *ServerInterfaceWrapper) PostFreeHands(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.PostFreeHands(ctx, params)
+	return err
+}
+
+// PostGetChats converts echo context to params.
+func (w *ServerInterfaceWrapper) PostGetChats(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.PostGetChats(ctx)
 	return err
 }
 
@@ -159,6 +190,7 @@ func RegisterHandlersWithBaseURL(router server.EchoRouter, si ServerInterface, b
 	}
 
 	router.POST(baseURL+"/freeHands", wrapper.PostFreeHands)
+	router.POST(baseURL+"/getChats", wrapper.PostGetChats)
 	router.POST(baseURL+"/getFreeHandsBtnAvailability", wrapper.PostGetFreeHandsBtnAvailability)
 
 }
@@ -166,19 +198,22 @@ func RegisterHandlersWithBaseURL(router server.EchoRouter, si ServerInterface, b
 // Base64 encoded, gzipped, json marshaled Swagger object
 var SwaggerSpec = []string{
 
-	"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",
+	"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",
+	"q5NUPGfW/RUAAP//JFy0iIgLAAA=",
 }
 
 func GetSwagger() (swagger *openapi3.T, err error) {

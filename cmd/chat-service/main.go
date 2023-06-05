@@ -223,7 +223,7 @@ func run() (errReturned error) {
 	}
 
 	// initialization manager server
-	srvManager, err := initServerManager(cfg, kc, manLoadService, manPoolService, eventStream)
+	srvManager, err := initServerManager(cfg, kc, manLoadService, manPoolService, eventStream, chatRepo, problemRepo)
 	if err != nil {
 		return fmt.Errorf("init server manager: %v", err)
 	}

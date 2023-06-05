@@ -7,6 +7,8 @@ import (
 
 	keycloakclient "github.com/Pickausernaame/chat-service/internal/clients/keycloak"
 	"github.com/Pickausernaame/chat-service/internal/config"
+	chatsrepo "github.com/Pickausernaame/chat-service/internal/repositories/chats"
+	problemsrepo "github.com/Pickausernaame/chat-service/internal/repositories/problems"
 	"github.com/Pickausernaame/chat-service/internal/server"
 	managerevents "github.com/Pickausernaame/chat-service/internal/server-manager/events"
 	managerv1 "github.com/Pickausernaame/chat-service/internal/server-manager/v1"
@@ -14,6 +16,7 @@ import (
 	manager_load "github.com/Pickausernaame/chat-service/internal/services/manager-load"
 	managerpool "github.com/Pickausernaame/chat-service/internal/services/manager-pool"
 	canreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/can-receive-problems"
+	getassignedproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/get-assigned-problems"
 	setreadyreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/set-ready-receive-problems"
 )
 
@@ -25,6 +28,8 @@ func initServerManager(
 	managerLoadService *manager_load.Service,
 	managerPool managerpool.Pool,
 	subscriber eventSubscriber,
+	chatRepo *chatsrepo.Repo,
+	problemRepo *problemsrepo.Repo,
 ) (*server.Server, error) {
 	// getting specification
 	v1Swagger, err := managerv1.GetSwagger()
@@ -53,8 +58,13 @@ func initServerManager(
 		return nil, fmt.Errorf("init setReadyReceiveProblems usecase: %v", err)
 	}
 
+	getAssignedProblems, err := getassignedproblems.New(getassignedproblems.NewOptions(problemRepo, chatRepo))
+	if err != nil {
+		return nil, fmt.Errorf("init getAssignedProblems usecase: %v", err)
+	}
+
 	// initialization v1 handlers
-	v1Handlers, err := managerv1.NewHandlers(managerv1.NewOptions(canReciveProblems, setReadyReceiveProblems))
+	v1Handlers, err := managerv1.NewHandlers(managerv1.NewOptions(canReciveProblems, setReadyReceiveProblems, getAssignedProblems))
 	if err != nil {
 		return nil, fmt.Errorf("create v1 handlers: %v", err)
 	}

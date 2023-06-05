@@ -12,3 +12,11 @@ func (r *Repo) CreateIfNotExists(ctx context.Context, userID types.UserID) (type
 		SetClientID(userID).
 		OnConflictColumns(chat.FieldClientID).Ignore().ID(ctx)
 }
+
+func (r *Repo) ClientIDByID(ctx context.Context, id types.ChatID) (types.UserID, error) {
+	c, err := r.db.Chat(ctx).Get(ctx, id)
+	if err != nil {
+		return types.UserIDNil, nil
+	}
+	return c.ClientID, nil
+}
