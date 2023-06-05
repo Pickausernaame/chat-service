@@ -75,18 +75,15 @@ func (s *ManagerSchedulerSuite) TestScheduling() {
 	cancel, errCh := s.runScheduler()
 	defer cancel()
 
-	clientID := types.NewUserID()
-
-	chat := s.Store.Chat.Create().SetClientID(clientID).SaveX(s.Ctx)
-	s.createExpectingManagerProblem(chat.ID, clientID)
-	s.createExpectingManagerProblem(chat.ID, clientID)
+	s.createExpectingManagerProblem()
+	s.createExpectingManagerProblem()
 
 	m1, m2, m3 := types.NewUserID(), types.NewUserID(), types.NewUserID()
 	s.Require().NoError(s.mPool.Put(s.Ctx, m3)) // Pool: [m3]
 
 	time.Sleep(period * 2)
 
-	s.createExpectingManagerProblem(chat.ID, clientID)
+	s.createExpectingManagerProblem()
 	s.Require().NoError(s.mPool.Put(s.Ctx, m2)) // Pool: [m2]
 	s.Require().NoError(s.mPool.Put(s.Ctx, m1)) // Pool: [m2, m1]
 	s.Require().NoError(s.mPool.Put(s.Ctx, m3)) // Pool: [m2, m1, m3]
@@ -110,11 +107,8 @@ func (s *ManagerSchedulerSuite) TestScheduling() {
 func (s *ManagerSchedulerSuite) TestLessManagersThanProblems() {
 	const problems = 100
 
-	clientID := types.NewUserID()
-
-	chat := s.Store.Chat.Create().SetClientID(clientID).SaveX(s.Ctx)
 	for i := 0; i < problems; i++ {
-		s.createExpectingManagerProblem(chat.ID, clientID)
+		s.createExpectingManagerProblem()
 	}
 
 	s.Require().NoError(s.mPool.Put(s.Ctx, types.NewUserID()))
@@ -131,10 +125,7 @@ func (s *ManagerSchedulerSuite) TestLessManagersThanProblems() {
 func (s *ManagerSchedulerSuite) TestMoreManagersThanProblems() {
 	const managers = 100
 
-	clientID := types.NewUserID()
-
-	chat := s.Store.Chat.Create().SetClientID(clientID).SaveX(s.Ctx)
-	s.createExpectingManagerProblem(chat.ID, clientID)
+	s.createExpectingManagerProblem()
 
 	for i := 0; i < managers; i++ {
 		s.Require().NoError(s.mPool.Put(s.Ctx, types.NewUserID()))
@@ -171,13 +162,14 @@ func (s *ManagerSchedulerSuite) runScheduler() (context.CancelFunc, <-chan error
 	return cancel, errCh
 }
 
-func (s *ManagerSchedulerSuite) createExpectingManagerProblem(chatID types.ChatID, clientID types.UserID) {
+func (s *ManagerSchedulerSuite) createExpectingManagerProblem() {
 	s.T().Helper()
-
-	p := s.Store.Problem.Create().SetChatID(chatID).SaveX(s.Ctx)
+	clientID := types.NewUserID()
+	chat := s.Store.Chat.Create().SetClientID(clientID).SaveX(s.Ctx)
+	p := s.Store.Problem.Create().SetChatID(chat.ID).SaveX(s.Ctx)
 	s.Database.Message(s.Ctx).Create().
 		SetID(types.NewMessageID()).
-		SetChatID(chatID).
+		SetChatID(chat.ID).
 		SetAuthorID(clientID).
 		SetProblemID(p.ID).
 		SetBody("Где мои деньги?").
