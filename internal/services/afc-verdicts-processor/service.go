@@ -232,8 +232,11 @@ func (s *Service) handleSuspicious(ctx context.Context, msgID types.MessageID) f
 			if err != nil {
 				return fmt.Errorf("blocking msg: %v", err)
 			}
-
-			_, err = s.outBox.Put(ctx, clientmessageblockedjob.Name, msgID.String(), time.Now())
+			payload, err := clientmessageblockedjob.MarshalPayload(msgID)
+			if err != nil {
+				return fmt.Errorf("marshaling clientmessageblockedjob payload: %v", err)
+			}
+			_, err = s.outBox.Put(ctx, clientmessageblockedjob.Name, payload, time.Now())
 			if err != nil {
 				return fmt.Errorf("putting %s job: %v", clientmessageblockedjob.Name, err)
 			}
@@ -250,7 +253,12 @@ func (s *Service) handleOk(ctx context.Context, msgID types.MessageID) func() er
 				return fmt.Errorf("marking visible for manager msg: %v", err)
 			}
 
-			_, err = s.outBox.Put(ctx, clientmessagesentjob.Name, msgID.String(), time.Now())
+			payload, err := clientmessagesentjob.MarshalPayload(msgID)
+			if err != nil {
+				return fmt.Errorf("marshaling clientmessagesentjob payload: %v", err)
+			}
+
+			_, err = s.outBox.Put(ctx, clientmessagesentjob.Name, payload, time.Now())
 			if err != nil {
 				return fmt.Errorf("putting %s job: %v", clientmessagesentjob.Name, err)
 			}

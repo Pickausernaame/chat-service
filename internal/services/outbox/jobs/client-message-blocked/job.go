@@ -12,7 +12,7 @@ import (
 	"github.com/Pickausernaame/chat-service/internal/types"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=mocks/job_mock.gen.go -package=sendclientmessagejobmocks
+//go:generate mockgen -source=$GOFILE -destination=mocks/job_mock.gen.go -package=clientmessageblockedjobmocks
 
 const Name = "client-message-blocked"
 

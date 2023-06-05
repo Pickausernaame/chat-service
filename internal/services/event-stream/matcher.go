@@ -24,3 +24,52 @@ func (m *NewMessageEvent) Matches(x interface{}) bool {
 func (m *NewMessageEvent) String() string {
 	return fmt.Sprintf("%v", *m)
 }
+
+func (m *MessageBlockedEvent) Matches(x interface{}) bool {
+	actualEvent, ok := x.(*MessageBlockedEvent)
+	if !ok {
+		return false
+	}
+
+	// Compare the fields excluding EventID
+	return actualEvent.EventType == m.EventType &&
+		actualEvent.MessageID == m.MessageID &&
+		actualEvent.RequestID == m.RequestID
+}
+
+func (m *MessageBlockedEvent) String() string {
+	return fmt.Sprintf("%v", *m)
+}
+
+func (m *MessageSentEvent) Matches(x interface{}) bool {
+	actualEvent, ok := x.(*MessageSentEvent)
+	if !ok {
+		return false
+	}
+
+	// Compare the fields excluding EventID
+	return actualEvent.EventType == m.EventType &&
+		actualEvent.MessageID == m.MessageID &&
+		actualEvent.RequestID == m.RequestID
+}
+
+func (m *MessageSentEvent) String() string {
+	return fmt.Sprintf("%v", *m)
+}
+
+func (m *NewChatEvent) Matches(x interface{}) bool {
+	actualEvent, ok := x.(*NewChatEvent)
+	if !ok {
+		return false
+	}
+
+	// Compare the fields excluding EventID
+	return actualEvent.EventType == m.EventType &&
+		actualEvent.RequestID == m.RequestID &&
+		actualEvent.ChatID == m.ChatID &&
+		actualEvent.ClientID == m.ClientID
+}
+
+func (m *NewChatEvent) String() string {
+	return fmt.Sprintf("%v", *m)
+}

@@ -55,7 +55,7 @@ func (s *ChatsRepoSuite) Test_CreateIfNotExists() {
 }
 
 func (s *ChatsRepoSuite) Test_ClientIDByID() {
-	s.Run("get clientID by chatID", func() {
+	s.Run("get clientID by chatID - success", func() {
 		clientID := types.NewUserID()
 
 		chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
@@ -64,5 +64,17 @@ func (s *ChatsRepoSuite) Test_ClientIDByID() {
 		res, err := s.repo.ClientIDByID(s.Ctx, chat.ID)
 		s.Require().NoError(err)
 		s.Equal(clientID, res)
+	})
+
+	s.Run("chat not exist", func() {
+		clientID := types.NewUserID()
+		chatID := types.NewChatID()
+
+		chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
+		s.Require().NoError(err)
+
+		res, err := s.repo.ClientIDByID(s.Ctx, chatID)
+		s.Require().Errot(err)
+		s.Empty(res)
 	})
 }

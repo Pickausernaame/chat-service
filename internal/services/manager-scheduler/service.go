@@ -2,7 +2,6 @@ package managerscheduler
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -109,19 +108,12 @@ func (s *Service) Run(ctx context.Context) (err error) {
 						return fmt.Errorf("creating problem assigned message: %v", err)
 					}
 
-					req := managerassignedtoproblemjob.Request{
-						ClientID:  clientMsg.AuthorID,
-						ManagerID: managerID,
-						RequestID: clientMsg.InitialRequestID,
-						MessageID: msg.ID,
-					}
-
-					payload, err := json.Marshal(&req)
+					payload, err := managerassignedtoproblemjob.MarshalPayload(clientMsg.AuthorID, managerID, clientMsg.InitialRequestID, msg.ID)
 					if err != nil {
-						return fmt.Errorf("marshaling payload: %v", err)
+						return fmt.Errorf("marshaling managerassignedtoproblemjob payload: %v", err)
 					}
 
-					_, err = s.outbox.Put(ctx, managerassignedtoproblemjob.Name, string(payload), time.Now())
+					_, err = s.outbox.Put(ctx, managerassignedtoproblemjob.Name, payload, time.Now())
 					if err != nil {
 						return fmt.Errorf("outbox put job: %v", err)
 					}

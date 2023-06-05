@@ -21,6 +21,12 @@ func (Adapter) Adapt(ev eventstream.Event) (any, error) {
 			return nil, ErrInvalidEventType
 		}
 		return toNewChatEvent(res), nil
+	case eventstream.EventTypeNewMessageEvent:
+		res, ok := ev.(*eventstream.NewMessageEvent)
+		if !ok {
+			return nil, ErrInvalidEventType
+		}
+		return toNewMessageEvent(res), nil
 	}
 	return nil, nil
 }
@@ -33,5 +39,18 @@ func toNewChatEvent(ev *eventstream.NewChatEvent) *NewChatEvent {
 		EventId:             ev.EventID,
 		EventType:           NewChatEventEventTypeNewChatEvent,
 		RequestId:           ev.RequestID,
+	}
+}
+
+func toNewMessageEvent(ev *eventstream.NewMessageEvent) *NewMessageEvent {
+	return &NewMessageEvent{
+		AuthorId:  ev.UserID,
+		Body:      ev.MessageBody,
+		CreatedAt: ev.CreatedAt,
+		EventId:   ev.EventID,
+		ChatId:    ev.ChatID,
+		EventType: NewMessageEventEventTypeNewMessageEvent,
+		MessageId: ev.MessageID,
+		RequestId: ev.RequestID,
 	}
 }

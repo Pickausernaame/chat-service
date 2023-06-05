@@ -14,6 +14,8 @@ import (
 	"github.com/Pickausernaame/chat-service/internal/types"
 )
 
+//go:generate mockgen -source=$GOFILE -destination=mocks/job_mock.gen.go -package=managerassignedtoproblemjobmocks
+
 const Name = "manager-assigned-to-problem"
 
 type messageRepository interface {
@@ -53,15 +55,8 @@ func (j *Job) Name() string {
 	return Name
 }
 
-type Request struct {
-	ClientID  types.UserID
-	ManagerID types.UserID
-	RequestID types.RequestID
-	MessageID types.MessageID
-}
-
 func (j *Job) Handle(ctx context.Context, payload string) error {
-	var req *Request
+	var req *request
 
 	if err := json.Unmarshal([]byte(payload), &req); err != nil {
 		return fmt.Errorf("unmarshaling payload: %v", err)
@@ -88,6 +83,7 @@ func (j *Job) Handle(ctx context.Context, payload string) error {
 		msg.IsService)
 
 	eg, ctx := errgroup.WithContext(ctx)
+	defer eg.Wait()
 	eg.Go(func() error {
 		err = j.eventStream.Publish(ctx, req.ClientID, clientEvent)
 		if err != nil {
@@ -109,5 +105,5 @@ func (j *Job) Handle(ctx context.Context, payload string) error {
 		return fmt.Errorf("publishing manager event: %v", err)
 	}
 
-	return eg.Wait()
+	return nil
 }

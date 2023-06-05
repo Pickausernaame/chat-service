@@ -157,7 +157,7 @@ func run() (errReturned error) {
 		return fmt.Errorf("registration msg blocked job: %v", err)
 	}
 
-	msgSentJob, err := clientmessagesentjob.New(clientmessagesentjob.NewOptions(msgRepo, eventStream))
+	msgSentJob, err := clientmessagesentjob.New(clientmessagesentjob.NewOptions(msgRepo, problemRepo, eventStream))
 	if err != nil {
 		return fmt.Errorf("init msg sent job: %v", err)
 	}

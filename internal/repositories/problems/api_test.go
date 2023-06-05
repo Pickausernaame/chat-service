@@ -139,7 +139,7 @@ func (s *ProblemsRepoSuite) Test_GetManagerOpenProblemsCount() {
 }
 
 func (s *ProblemsRepoSuite) Test_GetAssignedUnsolvedProblems() {
-	s.Run("problem does not exist, should be created", func() {
+	s.Run("getting assigned problems to manager", func() {
 		managerID := types.NewUserID()
 		problems := make([]*problemsrepo.Problem, 0, 10)
 
@@ -161,6 +161,39 @@ func (s *ProblemsRepoSuite) Test_GetAssignedUnsolvedProblems() {
 			problems = append(problems, p)
 		}
 
+		// add resolved problems - should be ignored
+		for i := 0; i < 3; i++ {
+			clientID := types.NewUserID()
+			chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
+			s.Require().NoError(err)
+
+			_, err = s.Database.Problem(s.Ctx).Create().SetChatID(chat.ID).SetManagerID(managerID).
+				SetResolveAt(time.Now()).Save(s.Ctx)
+			s.Require().NoError(err)
+		}
+
+		// add unsolved problems another manager - should be ignored
+		anotherManagerID := types.NewUserID()
+		for i := 0; i < 3; i++ {
+			clientID := types.NewUserID()
+			chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
+			s.Require().NoError(err)
+
+			_, err = s.Database.Problem(s.Ctx).Create().SetChatID(chat.ID).SetManagerID(anotherManagerID).Save(s.Ctx)
+			s.Require().NoError(err)
+		}
+
+		// add solved problems another manager - should be ignored
+		for i := 0; i < 3; i++ {
+			clientID := types.NewUserID()
+			chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
+			s.Require().NoError(err)
+
+			_, err = s.Database.Problem(s.Ctx).Create().SetChatID(chat.ID).SetManagerID(anotherManagerID).
+				SetResolveAt(time.Now()).Save(s.Ctx)
+			s.Require().NoError(err)
+		}
+
 		res, err := s.repo.GetAssignedUnsolvedProblems(s.Ctx, managerID)
 		s.Require().NoError(err)
 		s.Equal(len(problems), len(res))
@@ -169,6 +202,38 @@ func (s *ProblemsRepoSuite) Test_GetAssignedUnsolvedProblems() {
 			s.Equal(problems[i].ID, res[i].ID)
 			s.Equal(problems[i].ManagerID, res[i].ManagerID)
 		}
+	})
+}
+
+func (s *ProblemsRepoSuite) Test_GetManagerIDByChatID() {
+	s.Run("getting manager id by chat id - success", func() {
+		managerID := types.NewUserID()
+
+		clientID := types.NewUserID()
+		chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
+		s.Require().NoError(err)
+
+		_, err = s.Database.Problem(s.Ctx).Create().SetChatID(chat.ID).SetManagerID(managerID).Save(s.Ctx)
+		s.Require().NoError(err)
+
+		res, err := s.repo.GetManagerIDByChatID(s.Ctx, chat.ID)
+		s.Require().NoError(err)
+		s.Equal(managerID, res)
+	})
+
+	s.Run("chat not exist", func() {
+		managerID := types.NewUserID()
+		chatID := types.NewChatID()
+		clientID := types.NewUserID()
+		chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
+		s.Require().NoError(err)
+
+		_, err = s.Database.Problem(s.Ctx).Create().SetChatID(chat.ID).SetManagerID(managerID).Save(s.Ctx)
+		s.Require().NoError(err)
+
+		res, err := s.repo.GetManagerIDByChatID(s.Ctx, chatID)
+		s.Require().Error(err)
+		s.Empty(res)
 	})
 }
 

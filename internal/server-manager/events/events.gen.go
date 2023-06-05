@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/Pickausernaame/chat-service/internal/types"
 	"github.com/getkin/kin-openapi/openapi3"
@@ -18,12 +19,20 @@ import (
 
 // Defines values for BaseEventEventType.
 const (
-	BaseEventEventTypeNewChatEvent BaseEventEventType = "NewChatEvent"
+	BaseEventEventTypeNewChatEvent    BaseEventEventType = "NewChatEvent"
+	BaseEventEventTypeNewMessageEvent BaseEventEventType = "NewMessageEvent"
 )
 
 // Defines values for NewChatEventEventType.
 const (
-	NewChatEventEventTypeNewChatEvent NewChatEventEventType = "NewChatEvent"
+	NewChatEventEventTypeNewChatEvent    NewChatEventEventType = "NewChatEvent"
+	NewChatEventEventTypeNewMessageEvent NewChatEventEventType = "NewMessageEvent"
+)
+
+// Defines values for NewMessageEventEventType.
+const (
+	NewMessageEventEventTypeNewChatEvent    NewMessageEventEventType = "NewChatEvent"
+	NewMessageEventEventTypeNewMessageEvent NewMessageEventEventType = "NewMessageEvent"
 )
 
 // BaseEvent defines model for BaseEvent.
@@ -40,6 +49,11 @@ type BaseEvent struct {
 
 // BaseEventEventType Type of the event
 type BaseEventEventType string
+
+// MessageId defines model for MessageId.
+type MessageId struct {
+	MessageId types.MessageID `json:"messageId"`
+}
 
 // NewChatEvent defines model for NewChatEvent.
 type NewChatEvent struct {
@@ -65,18 +79,48 @@ type NewChatEvent struct {
 // NewChatEventEventType Type of the event
 type NewChatEventEventType string
 
+// NewMessageEvent defines model for NewMessageEvent.
+type NewMessageEvent struct {
+	// AuthorId Unique identifier for the author
+	AuthorId types.UserID `json:"authorId"`
+
+	// Body Body of the message
+	Body string `json:"body"`
+
+	// ChatId Unique identifier for the chat
+	ChatId types.ChatID `json:"chatId"`
+
+	// CreatedAt Date and time of event creation
+	CreatedAt time.Time `json:"createdAt"`
+
+	// EventId Unique identifier for the event
+	EventId types.EventID `json:"eventId"`
+
+	// EventType Type of the event
+	EventType NewMessageEventEventType `json:"eventType"`
+	MessageId types.MessageID          `json:"messageId"`
+
+	// RequestId Unique identifier for the request
+	RequestId types.RequestID `json:"requestId"`
+}
+
+// NewMessageEventEventType Type of the event
+type NewMessageEventEventType string
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7yTP2/bMBDFvwpx7UhbDroEHJN08NA2aJMp8EBTJ4s1/+VI2S0MffeClOJ/7WID6WT6",
-	"qCPfe/fjDpS3wTt0KYLYQVQtWlmWdzLi5w26lP8E8gEpaSxbmMvzOi9rjIp0SNo7EPDs9GuHTNfokm40",
-	"Ems8sdQiKy3AofFkZQIBXadr4JB+BwQBMZF2K+Dwa7Lyk7GYf+K0aJg/HO9NtA2eBmEytSBgpVPbLafK",
-	"2+pRq7XsIpKT0mKlWpkmEWmjFVbapVw3VTka+p4PXp7KheducpX55kQ/us6CeIGvuL1vZRoCWpz76DkQ",
-	"vnYYL0xpbLoqp+/jhe+U1GhJE9bZ/xsCxwEem170/DQjsQNpzLcGxMsOPhI2IOBDdaCvGtGrDtz1/Bw8",
-	"Jd2TXOMXT/hIfmnQxr/jnbtaK5kwMt0wK51cITElHUtyjcx6QhbemvfBLr03KF2eXM7hsrHljqtmluN5",
-	"P7SV0Re/06HnKjPPEek/0bd3tp8W/ycbh4fplz9RJegX5SztGp9VJZ1M3r2Tbs1+dCGrZXko7L7cwAqI",
-	"GZMNUhyy29xkSHxAJ4MGAZ+mN9MZ8OIwgnCdMRyyEaRYYD+N/gE3aHyw+fThK+DQkQEB2yiqynglTetj",
-	"Erez21m1jVnznwAAAP///isPi6cFAAA=",
+	"H4sIAAAAAAAC/9xVTW/jOAz9KwJ3j0qcopdCt+3HocC2U8y0p6IHxqZjTSzJleikRZD/PpDsfBcDJECL",
+	"wZziUKLE9/getYDcmcZZshxALSDkFRlMn5cY6GZGluOfxruGPGtKSxTDt0X8LCjkXjesnQUFT1a/tiR0",
+	"QZZ1qcmL0nnBFYmUAhJK5w0yKGhbXYAEfm8IFAT22k5Awttg4gZ9MP6EYarh9np7baBN43xXGHIFCiaa",
+	"q3Y8zJ3JHnQ+xTaQt4iGsrxCHgTyM51Tpi3HeJ2lo2G5lB2Wx3ThPpoYFa7cqZ9sa0A9wz3Nryrkmz58",
+	"T/M7CgEnPWUv+8iWEjy9thSO5K1POom57/2Fn8RdD0l7KiIjK1FsU7oN+mUpoeeoo2BXU2Z76Xisq5O/",
+	"Buum2IhqRwtqAVjX30pQzwv411MJCv7JNi7LeotlG38t5T4ZOdpHnNKd8/Tg3bgmEw5Fc2sLnSNTELoU",
+	"Bi1OyIscrWCckjDOk2hWyWsKx87VhDbqMSI+Towx4yQlRno+z8J5rY+eR13OSWCeAvkv0tka2bpb8kNt",
+	"bMaNG/+knGHZ63JnKJ0ozd/t3Bj6UMTYcuX8cW3pcv64tkgYu+L9EMilK95XL0Q/E0CCwbf/yU7ijeej",
+	"0UiC0XYVOPvgYfh7jOgJmYr/+BDLNTIJtIVgbdKjmh4JkTLiji0wBTIN4rYDRPv2WCus7892BWtaP/JG",
+	"PEjb0sU6WXMdVy/RTsWPtolsiMiTuEruE8kJcYTOyIcOzews9s01ZLHRoOB8eDYcgUwMBlC2rWsJkSjy",
+	"IbltjwyaUe0aE0/vdoGE1tegYB5UltUux7pygdXF6GKUzUOs+VcAAAD//2eWvrurCQAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
