@@ -8,6 +8,7 @@ import (
 
 	canreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/can-receive-problems"
 	getassignedproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/get-assigned-problems"
+	getchathistory "github.com/Pickausernaame/chat-service/internal/usecases/manager/get-chat-history"
 	setreadyreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/set-ready-receive-problems"
 )
 
@@ -27,11 +28,16 @@ type getAssignedProblemsUseCase interface {
 	Handle(ctx context.Context, req getassignedproblems.Request) (getassignedproblems.Response, error)
 }
 
+type getChatHistoryUseCase interface {
+	Handle(ctx context.Context, req getchathistory.Request) (getchathistory.Response, error)
+}
+
 //go:generate options-gen -out-filename=handlers.gen.go -from-struct=Options
 type Options struct {
 	canReceiveProblemsUseCase      canReceiveProblemsUseCase      `option:"mandatory" validate:"required"`
 	setReadyReceiveProblemsUseCase setReadyReceiveProblemsUseCase `option:"mandatory" validate:"required"`
 	getAssignedProblemsUseCase     getAssignedProblemsUseCase     `option:"mandatory" validate:"required"`
+	getChatHistoryUseCase          getChatHistoryUseCase          `option:"mandatory" validate:"required"`
 }
 
 type Handlers struct {

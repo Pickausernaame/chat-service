@@ -19,7 +19,7 @@ paths:
           content:
             application/json:
              schema:
-               $ref: "#/components/schemas/PostGetFreeHandsBtnAvailabilityResponse"
+               $ref: "#/components/schemas/PostGetFreeHandsBtnAvailability"
 
   /freeHands:
     post:
@@ -32,18 +32,39 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PostFreeHandsResponse"
+                $ref: "#/components/schemas/PostFreeHands"
 
   /getChats:
     post:
       description: Get open problems assigned to manager
+      parameters:
+        - $ref: "#/components/parameters/XRequestIDHeader"
       responses:
         '200':
           description: List of chats with problems
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PostGetChatsResponse"
+                $ref: "#/components/schemas/PostGetChats"
+
+  /getChatHistory:
+    post:
+      description: Get chat history.
+      parameters:
+        - $ref: "#/components/parameters/XRequestIDHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetChatHistoryRequest"
+      responses:
+        '200':
+          description: Messages list.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetChatHistoryResponse"
 
 security:
   - bearerAuth: [ ]
@@ -70,14 +91,23 @@ components:
 
   schemas:
     # Common.
-    PostGetFreeHandsBtnAvailabilityResponse:
+
+    GetChatHistoryResponse:
+      properties:
+        data:
+          $ref: "#/components/schemas/MessagesPage"
+        error:
+          $ref: "#/components/schemas/Error"
+
+
+    PostGetFreeHandsBtnAvailability:
       properties:
         data:
           $ref: "#/components/schemas/ManagerAvailability"
         error:
           $ref: "#/components/schemas/Error"
 
-    PostFreeHandsResponse:
+    PostFreeHands:
       properties:
         data:
           type: string
@@ -85,7 +115,7 @@ components:
         error:
           $ref: "#/components/schemas/Error"
 
-    PostGetChatsResponse:
+    PostGetChats:
       properties:
         data:
           $ref: "#/components/schemas/ChatList"
@@ -121,6 +151,55 @@ components:
           x-go-type: types.UserID
           x-go-type-import:
             path: "github.com/Pickausernaame/chat-service/internal/types"
+
+    GetChatHistoryRequest:
+      required: [chatId]
+      properties:
+        chatId:
+          type: string
+          format: uuid
+          x-go-type: types.ChatID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+        pageSize:
+          type: integer
+          minimum: 10
+          maximum: 100
+        cursor:
+          type: string
+
+
+
+    MessagesPage:
+      required: [ messages, next ]
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+        next:
+          type: string
+
+    Message:
+      required: [ id, body, createdAt, authorId ]
+      properties:
+        id:
+          type: string
+          format: uuid
+          x-go-type: types.MessageID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+        authorId:
+          type: string
+          format: uuid
+          x-go-type: types.UserID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
 
     Error:
       required: [ message, code ]

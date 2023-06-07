@@ -40,3 +40,12 @@ func (r *Repo) GetManagerIDByChatID(ctx context.Context, chatID types.ChatID) (t
 	}
 	return p.ManagerID, nil
 }
+
+func (r *Repo) GetProblemByChatAndManagerIDs(ctx context.Context, chatID types.ChatID, managerID types.UserID) (*Problem, error) {
+	p, err := r.db.Problem(ctx).Query().Where(problem.And(problem.ChatID(chatID), problem.ManagerID(managerID),
+		problem.ResolveAtIsNil())).First(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return adaptStoreProblem(p), nil
+}
