@@ -26,7 +26,7 @@ func (h Handlers) PostGetFreeHandsBtnAvailability(eCtx echo.Context, params Post
 	}
 
 	return eCtx.JSON(http.StatusOK,
-		PostGetFreeHandsBtnAvailability{
+		GetFreeHandsBtnAvailabilityResponse{
 			Data: &ManagerAvailability{
 				Available: pointer.PtrWithZeroAsNil(resp.Result),
 			},
@@ -49,5 +49,5 @@ func (h Handlers) PostFreeHands(eCtx echo.Context, params PostFreeHandsParams) e
 	}
 
 	return eCtx.JSON(http.StatusOK,
-		PostFreeHands{Data: nil})
+		FreeHandsResponse{Data: nil})
 }

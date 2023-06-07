@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	managerv1 "github.com/Pickausernaame/chat-service/internal/server-manager/v1"
 	"github.com/Pickausernaame/chat-service/internal/types"
 	getassignedproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/get-assigned-problems"
 )
@@ -18,7 +19,7 @@ func (s *HandlersSuite) TestGetChats_Usecase_Error() {
 	}).Return(getassignedproblems.Response{}, errors.New("something went wrong"))
 
 	// Action.
-	err := s.handlers.PostGetChats(eCtx)
+	err := s.handlers.PostGetChats(eCtx, managerv1.PostGetChatsParams{XRequestID: reqID})
 
 	// Assert.
 	s.Require().Error(err)
@@ -51,7 +52,7 @@ func (s *HandlersSuite) TestGetChats_Success() {
 	}).Return(getassignedproblems.Response{Chats: chats}, nil)
 
 	// Action.
-	err := s.handlers.PostGetChats(eCtx)
+	err := s.handlers.PostGetChats(eCtx, managerv1.PostGetChatsParams{XRequestID: reqID})
 
 	// Assert.
 	s.Require().NoError(err)

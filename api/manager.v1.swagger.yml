@@ -19,7 +19,7 @@ paths:
           content:
             application/json:
              schema:
-               $ref: "#/components/schemas/PostGetFreeHandsBtnAvailability"
+               $ref: "#/components/schemas/GetFreeHandsBtnAvailabilityResponse"
 
   /freeHands:
     post:
@@ -32,7 +32,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PostFreeHands"
+                $ref: "#/components/schemas/FreeHandsResponse"
 
   /getChats:
     post:
@@ -45,7 +45,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PostGetChats"
+                $ref: "#/components/schemas/GetChatsResponse"
 
   /getChatHistory:
     post:
@@ -65,6 +65,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetChatHistoryResponse"
+
+  /sendMessage:
+    post:
+      description: Send new message to the chat.
+      parameters:
+        - $ref: "#/components/parameters/XRequestIDHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+      responses:
+        '200':
+          description: Message created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendMessageResponse"
 
 security:
   - bearerAuth: [ ]
@@ -100,14 +119,14 @@ components:
           $ref: "#/components/schemas/Error"
 
 
-    PostGetFreeHandsBtnAvailability:
+    GetFreeHandsBtnAvailabilityResponse:
       properties:
         data:
           $ref: "#/components/schemas/ManagerAvailability"
         error:
           $ref: "#/components/schemas/Error"
 
-    PostFreeHands:
+    FreeHandsResponse:
       properties:
         data:
           type: string
@@ -115,12 +134,59 @@ components:
         error:
           $ref: "#/components/schemas/Error"
 
-    PostGetChats:
+    GetChatsResponse:
       properties:
         data:
           $ref: "#/components/schemas/ChatList"
         error:
           $ref: "#/components/schemas/Error"
+
+    ChatId:
+      required: [ chatId ]
+      properties:
+        chatId:
+          type: string
+          format: uuid
+          x-go-type: types.ChatID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+
+    SendMessageRequest:
+      allOf:
+        - $ref: "#/components/schemas/ChatId"
+        - type: object
+          required: [ messageBody ]
+          properties:
+            messageBody:
+              type: string
+              minLength: 1
+              maxLength: 3000
+
+    SendMessageResponse:
+      properties:
+        data:
+          $ref: "#/components/schemas/MessageWithoutBody"
+        error:
+          $ref: "#/components/schemas/Error"
+
+    MessageWithoutBody:
+      required: [ id, authorId, createdAt ]
+      properties:
+        id:
+          type: string
+          format: uuid
+          x-go-type: types.MessageID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+        authorId:
+          type: string
+          format: uuid
+          x-go-type: types.UserID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+        createdAt:
+          type: string
+          format: date-time
 
     ManagerAvailability:
       properties:
@@ -167,8 +233,6 @@ components:
           maximum: 100
         cursor:
           type: string
-
-
 
     MessagesPage:
       required: [ messages, next ]

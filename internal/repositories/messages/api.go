@@ -84,3 +84,15 @@ func (r *Repo) CreateProblemAssignedMessage(
 		SetBody(fmt.Sprintf("Manager %s will answer you", managerID.String())).
 		Save(ctx)
 }
+
+func (r *Repo) CreateFullVisible(
+	ctx context.Context,
+	reqID types.RequestID,
+	problemID types.ProblemID,
+	chatID types.ChatID,
+	authorID types.UserID,
+	msgBody string,
+) (*Message, error) {
+	// FIXME: Реализовать
+	return nil, nil
+}

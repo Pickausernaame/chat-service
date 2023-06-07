@@ -9,12 +9,17 @@ import (
 	canreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/can-receive-problems"
 	getassignedproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/get-assigned-problems"
 	getchathistory "github.com/Pickausernaame/chat-service/internal/usecases/manager/get-chat-history"
+	sendmessage "github.com/Pickausernaame/chat-service/internal/usecases/manager/send-message"
 	setreadyreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/set-ready-receive-problems"
 )
 
 var _ ServerInterface = (*Handlers)(nil)
 
 //go:generate mockgen -source=$GOFILE -destination=mocks/handlers_mocks.gen.go -package=managerv1mocks
+
+type sendMessageUseCase interface {
+	Handle(ctx context.Context, req sendmessage.Request) (sendmessage.Response, error)
+}
 
 type canReceiveProblemsUseCase interface {
 	Handle(ctx context.Context, req canreceiveproblems.Request) (canreceiveproblems.Response, error)
@@ -38,6 +43,7 @@ type Options struct {
 	setReadyReceiveProblemsUseCase setReadyReceiveProblemsUseCase `option:"mandatory" validate:"required"`
 	getAssignedProblemsUseCase     getAssignedProblemsUseCase     `option:"mandatory" validate:"required"`
 	getChatHistoryUseCase          getChatHistoryUseCase          `option:"mandatory" validate:"required"`
+	sendMessageUseCase             sendMessageUseCase             `option:"mandatory" validate:"required"`
 }
 
 type Handlers struct {

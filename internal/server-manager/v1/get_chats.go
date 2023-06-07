@@ -27,5 +27,5 @@ func (h Handlers) PostGetChats(eCtx echo.Context, params PostGetChatsParams) err
 		})
 	}
 
-	return eCtx.JSON(http.StatusOK, PostGetChats{Data: &ChatList{res}})
+	return eCtx.JSON(http.StatusOK, GetChatsResponse{Data: &ChatList{res}})
 }
