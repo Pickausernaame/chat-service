@@ -90,6 +90,7 @@ type ServiceConfig struct {
 type MsgSenderServiceConfig struct {
 	Brokers       []string `toml:"brokers" validate:"required,min=1"`
 	Topic         string   `toml:"topic" validate:"required"`
+	ManagerTopic  string   `toml:"manager_topic" validate:"required"`
 	BatchSize     int      `toml:"batch_size" validate:"required,min=1,max=100"`
 	EncryptionKey string   `toml:"encrypt_key" validate:"omitempty,hexadecimal"`
 }

@@ -123,8 +123,17 @@ func run() (errReturned error) {
 	kw := msgproducer.NewKafkaWriter(cfg.Service.MsgSender.Brokers,
 		cfg.Service.MsgSender.Topic, cfg.Service.MsgSender.BatchSize)
 
+	managerKw := msgproducer.NewKafkaWriter(cfg.Service.MsgSender.Brokers,
+		cfg.Service.MsgSender.Topic, cfg.Service.MsgSender.BatchSize)
+
 	msgProdService, err := msgproducer.New(
 		msgproducer.NewOptions(kw, msgproducer.WithEncryptKey(cfg.Service.MsgSender.EncryptionKey)))
+	if err != nil {
+		return fmt.Errorf("init msg sender service: %v", err)
+	}
+
+	managerMsgProdService, err := msgproducer.New(
+		msgproducer.NewOptions(managerKw, msgproducer.WithEncryptKey(cfg.Service.MsgSender.EncryptionKey)))
 	if err != nil {
 		return fmt.Errorf("init msg sender service: %v", err)
 	}
@@ -148,7 +157,7 @@ func run() (errReturned error) {
 		return fmt.Errorf("registration send msg job: %v", err)
 	}
 
-	sendManagerMsgJob, err := sendmanagermessagejob.New(sendmanagermessagejob.NewOptions(msgProdService, msgRepo, chatRepo, eventStream))
+	sendManagerMsgJob, err := sendmanagermessagejob.New(sendmanagermessagejob.NewOptions(managerMsgProdService, msgRepo, chatRepo, eventStream))
 	if err != nil {
 		return fmt.Errorf("init send manager msg job: %v", err)
 	}

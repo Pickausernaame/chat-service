@@ -45,6 +45,7 @@ max_problems_at_same_time = 5
 [services.msg_producer]
 brokers = ["localhost:9092"]
 topic = "chat.messages"
+manager_topic = "manager.chat.messages"
 batch_size = 1
 encrypt_key = "73367639792442264529482B4D625165"
 
