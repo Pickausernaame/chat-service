@@ -72,17 +72,21 @@ func (r *Repo) MessageForManagerByChatID(ctx context.Context, id types.ChatID) (
 
 func (r *Repo) CreateProblemAssignedMessage(
 	ctx context.Context,
-	id types.ChatID,
+	chatID types.ChatID,
 	managerID types.UserID,
 	problemID types.ProblemID,
-) (*store.Message, error) {
-	return r.db.Message(ctx).Create().
-		SetChatID(id).
+) (*Message, error) {
+	m, err := r.db.Message(ctx).Create().
+		SetChatID(chatID).
 		SetIsVisibleForClient(true).
 		SetIsService(true).
 		SetProblemID(problemID).
 		SetBody(fmt.Sprintf("Manager %s will answer you", managerID.String())).
 		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return adaptStoreMessage(m), nil
 }
 
 func (r *Repo) CreateFullVisible(
@@ -93,6 +97,38 @@ func (r *Repo) CreateFullVisible(
 	authorID types.UserID,
 	msgBody string,
 ) (*Message, error) {
-	// FIXME: Реализовать
-	return nil, nil
+	m, err := r.db.Message(ctx).Create().
+		SetChatID(chatID).
+		SetIsVisibleForClient(true).
+		SetIsVisibleForManager(true).
+		SetIsService(false).
+		SetAuthorID(authorID).
+		SetBody(msgBody).
+		SetInitialRequestID(reqID).
+		SetProblemID(problemID).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return adaptStoreMessage(m), nil
+}
+
+func (r *Repo) CreateProblemResolvedMessage(
+	ctx context.Context,
+	chatID types.ChatID,
+	problemID types.ProblemID,
+	reqID types.RequestID,
+) (*Message, error) {
+	m, err := r.db.Message(ctx).Create().
+		SetChatID(chatID).
+		SetIsVisibleForClient(true).
+		SetIsService(true).
+		SetProblemID(problemID).
+		SetInitialRequestID(reqID).
+		SetBody("Your question has been marked as resolved.\nThank you for being with us!").
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return adaptStoreMessage(m), nil
 }

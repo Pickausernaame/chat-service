@@ -73,3 +73,20 @@ func (m *NewChatEvent) Matches(x interface{}) bool {
 func (m *NewChatEvent) String() string {
 	return fmt.Sprintf("%v", *m)
 }
+
+func (m *ChatClosedEvent) Matches(x interface{}) bool {
+	actualEvent, ok := x.(*ChatClosedEvent)
+	if !ok {
+		return false
+	}
+
+	// Compare the fields excluding EventID
+	return actualEvent.EventType == m.EventType &&
+		actualEvent.RequestID == m.RequestID &&
+		actualEvent.ChatID == m.ChatID &&
+		actualEvent.CanTakeMoreProblems == m.CanTakeMoreProblems
+}
+
+func (m *ChatClosedEvent) String() string {
+	return fmt.Sprintf("%v", *m)
+}

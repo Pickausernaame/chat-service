@@ -70,11 +70,11 @@ func (s *ChatsRepoSuite) Test_ClientIDByID() {
 		clientID := types.NewUserID()
 		chatID := types.NewChatID()
 
-		chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
+		_, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
 		s.Require().NoError(err)
 
 		res, err := s.repo.ClientIDByID(s.Ctx, chatID)
-		s.Require().Errot(err)
+		s.Require().Error(err)
 		s.Empty(res)
 	})
 }

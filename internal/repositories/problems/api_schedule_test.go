@@ -100,30 +100,3 @@ func (s *ProblemsSchedulerRepoSuite) Test_AssignManager() {
 		s.Equal(managerID, res.ManagerID)
 	})
 }
-
-func (s *ProblemsSchedulerRepoSuite) Test_ResolveProblem() {
-	s.Run("resolve problem", func() {
-		clientID := types.NewUserID()
-
-		// Create chat.
-		chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
-		s.Require().NoError(err)
-
-		problem1, err := s.Database.Problem(s.Ctx).Create().
-			SetChatID(chat.ID).
-			Save(s.Ctx)
-		s.Require().NoError(err)
-		s.NotEmpty(problem1)
-
-		res, err := s.Database.Problem(s.Ctx).Get(s.Ctx, problem1.ID)
-		s.Require().NoError(err)
-		s.Empty(res.ResolveAt)
-
-		err = s.repo.ResolveProblem(s.Ctx, problem1.ID)
-		s.Require().NoError(err)
-
-		res, err = s.Database.Problem(s.Ctx).Get(s.Ctx, problem1.ID)
-		s.Require().NoError(err)
-		s.NotNil(res.ResolveAt)
-	})
-}

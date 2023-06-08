@@ -20,11 +20,11 @@ const serviceName = "manager-scheduler"
 type problemRepository interface {
 	GetUnassignedProblems(ctx context.Context) ([]*problemsrepo.Problem, error)
 	AssignManager(ctx context.Context, problemID types.ProblemID, managerID types.UserID) error
-	ResolveProblem(ctx context.Context, problemID types.ProblemID) error
+	ResolveProblem(ctx context.Context, problemID types.ProblemID, managerID types.UserID) error
 }
 
 type messageRepository interface {
-	CreateProblemAssignedMessage(ctx context.Context, id types.ChatID, managerID types.UserID, problemID types.ProblemID) (*store.Message, error)
+	CreateProblemAssignedMessage(ctx context.Context, id types.ChatID, managerID types.UserID, problemID types.ProblemID) (*messagesrepo.Message, error)
 	MessageForManagerByChatID(ctx context.Context, id types.ChatID) (*messagesrepo.Message, error)
 }
 
@@ -84,7 +84,7 @@ func (s *Service) Run(ctx context.Context) (err error) {
 				if err != nil {
 					if store.IsNotFound(err) {
 						// mark problem solved, it is zombie-problem
-						if err = s.prbRepo.ResolveProblem(ctx, p.ID); err != nil {
+						if err = s.prbRepo.ResolveProblem(ctx, p.ID, types.UserIDNil); err != nil {
 							s.lg.Error("resolving problem by ID", zap.Error(err))
 						}
 					}

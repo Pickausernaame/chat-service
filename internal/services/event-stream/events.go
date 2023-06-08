@@ -18,6 +18,7 @@ const (
 	EventTypeMessageSentEvent    string = "MessageSentEvent"
 	EventTypeNewMessageEvent     string = "NewMessageEvent"
 	EventTypeNewChatEvent        string = "NewChatEvent"
+	EventTypeChatClosedEvent     string = "ChatClosedEvent"
 )
 
 type event struct{}         //
@@ -158,5 +159,39 @@ func (e *NewChatEvent) Validate() error {
 }
 
 func (e *NewChatEvent) Type() string {
+	return e.EventType
+}
+
+type ChatClosedEvent struct {
+	event
+
+	EventID             types.EventID   `validate:"required"`
+	RequestID           types.RequestID `validate:"required"`
+	CanTakeMoreProblems bool
+	ChatID              types.ChatID `validate:"required"`
+	EventType           string       `validate:"required"`
+}
+
+func NewChatClosedEvent(
+	eventID types.EventID,
+	requestID types.RequestID,
+	canTakeMoreProblems bool,
+	chatID types.ChatID,
+) *ChatClosedEvent {
+	return &ChatClosedEvent{
+		event:               event{},
+		EventID:             eventID,
+		RequestID:           requestID,
+		CanTakeMoreProblems: canTakeMoreProblems,
+		ChatID:              chatID,
+		EventType:           EventTypeChatClosedEvent,
+	}
+}
+
+func (e *ChatClosedEvent) Validate() error {
+	return validator.Validator.Struct(e)
+}
+
+func (e *ChatClosedEvent) Type() string {
 	return e.EventType
 }

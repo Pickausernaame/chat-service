@@ -23,6 +23,12 @@ const (
 	BaseEventEventTypeNewMessageEvent BaseEventEventType = "NewMessageEvent"
 )
 
+// Defines values for ChatClosedEventEventType.
+const (
+	ChatClosedEventEventTypeNewChatEvent    ChatClosedEventEventType = "NewChatEvent"
+	ChatClosedEventEventTypeNewMessageEvent ChatClosedEventEventType = "NewMessageEvent"
+)
+
 // Defines values for NewChatEventEventType.
 const (
 	NewChatEventEventTypeNewChatEvent    NewChatEventEventType = "NewChatEvent"
@@ -49,6 +55,27 @@ type BaseEvent struct {
 
 // BaseEventEventType Type of the event
 type BaseEventEventType string
+
+// ChatClosedEvent defines model for ChatClosedEvent.
+type ChatClosedEvent struct {
+	// CanTakeMoreProblems Indicates if manager can take more problems
+	CanTakeMoreProblems bool `json:"canTakeMoreProblems"`
+
+	// ChatId Unique identifier for the chat
+	ChatId types.ChatID `json:"chatId"`
+
+	// EventId Unique identifier for the event
+	EventId types.EventID `json:"eventId"`
+
+	// EventType Type of the event
+	EventType ChatClosedEventEventType `json:"eventType"`
+
+	// RequestId Unique identifier for the request
+	RequestId types.RequestID `json:"requestId"`
+}
+
+// ChatClosedEventEventType Type of the event
+type ChatClosedEventEventType string
 
 // MessageId defines model for MessageId.
 type MessageId struct {
@@ -110,17 +137,18 @@ type NewMessageEventEventType string
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9xVTW/jOAz9KwJ3j0qcopdCt+3HocC2U8y0p6IHxqZjTSzJleikRZD/PpDsfBcDJECL",
-	"wZziUKLE9/getYDcmcZZshxALSDkFRlMn5cY6GZGluOfxruGPGtKSxTDt0X8LCjkXjesnQUFT1a/tiR0",
-	"QZZ1qcmL0nnBFYmUAhJK5w0yKGhbXYAEfm8IFAT22k5Awttg4gZ9MP6EYarh9np7baBN43xXGHIFCiaa",
-	"q3Y8zJ3JHnQ+xTaQt4iGsrxCHgTyM51Tpi3HeJ2lo2G5lB2Wx3ThPpoYFa7cqZ9sa0A9wz3Nryrkmz58",
-	"T/M7CgEnPWUv+8iWEjy9thSO5K1POom57/2Fn8RdD0l7KiIjK1FsU7oN+mUpoeeoo2BXU2Z76Xisq5O/",
-	"Buum2IhqRwtqAVjX30pQzwv411MJCv7JNi7LeotlG38t5T4ZOdpHnNKd8/Tg3bgmEw5Fc2sLnSNTELoU",
-	"Bi1OyIscrWCckjDOk2hWyWsKx87VhDbqMSI+Towx4yQlRno+z8J5rY+eR13OSWCeAvkv0tka2bpb8kNt",
-	"bMaNG/+knGHZ63JnKJ0ozd/t3Bj6UMTYcuX8cW3pcv64tkgYu+L9EMilK95XL0Q/E0CCwbf/yU7ijeej",
-	"0UiC0XYVOPvgYfh7jOgJmYr/+BDLNTIJtIVgbdKjmh4JkTLiji0wBTIN4rYDRPv2WCus7892BWtaP/JG",
-	"PEjb0sU6WXMdVy/RTsWPtolsiMiTuEruE8kJcYTOyIcOzews9s01ZLHRoOB8eDYcgUwMBlC2rWsJkSjy",
-	"IbltjwyaUe0aE0/vdoGE1tegYB5UltUux7pygdXF6GKUzUOs+VcAAAD//2eWvrurCQAA",
+	"H4sIAAAAAAAC/+xWTW/bMAz9KwK3oxKn6KXwbf04FFi7YmtPRQ+MTcda9OFKctKiyH8fKDsfTYoBCbBg",
+	"GHaKQ4kS3+N7pt+gcKZxlmwMkL9BKGoymB7PMdDVjGzkP413DfmoKC0Rh69LfiwpFF41UTkLOTxY9dyS",
+	"UCXZqCpFXlTOi1iTSCkgoXLeYIQc2laVICG+NgQ5hOiVnYCEl8HEDfog/4RhquH6cnNtoEzjfFcYxhpy",
+	"mKhYt+Nh4Ux2p4optoG8RTSUFTXGQSA/UwVlykaO6ywdDYuF7LDcpwu30XBUuOpd/WRbA/kj3NL8osZ4",
+	"1YdvaX5DIeCkp+xpG9lCgqfnlsKevPVJBzH3vb/wD3HXQ1KeSmZkKYpNSjdBPy0kMGUX2gUqV8pCrb9V",
+	"kD++wWdPFeTwKVtLMuv1mK3FuJDbaizQ3uOUbpynO+/GmkzYZfjalqrASEGoShi0OCEvCrQi4pSEcZ5E",
+	"s0xecTt2ThNabh5TsV/nOOOgtjFJR+pZj0p+yOFaw278k4oIC25hL/OOi/eNMJtL++Nennwc6OtiGdU7",
+	"O/9X5ZFVKaHQau+R0uUcBOYhkD+WxZbI5CFu254rB0rzdzvXht4VMbaxdn6/tnQ5f11bJIxd+boL5NyV",
+	"r8sh378TQILBl69kJ3zj6Wg0kmCUXQZOPpjt/44RPWGk8kvcxXKJkQTaUkRl0ndRmvMiZfCODTAlRhrw",
+	"th1E2/ZYKazvz2YFK1o/8gYfpGzluM6ooubVc7RT8aNtmA3BPImL5D6RnMCv0Bn50KGZnXDfXEMWGwU5",
+	"nA5PhiOQicEAuW21lsBEkQ/JbVtk0Iy0awyf3u0CCa3XkMM85FmmXYG6diHmZ6OzUTYPXPOvAAAA///f",
+	"g5tEbgsAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -31,8 +31,10 @@ import (
 	"github.com/Pickausernaame/chat-service/internal/services/outbox"
 	clientmessageblockedjob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/client-message-blocked"
 	clientmessagesentjob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/client-message-sent"
+	jobresolveproblem "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/job-resolve-problem"
 	managerassignedtoproblemjob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/manager-assigned-to-problem"
 	sendclientmessagejob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/send-client-message"
+	sendmanagermessagejob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/send-manager-message"
 	"github.com/Pickausernaame/chat-service/internal/store"
 	"github.com/Pickausernaame/chat-service/internal/types"
 )
@@ -146,6 +148,16 @@ func run() (errReturned error) {
 		return fmt.Errorf("registration send msg job: %v", err)
 	}
 
+	sendManagerMsgJob, err := sendmanagermessagejob.New(sendmanagermessagejob.NewOptions(msgProdService, msgRepo, chatRepo, eventStream))
+	if err != nil {
+		return fmt.Errorf("init send manager msg job: %v", err)
+	}
+
+	err = obox.RegisterJob(sendManagerMsgJob)
+	if err != nil {
+		return fmt.Errorf("registration send manager msg job: %v", err)
+	}
+
 	// initialization sendMsg job
 	msgBlockedJob, err := clientmessageblockedjob.New(clientmessageblockedjob.NewOptions(msgRepo, eventStream))
 	if err != nil {
@@ -186,6 +198,16 @@ func run() (errReturned error) {
 		return fmt.Errorf("registration manager assigned job: %v", err)
 	}
 
+	resolveProblem, err := jobresolveproblem.New(jobresolveproblem.NewOptions(msgRepo, chatRepo, manLoadService, eventStream))
+	if err != nil {
+		return fmt.Errorf("init resolve problem job: %v", err)
+	}
+
+	err = obox.RegisterJob(resolveProblem)
+	if err != nil {
+		return fmt.Errorf("registration resolve problem job: %v", err)
+	}
+
 	mngrScheduler, err := managerscheduler.New(managerscheduler.NewOptions(cfg.Service.ManagerScheduler.Period, manPoolService, msgRepo, obox, problemRepo, db))
 	if err != nil {
 		return fmt.Errorf("init manager scheduler error: %v", err)
@@ -223,7 +245,8 @@ func run() (errReturned error) {
 	}
 
 	// initialization manager server
-	srvManager, err := initServerManager(cfg, kc, manLoadService, manPoolService, eventStream, chatRepo, problemRepo, msgRepo)
+	srvManager, err := initServerManager(cfg, kc, manLoadService, manPoolService, eventStream, chatRepo,
+		problemRepo, msgRepo, obox, db)
 	if err != nil {
 		return fmt.Errorf("init server manager: %v", err)
 	}

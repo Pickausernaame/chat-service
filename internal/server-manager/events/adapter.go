@@ -27,6 +27,12 @@ func (Adapter) Adapt(ev eventstream.Event) (any, error) {
 			return nil, ErrInvalidEventType
 		}
 		return toNewMessageEvent(res), nil
+	case eventstream.EventTypeChatClosedEvent:
+		res, ok := ev.(*eventstream.ChatClosedEvent)
+		if !ok {
+			return nil, ErrInvalidEventType
+		}
+		return toChatClosedEvent(res), nil
 	}
 	return nil, nil
 }
@@ -52,5 +58,15 @@ func toNewMessageEvent(ev *eventstream.NewMessageEvent) *NewMessageEvent {
 		EventType: NewMessageEventEventTypeNewMessageEvent,
 		MessageId: ev.MessageID,
 		RequestId: ev.RequestID,
+	}
+}
+
+func toChatClosedEvent(ev *eventstream.ChatClosedEvent) *ChatClosedEvent {
+	return &ChatClosedEvent{
+		EventId:             ev.EventID,
+		ChatId:              ev.ChatID,
+		EventType:           ChatClosedEventEventTypeNewChatEvent,
+		RequestId:           ev.RequestID,
+		CanTakeMoreProblems: ev.CanTakeMoreProblems,
 	}
 }

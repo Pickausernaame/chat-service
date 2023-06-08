@@ -15,6 +15,12 @@ const (
 	BaseEventEventTypeNewMessageEvent BaseEventEventType = "NewMessageEvent"
 )
 
+// Defines values for ChatClosedEventEventType.
+const (
+	ChatClosedEventEventTypeNewChatEvent    ChatClosedEventEventType = "NewChatEvent"
+	ChatClosedEventEventTypeNewMessageEvent ChatClosedEventEventType = "NewMessageEvent"
+)
+
 // Defines values for NewChatEventEventType.
 const (
 	NewChatEventEventTypeNewChatEvent    NewChatEventEventType = "NewChatEvent"
@@ -41,6 +47,27 @@ type BaseEvent struct {
 
 // BaseEventEventType Type of the event
 type BaseEventEventType string
+
+// ChatClosedEvent defines model for ChatClosedEvent.
+type ChatClosedEvent struct {
+	// CanTakeMoreProblems Indicates if manager can take more problems
+	CanTakeMoreProblems bool `json:"canTakeMoreProblems"`
+
+	// ChatId Unique identifier for the chat
+	ChatId types.ChatID `json:"chatId"`
+
+	// EventId Unique identifier for the event
+	EventId types.EventID `json:"eventId"`
+
+	// EventType Type of the event
+	EventType ChatClosedEventEventType `json:"eventType"`
+
+	// RequestId Unique identifier for the request
+	RequestId types.RequestID `json:"requestId"`
+}
+
+// ChatClosedEventEventType Type of the event
+type ChatClosedEventEventType string
 
 // MessageId defines model for MessageId.
 type MessageId struct {

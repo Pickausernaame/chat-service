@@ -2,12 +2,17 @@ package problemsrepo
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 
+	"github.com/Pickausernaame/chat-service/internal/store"
 	"github.com/Pickausernaame/chat-service/internal/store/problem"
 	"github.com/Pickausernaame/chat-service/internal/types"
 )
+
+var ErrProblemNotFound = errors.New("problem not found")
 
 func (r *Repo) CreateIfNotExists(ctx context.Context, chatID types.ChatID) (types.ProblemID, error) {
 	return r.db.Problem(ctx).Create().SetChatID(chatID).
@@ -45,7 +50,22 @@ func (r *Repo) GetProblemByChatAndManagerIDs(ctx context.Context, chatID types.C
 	p, err := r.db.Problem(ctx).Query().Where(problem.And(problem.ChatID(chatID), problem.ManagerID(managerID),
 		problem.ResolveAtIsNil())).First(ctx)
 	if err != nil {
+		if store.IsNotFound(err) {
+			return nil, ErrProblemNotFound
+		}
 		return nil, err
 	}
 	return adaptStoreProblem(p), nil
+}
+
+func (r *Repo) ResolveProblem(ctx context.Context, problemID types.ProblemID, managerID types.UserID) error {
+	predicate := problem.And(problem.ID(problemID), problem.ManagerID(managerID), problem.ResolveAtIsNil())
+	exist, err := r.db.Problem(ctx).Query().Where(predicate).Exist(ctx)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		return ErrProblemNotFound
+	}
+	return r.db.Problem(ctx).Update().SetResolveAt(time.Now()).Where(predicate).Exec(ctx)
 }

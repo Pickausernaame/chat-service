@@ -1,7 +1,8 @@
-package clientmessagesentjob
+package jobresolveproblem
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"go.uber.org/zap"
@@ -13,26 +14,31 @@ import (
 	"github.com/Pickausernaame/chat-service/internal/types"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=mocks/job_mock.gen.go -package=clientmessagesentjobmocks
+//go:generate mockgen -source=$GOFILE -destination=mocks/job_mock.gen.go -package=jobresolveproblemmocks
 
-const Name = "client-message-sent"
+const Name = "resolve-problem"
+
+type chatRepository interface {
+	ClientIDByID(ctx context.Context, id types.ChatID) (types.UserID, error)
+}
 
 type messageRepository interface {
 	GetMessageByID(ctx context.Context, msgID types.MessageID) (*messagesrepo.Message, error)
-}
-
-type problemRepository interface {
-	GetManagerIDByChatID(ctx context.Context, chatID types.ChatID) (types.UserID, error)
 }
 
 type eventStream interface {
 	Publish(ctx context.Context, userID types.UserID, event eventstream.Event) error
 }
 
+type managerLoad interface {
+	CanManagerTakeProblem(ctx context.Context, managerID types.UserID) (bool, error)
+}
+
 //go:generate options-gen -out-filename=job_options.gen.go -from-struct=Options
 type Options struct {
 	msgRepo     messageRepository `option:"mandatory" validate:"required"`
-	prbRepo     problemRepository `option:"mandatory" validate:"required"`
+	chatRepo    chatRepository    `option:"mandatory" validate:"required"`
+	managerLoad managerLoad       `option:"mandatory" validate:"required"`
 	eventStream eventStream       `option:"mandatory" validate:"required"`
 }
 
@@ -46,7 +52,6 @@ func New(opts Options) (*Job, error) {
 	if err := opts.Validate(); err != nil {
 		return nil, fmt.Errorf("validations opts: %v", err)
 	}
-
 	return &Job{Options: opts, lg: zap.L().Named(Name)}, nil
 }
 
@@ -55,44 +60,48 @@ func (j *Job) Name() string {
 }
 
 func (j *Job) Handle(ctx context.Context, payload string) error {
-	var id types.MessageID
+	req := &Request{}
 
-	if err := id.UnmarshalText([]byte(payload)); err != nil {
+	if err := json.Unmarshal([]byte(payload), req); err != nil {
 		return fmt.Errorf("unmarshaling payload: %v", err)
 	}
 
-	msg, err := j.msgRepo.GetMessageByID(ctx, id)
+	msg, err := j.msgRepo.GetMessageByID(ctx, req.MessageID)
 	if err != nil {
 		return fmt.Errorf("getting msg by id: %v", err)
 	}
 
+	ok, err := j.managerLoad.CanManagerTakeProblem(ctx, req.ManagerID)
+	if err != nil {
+		return fmt.Errorf("getting manager takes problem: %v", err)
+	}
+
 	eg, ctx := errgroup.WithContext(ctx)
-	defer eg.Wait()
+	defer func() {
+		if err := eg.Wait(); err != nil {
+			j.lg.Error("error group error", zap.Error(err))
+		}
+	}()
+
 	eg.Go(func() error {
-		msgSentEv := eventstream.NewMessageSentEvent(types.NewEventID(), msg.InitialRequestID, msg.ID)
-		err := j.eventStream.Publish(ctx, msg.AuthorID, msgSentEv)
+		event := eventstream.NewChatClosedEvent(types.NewEventID(), req.RequestID, ok, req.ChatID)
+		err := j.eventStream.Publish(ctx, req.ManagerID, event)
 		if err != nil {
-			return fmt.Errorf("publishing event: %v", err)
+			return fmt.Errorf("publishing closed chat event: %v", err)
 		}
 		return nil
 	})
 
-	managerID, err := j.prbRepo.GetManagerIDByChatID(ctx, msg.ChatID)
+	clientID, err := j.chatRepo.ClientIDByID(ctx, msg.ChatID)
 	if err != nil {
-		return fmt.Errorf("getting manager by chatID: %v", err)
-	}
-
-	// if manager not assigned
-	if managerID.IsZero() {
-		return nil
+		return fmt.Errorf("getting client by chatID: %v", err)
 	}
 
 	event := eventstream.NewNewMessageEvent(types.NewEventID(), msg.InitialRequestID,
 		msg.ChatID, msg.ID, msg.AuthorID, msg.CreatedAt, msg.Body, msg.IsService)
-	err = j.eventStream.Publish(ctx, managerID, event)
+	err = j.eventStream.Publish(ctx, clientID, event)
 	if err != nil {
 		return fmt.Errorf("publishing event: %v", err)
 	}
-
 	return nil
 }

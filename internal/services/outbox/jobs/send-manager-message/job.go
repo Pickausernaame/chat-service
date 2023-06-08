@@ -79,7 +79,7 @@ func (j *Job) Handle(ctx context.Context, payload string) error {
 	}()
 
 	eg.Go(func() error {
-		err = j.msgProd.ProduceMessage(ctx, msgproducer.Message{
+		err := j.msgProd.ProduceMessage(ctx, msgproducer.Message{
 			ID:         msg.ID,
 			ChatID:     msg.ChatID,
 			Body:       msg.Body,

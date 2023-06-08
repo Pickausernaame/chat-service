@@ -16,9 +16,12 @@ import (
 	"github.com/Pickausernaame/chat-service/internal/server/errhandler"
 	manager_load "github.com/Pickausernaame/chat-service/internal/services/manager-load"
 	managerpool "github.com/Pickausernaame/chat-service/internal/services/manager-pool"
+	"github.com/Pickausernaame/chat-service/internal/services/outbox"
 	canreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/can-receive-problems"
 	getassignedproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/get-assigned-problems"
 	getchathistory "github.com/Pickausernaame/chat-service/internal/usecases/manager/get-chat-history"
+	resolveproblem "github.com/Pickausernaame/chat-service/internal/usecases/manager/resolve-problem"
+	sendmessage "github.com/Pickausernaame/chat-service/internal/usecases/manager/send-message"
 	setreadyreceiveproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/set-ready-receive-problems"
 )
 
@@ -33,6 +36,8 @@ func initServerManager(
 	chatRepo *chatsrepo.Repo,
 	problemRepo *problemsrepo.Repo,
 	msgRepo *messagesrepo.Repo,
+	obox *outbox.Service,
+	txtr Transactor,
 ) (*server.Server, error) {
 	// getting specification
 	v1Swagger, err := managerv1.GetSwagger()
@@ -71,9 +76,19 @@ func initServerManager(
 		return nil, fmt.Errorf("init getChatHistory usecase: %v", err)
 	}
 
+	sendMessage, err := sendmessage.New(sendmessage.NewOptions(msgRepo, obox, problemRepo, txtr))
+	if err != nil {
+		return nil, fmt.Errorf("init sendMessage usecase: %v", err)
+	}
+
+	resolveProblem, err := resolveproblem.New(resolveproblem.NewOptions(obox, problemRepo, msgRepo, txtr))
+	if err != nil {
+		return nil, fmt.Errorf("init sendMessage usecase: %v", err)
+	}
+
 	// initialization v1 handlers
 	v1Handlers, err := managerv1.NewHandlers(managerv1.NewOptions(canReciveProblems, setReadyReceiveProblems,
-		getAssignedProblems, getChatHistory))
+		getAssignedProblems, getChatHistory, sendMessage, resolveProblem))
 	if err != nil {
 		return nil, fmt.Errorf("create v1 handlers: %v", err)
 	}

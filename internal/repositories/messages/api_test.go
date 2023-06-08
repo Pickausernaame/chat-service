@@ -255,10 +255,6 @@ func (s *MsgRepoAPISuite) createProblemAndChat(clientID types.UserID) (types.Pro
 	return problem.ID, chat.ID
 }
 
-const (
-	msgBody = "whatever"
-)
-
 func (s *MsgRepoAPISuite) Test_CreateFullVisible() {
 	authorID := types.NewUserID()
 
@@ -294,16 +290,4 @@ func (s *MsgRepoAPISuite) Test_CreateFullVisible() {
 			s.Equal(initialRequestID, dbMsg.InitialRequestID)
 		})
 	}
-}
-
-func (s *MsgRepoAPISuite) createProblemAndChat(clientID types.UserID) (types.ProblemID, types.ChatID) {
-	s.T().Helper()
-
-	chat, err := s.Database.Chat(s.Ctx).Create().SetClientID(clientID).Save(s.Ctx)
-	s.Require().NoError(err)
-
-	problem, err := s.Database.Problem(s.Ctx).Create().SetChatID(chat.ID).Save(s.Ctx)
-	s.Require().NoError(err)
-
-	return problem.ID, chat.ID
 }

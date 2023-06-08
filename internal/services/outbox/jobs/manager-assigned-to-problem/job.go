@@ -83,9 +83,13 @@ func (j *Job) Handle(ctx context.Context, payload string) error {
 		msg.IsService)
 
 	eg, ctx := errgroup.WithContext(ctx)
-	defer eg.Wait()
+	defer func() {
+		if err := eg.Wait(); err != nil {
+			j.lg.Error("error group error", zap.Error(err))
+		}
+	}()
 	eg.Go(func() error {
-		err = j.eventStream.Publish(ctx, req.ClientID, clientEvent)
+		err := j.eventStream.Publish(ctx, req.ClientID, clientEvent)
 		if err != nil {
 			return fmt.Errorf("publishing client event: %v", err)
 		}

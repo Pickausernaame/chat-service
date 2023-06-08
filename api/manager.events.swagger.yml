@@ -97,3 +97,20 @@ components:
               x-go-type-import:
                 path: "github.com/Pickausernaame/chat-service/internal/types"
               description: Unique identifier for the chat
+
+    ChatClosedEvent:
+      allOf:
+        - $ref: '#/components/schemas/BaseEvent'
+        - type: object
+          required: [ chatId, canTakeMoreProblems ]
+          properties:
+            chatId:
+              type: string
+              format: uuid
+              x-go-type: types.ChatID
+              x-go-type-import:
+                path: "github.com/Pickausernaame/chat-service/internal/types"
+              description: Unique identifier for the chat
+            canTakeMoreProblems:
+              type: boolean
+              description: Indicates if manager can take more problems
