@@ -23,11 +23,19 @@ func (r *Repo) CreateIfNotExists(ctx context.Context, chatID types.ChatID) (type
 }
 
 func (r *Repo) GetManagerOpenProblemsCount(ctx context.Context, managerID types.UserID) (int, error) {
-	return r.db.Problem(ctx).Query().Where(problem.And(problem.ManagerID(managerID), problem.ResolveAtIsNil())).Count(ctx)
+	return r.db.Problem(ctx).Query().
+		Where(problem.And(
+			problem.ManagerID(managerID),
+			problem.ResolveAtIsNil()),
+		).Count(ctx)
 }
 
 func (r *Repo) GetAssignedUnsolvedProblems(ctx context.Context, managerID types.UserID) ([]*Problem, error) {
-	ps, err := r.db.Problem(ctx).Query().Where(problem.ResolveAtIsNil(), problem.ManagerID(managerID)).Order(problem.ByCreatedAt()).All(ctx)
+	ps, err := r.db.Problem(ctx).Query().
+		Where(problem.And(
+			problem.ResolveAtIsNil(),
+			problem.ManagerID(managerID)),
+		).Order(problem.ByCreatedAt()).All(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -14,7 +14,8 @@ type request struct {
 	MessageID types.MessageID `validate:"required"`
 }
 
-func MarshalPayload(clientID types.UserID, managerID types.UserID, requestID types.RequestID, messageID types.MessageID) (string, error) {
+func MarshalPayload(clientID types.UserID, managerID types.UserID,
+	requestID types.RequestID, messageID types.MessageID) (string, error) {
 	r := &request{
 		ClientID:  clientID,
 		ManagerID: managerID,

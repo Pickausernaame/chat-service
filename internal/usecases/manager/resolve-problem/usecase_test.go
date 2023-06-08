@@ -156,7 +156,8 @@ func (s *UseCaseSuite) TestCreateResolvedMessageError() {
 			return f(ctx)
 		})
 
-	s.msgRepo.EXPECT().CreateProblemResolvedMessage(gomock.Any(), req.ChatID, s.p.ID, req.RequestID).Return(nil, errors.New("some error"))
+	s.msgRepo.EXPECT().CreateProblemResolvedMessage(gomock.Any(), req.ChatID,
+		s.p.ID, req.RequestID).Return(nil, errors.New("some error"))
 
 	// Action.
 	resp, err := s.uCase.Handle(s.Ctx, req)
@@ -251,7 +252,8 @@ func (s *UseCaseSuite) TestPutJobError() {
 	payload, err := jobresolveproblem.MarshalPayload(s.managerID, s.reqID, s.m.ID, s.chatID)
 	s.Require().NoError(err)
 
-	s.outbox.EXPECT().Put(gomock.Any(), jobresolveproblem.Name, payload, gomock.Any()).Return(types.JobIDNil, errors.New("some error"))
+	s.outbox.EXPECT().Put(gomock.Any(), jobresolveproblem.Name, payload,
+		gomock.Any()).Return(types.JobIDNil, errors.New("some error"))
 	// Action.
 	resp, err := s.uCase.Handle(s.Ctx, req)
 

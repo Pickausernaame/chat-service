@@ -8,7 +8,11 @@ import (
 )
 
 func (r *Repo) GetUnassignedProblems(ctx context.Context) ([]*Problem, error) {
-	ps, err := r.db.Problem(ctx).Query().Where(problem.ResolveAtIsNil(), problem.ManagerIDIsNil()).Order(problem.ByCreatedAt()).All(ctx)
+	ps, err := r.db.Problem(ctx).Query().
+		Where(problem.And(
+			problem.ResolveAtIsNil(),
+			problem.ManagerIDIsNil()),
+		).Order(problem.ByCreatedAt()).All(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -22,11 +22,13 @@ var (
 )
 
 type messagesRepository interface {
-	CreateProblemResolvedMessage(ctx context.Context, chatID types.ChatID, problemID types.ProblemID, reqID types.RequestID) (*messagesrepo.Message, error)
+	CreateProblemResolvedMessage(ctx context.Context, chatID types.ChatID,
+		problemID types.ProblemID, reqID types.RequestID) (*messagesrepo.Message, error)
 }
 
 type problemsRepository interface {
-	GetProblemByChatAndManagerIDs(ctx context.Context, chatID types.ChatID, managerID types.UserID) (*problemsrepo.Problem, error)
+	GetProblemByChatAndManagerIDs(ctx context.Context, chatID types.ChatID,
+		managerID types.UserID) (*problemsrepo.Problem, error)
 	ResolveProblem(ctx context.Context, problemID types.ProblemID, managerID types.UserID) error
 }
 

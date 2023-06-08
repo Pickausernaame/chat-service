@@ -25,6 +25,7 @@ func (m *NewMessageEvent) String() string {
 	return fmt.Sprintf("%v", *m)
 }
 
+//nolint:stylecheck
 func (m *MessageBlockedEvent) Matches(x interface{}) bool {
 	actualEvent, ok := x.(*MessageBlockedEvent)
 	if !ok {
@@ -41,6 +42,7 @@ func (m *MessageBlockedEvent) String() string {
 	return fmt.Sprintf("%v", *m)
 }
 
+//nolint:stylecheck
 func (m *MessageSentEvent) Matches(x interface{}) bool {
 	actualEvent, ok := x.(*MessageSentEvent)
 	if !ok {
@@ -57,6 +59,7 @@ func (m *MessageSentEvent) String() string {
 	return fmt.Sprintf("%v", *m)
 }
 
+//nolint:stylecheck
 func (m *NewChatEvent) Matches(x interface{}) bool {
 	actualEvent, ok := x.(*NewChatEvent)
 	if !ok {
@@ -74,6 +77,7 @@ func (m *NewChatEvent) String() string {
 	return fmt.Sprintf("%v", *m)
 }
 
+//nolint:stylecheck
 func (m *ChatClosedEvent) Matches(x interface{}) bool {
 	actualEvent, ok := x.(*ChatClosedEvent)
 	if !ok {

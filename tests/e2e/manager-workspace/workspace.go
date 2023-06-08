@@ -303,7 +303,6 @@ func (ws *Workspace) CloseChat(ctx context.Context, chatID types.ChatID) error {
 			ChatId: chatID,
 		},
 	)
-
 	if err != nil {
 		return fmt.Errorf("post request: %v", err)
 	}

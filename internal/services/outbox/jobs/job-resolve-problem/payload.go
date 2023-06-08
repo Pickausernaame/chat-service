@@ -7,15 +7,17 @@ import (
 	"github.com/Pickausernaame/chat-service/internal/validator"
 )
 
-type Request struct {
-	ChatID    types.ChatID    `json:"chat_id" validate:"required"`
-	ManagerID types.UserID    `json:"manager_id" validate:"required"`
-	MessageID types.MessageID `json:"message_id" validate:"required"`
-	RequestID types.RequestID `json:"request_id" validate:"required"`
+type request struct {
+	ChatID    types.ChatID    `validate:"required"`
+	ManagerID types.UserID    `validate:"required"`
+	MessageID types.MessageID `validate:"required"`
+	RequestID types.RequestID `validate:"required"`
 }
 
-func MarshalPayload(managerID types.UserID, requestID types.RequestID, messageID types.MessageID, chatID types.ChatID) (string, error) {
-	r := &Request{
+func MarshalPayload(managerID types.UserID, requestID types.RequestID,
+	messageID types.MessageID, chatID types.ChatID,
+) (string, error) {
+	r := &request{
 		ChatID:    chatID,
 		ManagerID: managerID,
 		RequestID: requestID,

@@ -9,7 +9,7 @@ import (
 	getassignedproblems "github.com/Pickausernaame/chat-service/internal/usecases/manager/get-assigned-problems"
 )
 
-func (h Handlers) PostGetChats(eCtx echo.Context, params PostGetChatsParams) error {
+func (h Handlers) PostGetChats(eCtx echo.Context, _ PostGetChatsParams) error {
 	ctx := eCtx.Request().Context()
 	managerID := middlewares.MustUserID(eCtx)
 

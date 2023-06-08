@@ -13,8 +13,6 @@ import (
 	"github.com/Pickausernaame/chat-service/pkg/pointer"
 )
 
-// FIXME: Тесты на PostGetChatHistory.
-
 func (h Handlers) PostGetChatHistory(eCtx echo.Context, params PostGetChatHistoryParams) error {
 	ctx := eCtx.Request().Context()
 	managerID := middlewares.MustUserID(eCtx)

@@ -70,6 +70,7 @@ func TestJob_Handle(t *testing.T) {
 	}
 
 	eventStream.EXPECT().Publish(gomock.Any(), clientID, event)
+	eventStream.EXPECT().Publish(gomock.Any(), msg.AuthorID, event)
 	// Action & assert.
 	payload, err := sendmanagermessagejob.MarshalPayload(msgID)
 	require.NoError(t, err)

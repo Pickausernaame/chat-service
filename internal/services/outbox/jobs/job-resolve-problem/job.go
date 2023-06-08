@@ -60,7 +60,7 @@ func (j *Job) Name() string {
 }
 
 func (j *Job) Handle(ctx context.Context, payload string) error {
-	req := &Request{}
+	req := &request{}
 
 	if err := json.Unmarshal([]byte(payload), req); err != nil {
 		return fmt.Errorf("unmarshaling payload: %v", err)

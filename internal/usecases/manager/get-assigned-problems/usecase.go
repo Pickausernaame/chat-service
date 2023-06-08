@@ -7,7 +7,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/Pickausernaame/chat-service/internal/repositories/problems"
+	problemsrepo "github.com/Pickausernaame/chat-service/internal/repositories/problems"
 	"github.com/Pickausernaame/chat-service/internal/types"
 )
 

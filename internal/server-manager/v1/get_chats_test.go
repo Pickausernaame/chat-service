@@ -57,6 +57,6 @@ func (s *HandlersSuite) TestGetChats_Success() {
 	// Assert.
 	s.Require().NoError(err)
 
-	expectedJson := fmt.Sprintf("{\n    \"data\":\n    {\n        \"chats\":[%s]}}", strings.Join(jsonChats, ","))
-	s.JSONEq(expectedJson, resp.Body.String())
+	expectedJSON := fmt.Sprintf("{\n    \"data\":\n    {\n        \"chats\":[%s]}}", strings.Join(jsonChats, ","))
+	s.JSONEq(expectedJSON, resp.Body.String())
 }

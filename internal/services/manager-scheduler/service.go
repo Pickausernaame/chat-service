@@ -24,7 +24,8 @@ type problemRepository interface {
 }
 
 type messageRepository interface {
-	CreateProblemAssignedMessage(ctx context.Context, id types.ChatID, managerID types.UserID, problemID types.ProblemID) (*messagesrepo.Message, error)
+	CreateProblemAssignedMessage(ctx context.Context, id types.ChatID,
+		managerID types.UserID, problemID types.ProblemID) (*messagesrepo.Message, error)
 	MessageForManagerByChatID(ctx context.Context, id types.ChatID) (*messagesrepo.Message, error)
 }
 
