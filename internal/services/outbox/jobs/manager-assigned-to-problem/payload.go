@@ -8,10 +8,10 @@ import (
 )
 
 type request struct {
-	ClientID  types.UserID    `validate:"required"`
-	ManagerID types.UserID    `validate:"required"`
-	RequestID types.RequestID `validate:"required"`
-	MessageID types.MessageID `validate:"required"`
+	ClientID  types.UserID    `json:"clientId" validate:"required"`
+	ManagerID types.UserID    `json:"managerId" validate:"required"`
+	RequestID types.RequestID `json:"requestId" validate:"required"`
+	MessageID types.MessageID `json:"messageId" validate:"required"`
 }
 
 func MarshalPayload(clientID types.UserID, managerID types.UserID,
