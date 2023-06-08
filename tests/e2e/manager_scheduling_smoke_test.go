@@ -126,4 +126,56 @@ var _ = Describe("Manager Scheduling Smoke", Ordered, func() {
 		Expect(lastMsg.AuthorID.String()).Should(Equal(clientChat.ClientID().String()))
 		Expect(lastMsg.CreatedAt.IsZero()).Should(BeFalse())
 	})
+
+	It("manager answers back", func() {
+		lastChat, ok := managerWs.LastChat()
+		Expect(ok).Should(BeTrue())
+		err := managerWs.SendMessage(ctx, lastChat.ID)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		waitForEvent(clientStream) // NewMessageEvent.
+
+		clientMsg, ok := clientChat.LastMessage()
+		Expect(ok).Should(BeTrue())
+		Expect(clientMsg.AuthorID.String()).Should(Equal(managerWs.ManagerID().String()))
+		Expect(clientMsg.Body).Should(Equal("hello"))
+		Expect(clientMsg.CreatedAt.IsZero()).Should(BeFalse())
+
+		waitForEvent(managerStream) // NewMessageEvent.
+		managerWs.Refresh(ctx)
+		lastChat, _ = managerWs.LastChat()
+
+		managerMsg, ok := lastChat.LastMessage()
+		Expect(ok).Should(BeTrue())
+		Expect(managerMsg.AuthorID.String()).Should(Equal(managerWs.ManagerID().String()))
+		Expect(managerMsg.Body).Should(Equal("hello"))
+		Expect(managerMsg.CreatedAt.IsZero()).Should(BeFalse())
+
+		GinkgoWriter.Println(lastChat.Messages())
+		n := lastChat.MessagesCount()
+		Expect(2).Should(Equal(n))
+	})
+
+	It("manager closes chat", func() {
+		count := managerWs.ChatsCount()
+		lastChat, ok := managerWs.LastChat()
+		Expect(ok).Should(BeTrue())
+		err := managerWs.CloseChat(ctx, lastChat.ID)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		waitForEvent(managerStream) // ChatClosedEvent.
+		managerWs.Refresh(ctx)
+		Expect(managerWs.ChatsCount()).Should(Equal(count - 1))
+
+		Expect(managerWs.CanTakeMoreProblems()).Should(BeTrue())
+
+		waitForEvent(clientStream) // NewMessageEvent
+		clientMsg, ok := clientChat.LastMessage()
+		Expect(ok).Should(BeTrue())
+		Expect(clientMsg.Body).Should(Equal("Your question has been marked as resolved.\nThank you for being with us!"))
+		Expect(clientMsg.CreatedAt.IsZero()).Should(BeFalse())
+		Expect(clientMsg.IsService).Should(BeTrue())
+
+		Expect(4).Should(Equal(clientChat.MessagesCount()))
+	})
 })

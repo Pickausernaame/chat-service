@@ -11,24 +11,28 @@ import (
 
 // Defines values for BaseEventEventType.
 const (
+	BaseEventEventTypeChatClosedEvent BaseEventEventType = "ChatClosedEvent"
 	BaseEventEventTypeNewChatEvent    BaseEventEventType = "NewChatEvent"
 	BaseEventEventTypeNewMessageEvent BaseEventEventType = "NewMessageEvent"
 )
 
 // Defines values for ChatClosedEventEventType.
 const (
+	ChatClosedEventEventTypeChatClosedEvent ChatClosedEventEventType = "ChatClosedEvent"
 	ChatClosedEventEventTypeNewChatEvent    ChatClosedEventEventType = "NewChatEvent"
 	ChatClosedEventEventTypeNewMessageEvent ChatClosedEventEventType = "NewMessageEvent"
 )
 
 // Defines values for NewChatEventEventType.
 const (
+	NewChatEventEventTypeChatClosedEvent NewChatEventEventType = "ChatClosedEvent"
 	NewChatEventEventTypeNewChatEvent    NewChatEventEventType = "NewChatEvent"
 	NewChatEventEventTypeNewMessageEvent NewChatEventEventType = "NewMessageEvent"
 )
 
 // Defines values for NewMessageEventEventType.
 const (
+	NewMessageEventEventTypeChatClosedEvent NewMessageEventEventType = "ChatClosedEvent"
 	NewMessageEventEventTypeNewChatEvent    NewMessageEventEventType = "NewChatEvent"
 	NewMessageEventEventTypeNewMessageEvent NewMessageEventEventType = "NewMessageEvent"
 )

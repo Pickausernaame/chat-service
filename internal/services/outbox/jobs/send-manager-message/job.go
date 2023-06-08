@@ -102,5 +102,10 @@ func (j *Job) Handle(ctx context.Context, payload string) error {
 	if err != nil {
 		return fmt.Errorf("publishing event: %v", err)
 	}
+
+	err = j.eventStream.Publish(ctx, msg.AuthorID, event)
+	if err != nil {
+		return fmt.Errorf("publishing event: %v", err)
+	}
 	return nil
 }

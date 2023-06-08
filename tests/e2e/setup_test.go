@@ -1,4 +1,4 @@
-//go:build e2e
+////go:build e2e
 
 package e2e_test
 
@@ -95,6 +95,23 @@ var _ = BeforeSuite(func() {
 	managersPool = newUsersPool(managers)
 })
 
+type E2EHttpClient struct {
+	client    *http.Client
+	UserAgent string
+}
+
+func NewE2EHttpClient() *E2EHttpClient {
+	return &E2EHttpClient{
+		client:    &http.Client{},
+		UserAgent: "chat-service-e2e-tests",
+	}
+}
+
+func (c *E2EHttpClient) Do(req *http.Request) (*http.Response, error) {
+	req.Header.Set("User-Agent", c.UserAgent)
+	return c.client.Do(req)
+}
+
 func expectEnv(k string) string {
 	v := os.Getenv(k)
 	Expect(v).NotTo(BeZero(), fmt.Sprintf("Please make sure %q is set correctly.", k))
@@ -151,6 +168,7 @@ func newClientAPI(ctx context.Context, client user) (*apiclientv1.ClientWithResp
 	apiClientV1, err := apiclientv1.NewClientWithResponses(
 		apiClientV1Endpoint,
 		apiclientv1.WithRequestEditorFn(authorizator),
+		apiclientv1.WithHTTPClient(NewE2EHttpClient()),
 	)
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -185,6 +203,7 @@ func newManagerAPI(ctx context.Context, manager user) (*apimanagerv1.ClientWithR
 	apiManagerV1, err := apimanagerv1.NewClientWithResponses(
 		apiManagerV1Endpoint,
 		apimanagerv1.WithRequestEditorFn(authorizator),
+		apimanagerv1.WithHTTPClient(NewE2EHttpClient()),
 	)
 	Expect(err).ShouldNot(HaveOccurred())
 

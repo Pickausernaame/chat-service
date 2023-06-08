@@ -53,7 +53,5 @@ func TestMarshalPayload_Smoke(t *testing.T) {
 			types.ChatIDNil)
 		require.Error(t, err)
 		assert.Empty(t, p)
-
 	})
-
 }

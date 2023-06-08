@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/onsi/ginkgo/v2"
 	"go.uber.org/atomic"
@@ -247,6 +248,78 @@ func (ws *Workspace) ReadyToNewProblems(ctx context.Context) error {
 	return nil
 }
 
+func (ws *Workspace) SendMessage(ctx context.Context, chatID types.ChatID) error {
+	_, ok := ws.getChat(chatID)
+	if !ok {
+		return fmt.Errorf("%v: %v", errUnknownChat, chatID)
+	}
+
+	body := "hello"
+	resp, err := ws.api.PostSendMessageWithResponse(ctx,
+		&apimanagerv1.PostSendMessageParams{XRequestID: types.NewRequestID()},
+		apimanagerv1.SendMessageRequest{
+			ChatId:      chatID,
+			MessageBody: body,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("post request: %v", err)
+	}
+
+	if resp.JSON200 == nil {
+		return fmt.Errorf("invalid response: %v", err)
+	}
+
+	if err := resp.JSON200.Error; err != nil {
+		return fmt.Errorf("%v: %v", err.Code, err.Message)
+	}
+
+	data := resp.JSON200.Data
+	if data == nil {
+		return errNoDataInResponse
+	}
+
+	ws.pushMessageToBack(NewMessage(
+		data.Id,
+		chatID,
+		data.AuthorId,
+		body,
+		data.CreatedAt,
+	))
+
+	time.Sleep(10 * time.Millisecond)
+	return nil
+}
+
+func (ws *Workspace) CloseChat(ctx context.Context, chatID types.ChatID) error {
+	_, ok := ws.getChat(chatID)
+	if !ok {
+		return fmt.Errorf("%v: %v", errUnknownChat, chatID)
+	}
+
+	resp, err := ws.api.PostCloseChatWithResponse(ctx,
+		&apimanagerv1.PostCloseChatParams{XRequestID: types.NewRequestID()},
+		apimanagerv1.PostCloseChatJSONRequestBody{
+			ChatId: chatID,
+		},
+	)
+
+	if err != nil {
+		return fmt.Errorf("post request: %v", err)
+	}
+
+	if resp.JSON200 == nil {
+		return fmt.Errorf("invalid response: %v", err)
+	}
+
+	if err := resp.JSON200.Error; err != nil {
+		return fmt.Errorf("%v: %v", err.Code, err.Message)
+	}
+
+	time.Sleep(10 * time.Millisecond)
+	return nil
+}
+
 func (ws *Workspace) HandleEvent(_ context.Context, data []byte) error {
 	type EventType struct {
 		EventType string `json:"eventType"`
@@ -282,6 +355,17 @@ func (ws *Workspace) HandleEvent(_ context.Context, data []byte) error {
 			vv.Body,
 			vv.CreatedAt,
 		))
+	case string(apimanagerevents.BaseEventEventTypeChatClosedEvent):
+		vv := &apimanagerevents.ChatClosedEvent{}
+		if err := json.Unmarshal(data, vv); err != nil {
+			return fmt.Errorf("unmarshal event: %v", err)
+		}
+
+		if err := ws.removeChat(vv.ChatId); err != nil {
+			return fmt.Errorf("removing chat: %v", err)
+		}
+
+		ws.canTakeMoreProblems.Store(true)
 	}
 
 	return nil

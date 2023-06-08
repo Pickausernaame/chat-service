@@ -19,24 +19,28 @@ import (
 
 // Defines values for BaseEventEventType.
 const (
+	BaseEventEventTypeChatClosedEvent BaseEventEventType = "ChatClosedEvent"
 	BaseEventEventTypeNewChatEvent    BaseEventEventType = "NewChatEvent"
 	BaseEventEventTypeNewMessageEvent BaseEventEventType = "NewMessageEvent"
 )
 
 // Defines values for ChatClosedEventEventType.
 const (
+	ChatClosedEventEventTypeChatClosedEvent ChatClosedEventEventType = "ChatClosedEvent"
 	ChatClosedEventEventTypeNewChatEvent    ChatClosedEventEventType = "NewChatEvent"
 	ChatClosedEventEventTypeNewMessageEvent ChatClosedEventEventType = "NewMessageEvent"
 )
 
 // Defines values for NewChatEventEventType.
 const (
+	NewChatEventEventTypeChatClosedEvent NewChatEventEventType = "ChatClosedEvent"
 	NewChatEventEventTypeNewChatEvent    NewChatEventEventType = "NewChatEvent"
 	NewChatEventEventTypeNewMessageEvent NewChatEventEventType = "NewMessageEvent"
 )
 
 // Defines values for NewMessageEventEventType.
 const (
+	NewMessageEventEventTypeChatClosedEvent NewMessageEventEventType = "ChatClosedEvent"
 	NewMessageEventEventTypeNewChatEvent    NewMessageEventEventType = "NewChatEvent"
 	NewMessageEventEventTypeNewMessageEvent NewMessageEventEventType = "NewMessageEvent"
 )
@@ -137,18 +141,18 @@ type NewMessageEventEventType string
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xWTW/bMAz9KwK3oxKn6KXwbf04FFi7YmtPRQ+MTcda9OFKctKiyH8fKDsfTYoBCbBg",
-	"GHaKQ4kS3+N7pt+gcKZxlmwMkL9BKGoymB7PMdDVjGzkP413DfmoKC0Rh69LfiwpFF41UTkLOTxY9dyS",
-	"UCXZqCpFXlTOi1iTSCkgoXLeYIQc2laVICG+NgQ5hOiVnYCEl8HEDfog/4RhquH6cnNtoEzjfFcYxhpy",
-	"mKhYt+Nh4Ux2p4optoG8RTSUFTXGQSA/UwVlykaO6ywdDYuF7LDcpwu30XBUuOpd/WRbA/kj3NL8osZ4",
-	"1YdvaX5DIeCkp+xpG9lCgqfnlsKevPVJBzH3vb/wD3HXQ1KeSmZkKYpNSjdBPy0kMGUX2gUqV8pCrb9V",
-	"kD++wWdPFeTwKVtLMuv1mK3FuJDbaizQ3uOUbpynO+/GmkzYZfjalqrASEGoShi0OCEvCrQi4pSEcZ5E",
-	"s0xecTt2ThNabh5TsV/nOOOgtjFJR+pZj0p+yOFaw278k4oIC25hL/OOi/eNMJtL++Nennwc6OtiGdU7",
-	"O/9X5ZFVKaHQau+R0uUcBOYhkD+WxZbI5CFu254rB0rzdzvXht4VMbaxdn6/tnQ5f11bJIxd+boL5NyV",
-	"r8sh378TQILBl69kJ3zj6Wg0kmCUXQZOPpjt/44RPWGk8kvcxXKJkQTaUkRl0ndRmvMiZfCODTAlRhrw",
-	"th1E2/ZYKazvz2YFK1o/8gYfpGzluM6ooubVc7RT8aNtmA3BPImL5D6RnMCv0Bn50KGZnXDfXEMWGwU5",
-	"nA5PhiOQicEAuW21lsBEkQ/JbVtk0Iy0awyf3u0CCa3XkMM85FmmXYG6diHmZ6OzUTYPXPOvAAAA///f",
-	"g5tEbgsAAA==",
+	"H4sIAAAAAAAC/+xWTW/bMAz9KwK3oxKn6KXQbf04FFi7YmtPRQ+MTcda9OFKctIiyH8faDtNmhQDEmDB",
+	"MOwUhxIlvsf3TC8g97b2jlyKoBYQ84osto/nGOlqRi7xnzr4mkLS1C4Rh68Lfiwo5kHXSXsHCh6cfm5I",
+	"6IJc0qWmIEofRKpItCkgofTBYgIFTaMLkJBeawIFMQXtJiDhZTDxgz7IP3HY1nB9ubk20Lb2oSsMUwUK",
+	"JjpVzXiYe5vd6XyKTaTgEC1leYVpECnMdE6ZdonjJmuPhuVSdlju2wu30XBU+PJd/eQaC+oRbml+UWG6",
+	"6sO3NL+hGHFCqwivXhgfqegiT9tYlxICPTcU92SyTzqIy+/9hX+IzR6SDlQwRyuZbJK8CfppuUuTWgAa",
+	"860E9biAz4FKUPApW4s06xWareW5lNv6zNHd45RufKC74MeGbNxl+NoVOsdEUehSWHQ4oSBydCLhlIT1",
+	"gUS9Sn7jduy9IXTcPKZiv85xxkFtY5KO1LMelfyQw7WG/fgn5QmW3MJe+B0X7xthN5f2x706+TjQ18Uy",
+	"qncG/6/KI6tSQm703kOmyzkIzEOkcCyLrZDJQ9y2PWkOlObvdq4NvStibFLlw35t6XL+urZIGPvidRfI",
+	"uS9eV2O/fyeABIsvX8lN+MbT0WgkwWq3Cpx8MNv/HSMGwkTFl7SL5RITCXSFSNq2X0rtnBdtBu/YAFNg",
+	"ogFv20G0bY83hfX92azgjdaPvMEHaVd6rjPpZHj1HN1U/GhqZkMwT+KidZ9oncCv0BmF2KGZnXDffE0O",
+	"aw0KTocnwxHIlsEIyjXGSGCiKMTWbVtk0IyMry2f3u0CCU0woGAeVZYZn6OpfEzqbHQ2yuaRa/4VAAD/",
+	"/zJmJfWACwAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
