@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/labstack/echo/v4"
-	"go.uber.org/zap"
 
 	keycloakclient "github.com/Pickausernaame/chat-service/internal/clients/keycloak"
 	"github.com/Pickausernaame/chat-service/internal/config"
@@ -34,9 +33,8 @@ func initServerClient(
 	problemRepo *problemsrepo.Repo,
 	txtr Transactor,
 	outbox *outbox.Service,
+	subscriber eventSubscriber,
 ) (*server.Server, error) {
-	lg := zap.L().Named(nameServerClient)
-
 	// getting specification
 	v1Swagger, err := clientv1.GetSwagger()
 	if err != nil {
@@ -44,7 +42,7 @@ func initServerClient(
 	}
 
 	// initialization errorHandler
-	errHandler, err := errhandler.New(errhandler.NewOptions(lg, cfg.Global.IsProd(), errhandler.ResponseBuilder))
+	errHandler, err := errhandler.New(errhandler.NewOptions(nameServerClient, cfg.Global.IsProd(), errhandler.ResponseBuilder))
 	if err != nil {
 		return nil, fmt.Errorf("init errror handler: %v", err)
 	}
@@ -71,7 +69,7 @@ func initServerClient(
 	// initialization server
 	srv, err := server.New(
 		server.NewOptions(
-			lg,
+			nameServerClient,
 			cfg.Servers.Client.Addr,
 			cfg.Servers.Client.AllowsOrigins,
 			v1Swagger,
@@ -79,6 +77,8 @@ func initServerClient(
 			keycloakClient,
 			cfg.Servers.Client.RequiredAccess.Resource,
 			cfg.Servers.Client.RequiredAccess.Role,
+			cfg.Servers.Client.SecWsProtocol,
+			subscriber,
 			errHandler.Handle,
 		))
 	if err != nil {

@@ -45,6 +45,7 @@ type DebugServerConfig struct {
 type ServersCommonConfig struct {
 	Addr           string                            `toml:"addr" validate:"required,hostname_port"`
 	AllowsOrigins  []string                          `toml:"allow_origins" validate:"required,min=1"`
+	SecWsProtocol  string                            `toml:"sec_ws_protocol" validate:"required"`
 	RequiredAccess ServersClientRequiredAccessConfig `toml:"required_access"`
 }
 
@@ -79,15 +80,16 @@ type PSQLClientConfig struct {
 }
 
 type ServiceConfig struct {
-	MsgSender   MsgSenderServiceConfig   `toml:"msg_producer"`
-	Outbox      OutboxServiceConfig      `toml:"outbox"`
-	ManagerLoad ManagerLoadServiceConfig `toml:"manager_load"`
+	MsgSender           MsgSenderServiceConfig            `toml:"msg_producer"`
+	Outbox              OutboxServiceConfig               `toml:"outbox"`
+	ManagerLoad         ManagerLoadServiceConfig          `toml:"manager_load"`
+	AvcVerdictProcessor AfcVerdictsProcessorServiceConfig `toml:"afc_verdicts_processor"`
 }
 
 type MsgSenderServiceConfig struct {
 	Brokers       []string `toml:"brokers" validate:"required,min=1"`
 	Topic         string   `toml:"topic" validate:"required"`
-	BatchSize     int      `toml:"batch_size" validate:"required,min=1"`
+	BatchSize     int      `toml:"batch_size" validate:"required,min=1,max=100"`
 	EncryptionKey string   `toml:"encrypt_key" validate:"omitempty,hexadecimal"`
 }
 
@@ -98,5 +100,14 @@ type OutboxServiceConfig struct {
 }
 
 type ManagerLoadServiceConfig struct {
-	MaxProblemsAtSameTime int `toml:"max_problems_at_same_time" validate:"required,min=1"`
+	MaxProblemsAtSameTime int `toml:"max_problems_at_same_time" validate:"required,min=1,max=30"`
+}
+
+type AfcVerdictsProcessorServiceConfig struct {
+	Brokers       []string `toml:"brokers" validate:"required,min=1"`
+	Consumers     int      `toml:"consumers" validate:"required,min=1"`
+	ConsumerGroup string   `toml:"consumer_group" validate:"required"`
+	VerdictsTopic string   `toml:"verdicts_topic" validate:"required"`
+	DlqTopic      string   `toml:"dlq_topic" validate:"required"`
+	EncryptKey    string   `toml:"verdicts_signing_public_key"`
 }

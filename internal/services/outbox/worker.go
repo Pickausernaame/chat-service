@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/labstack/gommon/log"
 	"go.uber.org/zap"
 
 	jobsrepo "github.com/Pickausernaame/chat-service/internal/repositories/jobs"
@@ -93,7 +92,7 @@ func (w *worker) Run(ctx context.Context) {
 					if nil == err {
 						break
 					}
-
+					w.lg.Error("executing job error", zap.Error(err), zap.Any("job", jobMeta))
 					jobMeta.Attempts++
 					if j.MaxAttempts() < jobMeta.Attempts {
 						err = fmt.Errorf("attempts limit exceeded. job = %q attempts=%d", jobMeta.ID, jobMeta.Attempts)
@@ -127,7 +126,6 @@ func (w *worker) postJobProcessing(ctx context.Context, jobMeta jobsrepo.Job, jo
 			if jobProcessingErr != nil && jobMeta.Name != "" {
 				err := w.jobsRepo.CreateFailedJob(ctx, jobMeta.Name, jobMeta.Payload, jobProcessingErr.Error())
 				if err != nil {
-					log.Info("try to set failed job", zap.Any("job", jobMeta))
 					return fmt.Errorf("creating faailed job: %v", err)
 				}
 			}

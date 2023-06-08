@@ -2,10 +2,10 @@ package sendclientmessagejob
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
+	eventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream"
 	msgproducer "github.com/Pickausernaame/chat-service/internal/services/msg-producer"
 	"github.com/Pickausernaame/chat-service/internal/services/outbox"
 	"github.com/Pickausernaame/chat-service/internal/types"
@@ -23,10 +23,15 @@ type messageRepository interface {
 	GetMessageByID(ctx context.Context, msgID types.MessageID) (*messagesrepo.Message, error)
 }
 
+type eventStream interface {
+	Publish(ctx context.Context, userID types.UserID, event eventstream.Event) error
+}
+
 //go:generate options-gen -out-filename=job_options.gen.go -from-struct=Options
 type Options struct {
-	msgProd messageProducer   `option:"mandatory" validate:"required"`
-	msgRepo messageRepository `option:"mandatory" validate:"required"`
+	msgProd     messageProducer   `option:"mandatory" validate:"required"`
+	msgRepo     messageRepository `option:"mandatory" validate:"required"`
+	eventStream eventStream       `option:"mandatory" validate:"required"`
 }
 
 type Job struct {
@@ -48,7 +53,8 @@ func (j *Job) Name() string {
 
 func (j *Job) Handle(ctx context.Context, payload string) error {
 	var id types.MessageID
-	if err := json.Unmarshal([]byte(payload), &id); err != nil {
+
+	if err := id.UnmarshalText([]byte(payload)); err != nil {
 		return fmt.Errorf("unmarshaling payload: %v", err)
 	}
 
@@ -65,6 +71,13 @@ func (j *Job) Handle(ctx context.Context, payload string) error {
 	})
 	if err != nil {
 		return fmt.Errorf("producing msg: %v", err)
+	}
+
+	event := eventstream.NewNewMessageEvent(types.NewEventID(), msg.InitialRequestID,
+		msg.ChatID, msg.ID, msg.AuthorID, msg.CreatedAt, msg.Body, msg.IsService)
+	err = j.eventStream.Publish(ctx, msg.AuthorID, event)
+	if err != nil {
+		return fmt.Errorf("publishing event: %v", err)
 	}
 
 	return nil

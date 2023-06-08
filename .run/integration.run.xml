@@ -1,0 +1,36 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="integration" type="GoTestRunConfiguration" factoryName="Go Test">
+    <module name="chat-service" />
+    <working_directory value="$PROJECT_DIR$" />
+    <go_parameters value="-tags integration" />
+    <useCustomBuildTags value="true" />
+    <envs>
+      <env name="TEST_KEYCLOAK_BASE_PATH" value="http://localhost:3010" />
+      <env name="TEST_KEYCLOAK_REALM" value="Bank" />
+      <env name="TEST_KEYCLOAK_CLIENT_ID" value="integration-testing" />
+      <env name="TEST_KEYCLOAK_CLIENT_SECRET" value="Xb9A5G6qBa0qzeI0vUvN1OvU1mjdr8AT" />
+      <env name="TEST_KEYCLOAK_TEST_USER" value="integration-testing" />
+      <env name="TEST_KEYCLOAK_TEST_PASSWORD" value="123qwe" />
+      <env name="TEST_PSQL_ADDRESS" value="0.0.0.0:5433" />
+      <env name="TEST_PSQL_USER" value="chat-service" />
+      <env name="TEST_PSQL_PASSWORD" value="chat-service" />
+      <env name="TEST_PSQL_DEBUG" value="false" />
+    </envs>
+    <EXTENSION ID="net.ashald.envfile">
+      <option name="IS_ENABLED" value="false" />
+      <option name="IS_SUBST" value="false" />
+      <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+      <option name="IS_IGNORE_MISSING_FILES" value="false" />
+      <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+      <ENTRIES>
+        <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+      </ENTRIES>
+    </EXTENSION>
+    <kind value="PACKAGE" />
+    <package value="github.com/Pickausernaame/chat-service/internal/services/afc-verdicts-processor" />
+    <directory value="$PROJECT_DIR$/internal/services/afc-verdicts-processor" />
+    <filePath value="$PROJECT_DIR$" />
+    <framework value="gotest" />
+    <method v="2" />
+  </configuration>
+</component>

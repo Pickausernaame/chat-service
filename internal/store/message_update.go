@@ -50,6 +50,20 @@ func (mu *MessageUpdate) ClearInitialRequestID() *MessageUpdate {
 	return mu
 }
 
+// SetIsVisibleForManager sets the "is_visible_for_manager" field.
+func (mu *MessageUpdate) SetIsVisibleForManager(b bool) *MessageUpdate {
+	mu.mutation.SetIsVisibleForManager(b)
+	return mu
+}
+
+// SetNillableIsVisibleForManager sets the "is_visible_for_manager" field if the given value is not nil.
+func (mu *MessageUpdate) SetNillableIsVisibleForManager(b *bool) *MessageUpdate {
+	if b != nil {
+		mu.SetIsVisibleForManager(*b)
+	}
+	return mu
+}
+
 // SetBody sets the "body" field.
 func (mu *MessageUpdate) SetBody(s string) *MessageUpdate {
 	mu.mutation.SetBody(s)
@@ -178,6 +192,9 @@ func (mu *MessageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if mu.mutation.InitialRequestIDCleared() {
 		_spec.ClearField(message.FieldInitialRequestID, field.TypeUUID)
 	}
+	if value, ok := mu.mutation.IsVisibleForManager(); ok {
+		_spec.SetField(message.FieldIsVisibleForManager, field.TypeBool, value)
+	}
 	if value, ok := mu.mutation.Body(); ok {
 		_spec.SetField(message.FieldBody, field.TypeString, value)
 	}
@@ -230,6 +247,20 @@ func (muo *MessageUpdateOne) SetNillableInitialRequestID(ti *types.RequestID) *M
 // ClearInitialRequestID clears the value of the "initial_request_id" field.
 func (muo *MessageUpdateOne) ClearInitialRequestID() *MessageUpdateOne {
 	muo.mutation.ClearInitialRequestID()
+	return muo
+}
+
+// SetIsVisibleForManager sets the "is_visible_for_manager" field.
+func (muo *MessageUpdateOne) SetIsVisibleForManager(b bool) *MessageUpdateOne {
+	muo.mutation.SetIsVisibleForManager(b)
+	return muo
+}
+
+// SetNillableIsVisibleForManager sets the "is_visible_for_manager" field if the given value is not nil.
+func (muo *MessageUpdateOne) SetNillableIsVisibleForManager(b *bool) *MessageUpdateOne {
+	if b != nil {
+		muo.SetIsVisibleForManager(*b)
+	}
 	return muo
 }
 
@@ -390,6 +421,9 @@ func (muo *MessageUpdateOne) sqlSave(ctx context.Context) (_node *Message, err e
 	}
 	if muo.mutation.InitialRequestIDCleared() {
 		_spec.ClearField(message.FieldInitialRequestID, field.TypeUUID)
+	}
+	if value, ok := muo.mutation.IsVisibleForManager(); ok {
+		_spec.SetField(message.FieldIsVisibleForManager, field.TypeBool, value)
 	}
 	if value, ok := muo.mutation.Body(); ok {
 		_spec.SetField(message.FieldBody, field.TypeString, value)

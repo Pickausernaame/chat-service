@@ -480,6 +480,18 @@ func (u *MessageUpsert) ClearInitialRequestID() *MessageUpsert {
 	return u
 }
 
+// SetIsVisibleForManager sets the "is_visible_for_manager" field.
+func (u *MessageUpsert) SetIsVisibleForManager(v bool) *MessageUpsert {
+	u.Set(message.FieldIsVisibleForManager, v)
+	return u
+}
+
+// UpdateIsVisibleForManager sets the "is_visible_for_manager" field to the value that was provided on create.
+func (u *MessageUpsert) UpdateIsVisibleForManager() *MessageUpsert {
+	u.SetExcluded(message.FieldIsVisibleForManager)
+	return u
+}
+
 // SetBody sets the "body" field.
 func (u *MessageUpsert) SetBody(v string) *MessageUpsert {
 	u.Set(message.FieldBody, v)
@@ -563,9 +575,6 @@ func (u *MessageUpsertOne) UpdateNewValues() *MessageUpsertOne {
 		if _, exists := u.create.mutation.IsVisibleForClient(); exists {
 			s.SetIgnore(message.FieldIsVisibleForClient)
 		}
-		if _, exists := u.create.mutation.IsVisibleForManager(); exists {
-			s.SetIgnore(message.FieldIsVisibleForManager)
-		}
 		if _, exists := u.create.mutation.CreatedAt(); exists {
 			s.SetIgnore(message.FieldCreatedAt)
 		}
@@ -618,6 +627,20 @@ func (u *MessageUpsertOne) UpdateInitialRequestID() *MessageUpsertOne {
 func (u *MessageUpsertOne) ClearInitialRequestID() *MessageUpsertOne {
 	return u.Update(func(s *MessageUpsert) {
 		s.ClearInitialRequestID()
+	})
+}
+
+// SetIsVisibleForManager sets the "is_visible_for_manager" field.
+func (u *MessageUpsertOne) SetIsVisibleForManager(v bool) *MessageUpsertOne {
+	return u.Update(func(s *MessageUpsert) {
+		s.SetIsVisibleForManager(v)
+	})
+}
+
+// UpdateIsVisibleForManager sets the "is_visible_for_manager" field to the value that was provided on create.
+func (u *MessageUpsertOne) UpdateIsVisibleForManager() *MessageUpsertOne {
+	return u.Update(func(s *MessageUpsert) {
+		s.UpdateIsVisibleForManager()
 	})
 }
 
@@ -875,9 +898,6 @@ func (u *MessageUpsertBulk) UpdateNewValues() *MessageUpsertBulk {
 			if _, exists := b.mutation.IsVisibleForClient(); exists {
 				s.SetIgnore(message.FieldIsVisibleForClient)
 			}
-			if _, exists := b.mutation.IsVisibleForManager(); exists {
-				s.SetIgnore(message.FieldIsVisibleForManager)
-			}
 			if _, exists := b.mutation.CreatedAt(); exists {
 				s.SetIgnore(message.FieldCreatedAt)
 			}
@@ -931,6 +951,20 @@ func (u *MessageUpsertBulk) UpdateInitialRequestID() *MessageUpsertBulk {
 func (u *MessageUpsertBulk) ClearInitialRequestID() *MessageUpsertBulk {
 	return u.Update(func(s *MessageUpsert) {
 		s.ClearInitialRequestID()
+	})
+}
+
+// SetIsVisibleForManager sets the "is_visible_for_manager" field.
+func (u *MessageUpsertBulk) SetIsVisibleForManager(v bool) *MessageUpsertBulk {
+	return u.Update(func(s *MessageUpsert) {
+		s.SetIsVisibleForManager(v)
+	})
+}
+
+// UpdateIsVisibleForManager sets the "is_visible_for_manager" field to the value that was provided on create.
+func (u *MessageUpsertBulk) UpdateIsVisibleForManager() *MessageUpsertBulk {
+	return u.Update(func(s *MessageUpsert) {
+		s.UpdateIsVisibleForManager()
 	})
 }
 

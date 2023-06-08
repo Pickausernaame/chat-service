@@ -1,0 +1,37 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="e2e" type="GoTestRunConfiguration" factoryName="Go Test">
+    <module name="chat-service" />
+    <working_directory value="$PROJECT_DIR$/tests/e2e" />
+    <go_parameters value="-tags e2e" />
+    <envs>
+      <env name="E2E_CLIENT_V1_API_ENDPOINT" value="http://localhost:8080/v1" />
+      <env name="E2E_CLIENT_WS_ENDPOINT" value="ws://localhost:8080/ws" />
+      <env name="E2E_CLIENT_WS_SEC_PROTOCOL" value="chat-service-protocol" />
+      <env name="E2E_CLIENT_WS_ORIGIN" value="http://localhost:3000" />
+      <env name="E2E_KEYCLOAK_BASE_PATH" value="http://localhost:3010" />
+      <env name="E2E_KEYCLOAK_REALM" value="Bank" />
+      <env name="E2E_KEYCLOAK_CLIENT_ID" value="e2e-testing" />
+      <env name="E2E_KEYCLOAK_CLIENT_SECRET" value="BVg0D8oeOQfGgQVvQMKeMtezvl4WvA4D" />
+      <env name="E2E_KEYCLOAK_CLIENT_DEBUG" value="false" />
+      <env name="E2E_KEYCLOAK_CLIENTS" value="e2e-user,e2e-user1,e2e-user2" />
+    </envs>
+    <EXTENSION ID="net.ashald.envfile">
+      <option name="IS_ENABLED" value="false" />
+      <option name="IS_SUBST" value="false" />
+      <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+      <option name="IS_IGNORE_MISSING_FILES" value="false" />
+      <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+      <ENTRIES>
+        <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+      </ENTRIES>
+    </EXTENSION>
+    <root_directory value="$PROJECT_DIR$" />
+    <kind value="PACKAGE" />
+    <package value="github.com/Pickausernaame/chat-service/tests/e2e" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$" />
+    <framework value="gotest" />
+    <pattern value="^\QTestE2E\E$" />
+    <method v="2" />
+  </configuration>
+</component>

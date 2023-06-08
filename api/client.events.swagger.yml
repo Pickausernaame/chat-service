@@ -1,0 +1,83 @@
+openapi: 3.1.0
+info:
+  title: Bank Support Chat Client Events
+  version: v1
+
+servers:
+  - url: ws://localhost:8080/ws
+    description: Development server
+
+components:
+  schemas:
+    MessageId:
+      required: [ messageId ]
+      properties:
+        messageId:
+          type: string
+          format: uuid
+          x-go-type: types.MessageID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+
+    BaseEvent:
+      required: [ eventId, eventType, requestId ]
+      properties:
+        eventId:
+          type: string
+          format: uuid
+          x-go-type: types.EventID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+          description: Unique identifier for the event
+        eventType:
+          type: string
+          enum:
+            - NewMessageEvent
+            - MessageSentEvent
+            - MessageBlockedEvent
+          description: Type of the event
+        requestId:
+          type: string
+          format: uuid
+          x-go-type: types.RequestID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+          description: Unique identifier for the request
+
+    NewMessageEvent:
+
+      allOf:
+        - $ref: '#/components/schemas/BaseEvent'
+        - $ref: '#/components/schemas/MessageId'
+        - type: object
+          required: [ body, createdAt, isService ]
+          properties:
+            authorId:
+              type: string
+              format: uuid
+              x-go-type: types.UserID
+              x-go-type-import:
+                path: "github.com/Pickausernaame/chat-service/internal/types"
+              description: Unique identifier for the author
+            body:
+              type: string
+              minLength: 1
+              maxLength: 3000
+              description: Body of the message
+            createdAt:
+              type: string
+              format: date-time
+              description: Date and time of event creation
+            isService:
+              type: boolean
+              description: Indicates if the event is a service event
+
+    MessageSentEvent:
+      allOf:
+        - $ref: '#/components/schemas/BaseEvent'
+        - $ref: '#/components/schemas/MessageId'
+
+    MessageBlockedEvent:
+      allOf:
+        - $ref: '#/components/schemas/BaseEvent'
+        - $ref: '#/components/schemas/MessageId'

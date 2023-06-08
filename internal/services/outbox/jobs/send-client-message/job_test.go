@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
+	eventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream"
 	msgproducer "github.com/Pickausernaame/chat-service/internal/services/msg-producer"
 	sendclientmessagejob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/send-client-message"
 	sendclientmessagejobmocks "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/send-client-message/mocks"
@@ -24,7 +25,8 @@ func TestJob_Handle(t *testing.T) {
 
 	msgProducer := sendclientmessagejobmocks.NewMockmessageProducer(ctrl)
 	msgRepo := sendclientmessagejobmocks.NewMockmessageRepository(ctrl)
-	job, err := sendclientmessagejob.New(sendclientmessagejob.NewOptions(msgProducer, msgRepo))
+	eventStream := sendclientmessagejobmocks.NewMockeventStream(ctrl)
+	job, err := sendclientmessagejob.New(sendclientmessagejob.NewOptions(msgProducer, msgRepo, eventStream))
 	require.NoError(t, err)
 
 	clientID := types.NewUserID()
@@ -52,6 +54,18 @@ func TestJob_Handle(t *testing.T) {
 		FromClient: true,
 	}).Return(nil)
 
+	event := &eventstream.NewMessageEvent{
+		EventType:   eventstream.EventTypeNewMessageEvent,
+		RequestID:   msg.InitialRequestID,
+		ChatID:      msg.ChatID,
+		MessageID:   msg.ID,
+		UserID:      msg.AuthorID,
+		CreatedAt:   msg.CreatedAt,
+		MessageBody: msg.Body,
+		IsService:   msg.IsService,
+	}
+
+	eventStream.EXPECT().Publish(gomock.Any(), msg.AuthorID, event)
 	// Action & assert.
 	payload, err := sendclientmessagejob.MarshalPayload(msgID)
 	require.NoError(t, err)

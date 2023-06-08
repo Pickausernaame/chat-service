@@ -57,6 +57,153 @@ func (t ChatID) string() string {
 	return uuid.UUID(t).String()
 }
 
+type EventID uuid.UUID
+
+var EventIDNil EventID
+
+func NewEventID() EventID {
+	return EventID(uuid.New())
+}
+
+func (t EventID) IsZero() bool { return t.isZero() }
+
+func (t EventID) MarshalText() ([]byte, error) {
+	return []byte(t.string()), nil
+}
+
+func (t EventID) Matches(x interface{}) bool {
+	value, ok := x.(EventID)
+	if !ok {
+		return false
+	}
+	return t.String() == value.String()
+}
+
+func (t EventID) String() string { return t.string() }
+
+func (t EventID) Validate() error {
+	if t.isZero() {
+		return errors.New("empty value")
+	}
+	return nil
+}
+
+func (t EventID) Value() (driver.Value, error) { return t.string(), nil }
+
+func (t *EventID) Scan(src any) error { return t.scan(src) }
+
+func (t *EventID) UnmarshalText(text []byte) error { return t.scan(text) }
+
+func (t *EventID) isZero() bool {
+	return t == nil || (uuid.UUID)(*t) == uuid.Nil
+}
+
+func (t *EventID) scan(v any) error {
+	return (*uuid.UUID)(t).Scan(v)
+}
+
+func (t EventID) string() string {
+	return uuid.UUID(t).String()
+}
+
+type FailedJobID uuid.UUID
+
+var FailedJobIDNil FailedJobID
+
+func NewFailedJobID() FailedJobID {
+	return FailedJobID(uuid.New())
+}
+
+func (t FailedJobID) IsZero() bool { return t.isZero() }
+
+func (t FailedJobID) MarshalText() ([]byte, error) {
+	return []byte(t.string()), nil
+}
+
+func (t FailedJobID) Matches(x interface{}) bool {
+	value, ok := x.(FailedJobID)
+	if !ok {
+		return false
+	}
+	return t.String() == value.String()
+}
+
+func (t FailedJobID) String() string { return t.string() }
+
+func (t FailedJobID) Validate() error {
+	if t.isZero() {
+		return errors.New("empty value")
+	}
+	return nil
+}
+
+func (t FailedJobID) Value() (driver.Value, error) { return t.string(), nil }
+
+func (t *FailedJobID) Scan(src any) error { return t.scan(src) }
+
+func (t *FailedJobID) UnmarshalText(text []byte) error { return t.scan(text) }
+
+func (t *FailedJobID) isZero() bool {
+	return t == nil || (uuid.UUID)(*t) == uuid.Nil
+}
+
+func (t *FailedJobID) scan(v any) error {
+	return (*uuid.UUID)(t).Scan(v)
+}
+
+func (t FailedJobID) string() string {
+	return uuid.UUID(t).String()
+}
+
+type JobID uuid.UUID
+
+var JobIDNil JobID
+
+func NewJobID() JobID {
+	return JobID(uuid.New())
+}
+
+func (t JobID) IsZero() bool { return t.isZero() }
+
+func (t JobID) MarshalText() ([]byte, error) {
+	return []byte(t.string()), nil
+}
+
+func (t JobID) Matches(x interface{}) bool {
+	value, ok := x.(JobID)
+	if !ok {
+		return false
+	}
+	return t.String() == value.String()
+}
+
+func (t JobID) String() string { return t.string() }
+
+func (t JobID) Validate() error {
+	if t.isZero() {
+		return errors.New("empty value")
+	}
+	return nil
+}
+
+func (t JobID) Value() (driver.Value, error) { return t.string(), nil }
+
+func (t *JobID) Scan(src any) error { return t.scan(src) }
+
+func (t *JobID) UnmarshalText(text []byte) error { return t.scan(text) }
+
+func (t *JobID) isZero() bool {
+	return t == nil || (uuid.UUID)(*t) == uuid.Nil
+}
+
+func (t *JobID) scan(v any) error {
+	return (*uuid.UUID)(t).Scan(v)
+}
+
+func (t JobID) string() string {
+	return uuid.UUID(t).String()
+}
+
 type MessageID uuid.UUID
 
 var MessageIDNil MessageID
@@ -155,55 +302,6 @@ func (t ProblemID) string() string {
 	return uuid.UUID(t).String()
 }
 
-type UserID uuid.UUID
-
-var UserIDNil UserID
-
-func NewUserID() UserID {
-	return UserID(uuid.New())
-}
-
-func (t UserID) IsZero() bool { return t.isZero() }
-
-func (t UserID) MarshalText() ([]byte, error) {
-	return []byte(t.string()), nil
-}
-
-func (t UserID) Matches(x interface{}) bool {
-	value, ok := x.(UserID)
-	if !ok {
-		return false
-	}
-	return t.String() == value.String()
-}
-
-func (t UserID) String() string { return t.string() }
-
-func (t UserID) Validate() error {
-	if t.isZero() {
-		return errors.New("empty value")
-	}
-	return nil
-}
-
-func (t UserID) Value() (driver.Value, error) { return t.string(), nil }
-
-func (t *UserID) Scan(src any) error { return t.scan(src) }
-
-func (t *UserID) UnmarshalText(text []byte) error { return t.scan(text) }
-
-func (t *UserID) isZero() bool {
-	return t == nil || (uuid.UUID)(*t) == uuid.Nil
-}
-
-func (t *UserID) scan(v any) error {
-	return (*uuid.UUID)(t).Scan(v)
-}
-
-func (t UserID) string() string {
-	return uuid.UUID(t).String()
-}
-
 type RequestID uuid.UUID
 
 var RequestIDNil RequestID
@@ -253,100 +351,51 @@ func (t RequestID) string() string {
 	return uuid.UUID(t).String()
 }
 
-type JobID uuid.UUID
+type UserID uuid.UUID
 
-var JobIDNil JobID
+var UserIDNil UserID
 
-func NewJobID() JobID {
-	return JobID(uuid.New())
+func NewUserID() UserID {
+	return UserID(uuid.New())
 }
 
-func (t JobID) IsZero() bool { return t.isZero() }
+func (t UserID) IsZero() bool { return t.isZero() }
 
-func (t JobID) MarshalText() ([]byte, error) {
+func (t UserID) MarshalText() ([]byte, error) {
 	return []byte(t.string()), nil
 }
 
-func (t JobID) Matches(x interface{}) bool {
-	value, ok := x.(JobID)
+func (t UserID) Matches(x interface{}) bool {
+	value, ok := x.(UserID)
 	if !ok {
 		return false
 	}
 	return t.String() == value.String()
 }
 
-func (t JobID) String() string { return t.string() }
+func (t UserID) String() string { return t.string() }
 
-func (t JobID) Validate() error {
+func (t UserID) Validate() error {
 	if t.isZero() {
 		return errors.New("empty value")
 	}
 	return nil
 }
 
-func (t JobID) Value() (driver.Value, error) { return t.string(), nil }
+func (t UserID) Value() (driver.Value, error) { return t.string(), nil }
 
-func (t *JobID) Scan(src any) error { return t.scan(src) }
+func (t *UserID) Scan(src any) error { return t.scan(src) }
 
-func (t *JobID) UnmarshalText(text []byte) error { return t.scan(text) }
+func (t *UserID) UnmarshalText(text []byte) error { return t.scan(text) }
 
-func (t *JobID) isZero() bool {
+func (t *UserID) isZero() bool {
 	return t == nil || (uuid.UUID)(*t) == uuid.Nil
 }
 
-func (t *JobID) scan(v any) error {
+func (t *UserID) scan(v any) error {
 	return (*uuid.UUID)(t).Scan(v)
 }
 
-func (t JobID) string() string {
-	return uuid.UUID(t).String()
-}
-
-type FailedJobID uuid.UUID
-
-var FailedJobIDNil FailedJobID
-
-func NewFailedJobID() FailedJobID {
-	return FailedJobID(uuid.New())
-}
-
-func (t FailedJobID) IsZero() bool { return t.isZero() }
-
-func (t FailedJobID) MarshalText() ([]byte, error) {
-	return []byte(t.string()), nil
-}
-
-func (t FailedJobID) Matches(x interface{}) bool {
-	value, ok := x.(FailedJobID)
-	if !ok {
-		return false
-	}
-	return t.String() == value.String()
-}
-
-func (t FailedJobID) String() string { return t.string() }
-
-func (t FailedJobID) Validate() error {
-	if t.isZero() {
-		return errors.New("empty value")
-	}
-	return nil
-}
-
-func (t FailedJobID) Value() (driver.Value, error) { return t.string(), nil }
-
-func (t *FailedJobID) Scan(src any) error { return t.scan(src) }
-
-func (t *FailedJobID) UnmarshalText(text []byte) error { return t.scan(text) }
-
-func (t *FailedJobID) isZero() bool {
-	return t == nil || (uuid.UUID)(*t) == uuid.Nil
-}
-
-func (t *FailedJobID) scan(v any) error {
-	return (*uuid.UUID)(t).Scan(v)
-}
-
-func (t FailedJobID) string() string {
+func (t UserID) string() string {
 	return uuid.UUID(t).String()
 }

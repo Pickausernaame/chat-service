@@ -21,12 +21,18 @@ import (
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
 	problemsrepo "github.com/Pickausernaame/chat-service/internal/repositories/problems"
 	serverdebug "github.com/Pickausernaame/chat-service/internal/server-debug"
+	afcverdictsprocessor "github.com/Pickausernaame/chat-service/internal/services/afc-verdicts-processor"
+	eventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream"
+	inmemeventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream/in-mem"
 	managerload "github.com/Pickausernaame/chat-service/internal/services/manager-load"
 	inmemmanagerpool "github.com/Pickausernaame/chat-service/internal/services/manager-pool/in-mem"
 	msgproducer "github.com/Pickausernaame/chat-service/internal/services/msg-producer"
 	"github.com/Pickausernaame/chat-service/internal/services/outbox"
+	clientmessageblockedjob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/client-message-blocked"
+	clientmessagesentjob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/client-message-sent"
 	sendclientmessagejob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/send-client-message"
 	"github.com/Pickausernaame/chat-service/internal/store"
+	"github.com/Pickausernaame/chat-service/internal/types"
 )
 
 var configPath = flag.String("с", "configs/config.toml", "Path to config file")
@@ -35,6 +41,10 @@ func main() {
 	if err := run(); err != nil {
 		log.Fatalf("run app: %v", err)
 	}
+}
+
+type eventSubscriber interface {
+	Subscribe(ctx context.Context, userID types.UserID) (<-chan eventstream.Event, error)
 }
 
 func run() (errReturned error) {
@@ -122,8 +132,9 @@ func run() (errReturned error) {
 		return fmt.Errorf("init outbox service: %v", err)
 	}
 
+	eventStream := inmemeventstream.New()
 	// initialization sendMsg job
-	sendMsgJob, err := sendclientmessagejob.New(sendclientmessagejob.NewOptions(msgProdService, msgRepo))
+	sendMsgJob, err := sendclientmessagejob.New(sendclientmessagejob.NewOptions(msgProdService, msgRepo, eventStream))
 	if err != nil {
 		return fmt.Errorf("init send msg job: %v", err)
 	}
@@ -131,6 +142,27 @@ func run() (errReturned error) {
 	err = obox.RegisterJob(sendMsgJob)
 	if err != nil {
 		return fmt.Errorf("registration send msg job: %v", err)
+	}
+
+	// initialization sendMsg job
+	msgBlockedJob, err := clientmessageblockedjob.New(clientmessageblockedjob.NewOptions(msgRepo, eventStream))
+	if err != nil {
+		return fmt.Errorf("init msg blocked job: %v", err)
+	}
+
+	err = obox.RegisterJob(msgBlockedJob)
+	if err != nil {
+		return fmt.Errorf("registration msg blocked job: %v", err)
+	}
+
+	msgSentJob, err := clientmessagesentjob.New(clientmessagesentjob.NewOptions(msgRepo, eventStream))
+	if err != nil {
+		return fmt.Errorf("init msg sent job: %v", err)
+	}
+
+	err = obox.RegisterJob(msgSentJob)
+	if err != nil {
+		return fmt.Errorf("registration msg sent job: %v", err)
 	}
 
 	// initialization manager pool service
@@ -142,6 +174,24 @@ func run() (errReturned error) {
 		return fmt.Errorf("init outbox service: %v", err)
 	}
 
+	// initialization afc-verdicts-processor service
+	afc := cfg.Service.AvcVerdictProcessor
+	afcProcessor, err := afcverdictsprocessor.New(
+		afcverdictsprocessor.NewOptions(afc.Brokers,
+			afc.Consumers,
+			afc.ConsumerGroup,
+			afc.VerdictsTopic,
+			afcverdictsprocessor.NewKafkaReader,
+			afcverdictsprocessor.NewKafkaDLQWriter(afc.Brokers, afc.DlqTopic),
+			db,
+			msgRepo,
+			obox,
+			afcverdictsprocessor.WithVerdictsSignKey(afc.EncryptKey),
+		))
+	if err != nil {
+		return fmt.Errorf("init afc-verdicts-processor service: %v", err)
+	}
+
 	// creating servers
 	// initialization debug server
 	srvDebug, err := serverdebug.New(serverdebug.NewOptions(cfg.Servers.Debug.Addr))
@@ -150,13 +200,13 @@ func run() (errReturned error) {
 	}
 
 	// initialization client server
-	srvClient, err := initServerClient(cfg, kc, msgRepo, chatRepo, problemRepo, db, obox)
+	srvClient, err := initServerClient(cfg, kc, msgRepo, chatRepo, problemRepo, db, obox, eventStream)
 	if err != nil {
 		return fmt.Errorf("init server client: %v", err)
 	}
 
 	// initialization manager server
-	srvManager, err := initServerManager(cfg, kc, manLoadService, manPoolService)
+	srvManager, err := initServerManager(cfg, kc, manLoadService, manPoolService, eventStream)
 	if err != nil {
 		return fmt.Errorf("init server manager: %v", err)
 	}
@@ -175,6 +225,8 @@ func run() (errReturned error) {
 	// Run services.
 	// outbox run
 	eg.Go(func() error { return obox.Run(ctx) })
+
+	eg.Go(func() error { return afcProcessor.Run(ctx) })
 
 	if err = eg.Wait(); err != nil && !errors.Is(err, context.Canceled) {
 		return fmt.Errorf("wait app stop: %v", err)

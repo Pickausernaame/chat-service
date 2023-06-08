@@ -2,13 +2,18 @@ package clientchat
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/onsi/ginkgo/v2"
+
+	eventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream"
 	"github.com/Pickausernaame/chat-service/internal/types"
 	"github.com/Pickausernaame/chat-service/pkg/pointer"
+	apiclientevents "github.com/Pickausernaame/chat-service/tests/e2e/api/client/events"
 	apiclientv1 "github.com/Pickausernaame/chat-service/tests/e2e/api/client/v1"
 )
 
@@ -205,6 +210,70 @@ func (c *Chat) SendMessage(ctx context.Context, body string, opts ...SendMessage
 	c.addMessageToEnd(msg)
 
 	time.Sleep(10 * time.Millisecond)
+	return nil
+}
+
+func (c *Chat) HandleEvent(_ context.Context, data []byte) error {
+	ginkgo.GinkgoWriter.Println("chat client: new event: ", string(data))
+
+	type EventType struct {
+		EventType string `json:"eventType"`
+	}
+
+	eType := &EventType{}
+	if err := json.Unmarshal(data, eType); err != nil {
+		return fmt.Errorf("unmarshal event: %v", err)
+	}
+
+	switch eType.EventType {
+	case eventstream.EventTypeNewMessageEvent:
+		vv := &apiclientevents.NewMessageEvent{}
+		if err := json.Unmarshal(data, vv); err != nil {
+			return fmt.Errorf("unmarshal event: %v", err)
+		}
+
+		msg := &Message{
+			ID:        vv.MessageId,
+			Body:      vv.Body,
+			IsService: vv.IsService,
+			CreatedAt: vv.CreatedAt,
+		}
+		if uid := vv.AuthorId; uid != nil {
+			msg.AuthorID = *uid
+		}
+
+		c.addMessageToEnd(msg)
+	case eventstream.EventTypeMessageSentEvent:
+		vv := &apiclientevents.NewMessageEvent{}
+		if err := json.Unmarshal(data, vv); err != nil {
+			return fmt.Errorf("unmarshal event: %v", err)
+		}
+
+		c.msgMu.Lock()
+		defer c.msgMu.Unlock()
+
+		msg, ok := c.messagesByID[vv.MessageId]
+		if !ok {
+			return fmt.Errorf("unknown message: %v", vv.MessageId)
+		}
+		msg.IsReceived = true
+
+	case eventstream.EventTypeMessageBlockedEvent:
+		vv := &apiclientevents.MessageBlockedEvent{}
+		if err := json.Unmarshal(data, vv); err != nil {
+			return fmt.Errorf("unmarshal event: %v", err)
+		}
+
+		c.msgMu.Lock()
+		defer c.msgMu.Unlock()
+
+		msg, ok := c.messagesByID[vv.MessageId]
+		if !ok {
+			return fmt.Errorf("unknown message: %v", vv.MessageId)
+		}
+		msg.IsBlocked = true
+	}
+
 	return nil
 }
 
