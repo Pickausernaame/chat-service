@@ -51,6 +51,7 @@ type eventSubscriber interface {
 	Subscribe(ctx context.Context, userID types.UserID) (<-chan eventstream.Event, error)
 }
 
+//nolint:gocyclo
 func run() (errReturned error) {
 	flag.Parse()
 
@@ -157,7 +158,9 @@ func run() (errReturned error) {
 		return fmt.Errorf("registration send msg job: %v", err)
 	}
 
-	sendManagerMsgJob, err := sendmanagermessagejob.New(sendmanagermessagejob.NewOptions(managerMsgProdService, msgRepo, chatRepo, eventStream))
+	sendManagerMsgJob, err := sendmanagermessagejob.New(
+		sendmanagermessagejob.NewOptions(managerMsgProdService, msgRepo,
+			chatRepo, eventStream))
 	if err != nil {
 		return fmt.Errorf("init send manager msg job: %v", err)
 	}
@@ -192,12 +195,15 @@ func run() (errReturned error) {
 	manPoolService := inmemmanagerpool.New()
 
 	// initialization manager load service
-	manLoadService, err := managerload.New(managerload.NewOptions(cfg.Service.ManagerLoad.MaxProblemsAtSameTime, problemRepo))
+	manLoadService, err := managerload.New(
+		managerload.NewOptions(cfg.Service.ManagerLoad.MaxProblemsAtSameTime,
+			problemRepo))
 	if err != nil {
 		return fmt.Errorf("init manLoadService service: %v", err)
 	}
 
-	mngrAssignedJob, err := managerassignedtoproblemjob.New(managerassignedtoproblemjob.NewOptions(msgRepo, manLoadService, eventStream))
+	mngrAssignedJob, err := managerassignedtoproblemjob.New(
+		managerassignedtoproblemjob.NewOptions(msgRepo, manLoadService, eventStream))
 	if err != nil {
 		return fmt.Errorf("init manager assigned job: %v", err)
 	}
@@ -217,7 +223,9 @@ func run() (errReturned error) {
 		return fmt.Errorf("registration resolve problem job: %v", err)
 	}
 
-	mngrScheduler, err := managerscheduler.New(managerscheduler.NewOptions(cfg.Service.ManagerScheduler.Period, manPoolService, msgRepo, obox, problemRepo, db))
+	mngrScheduler, err := managerscheduler.New(
+		managerscheduler.NewOptions(cfg.Service.ManagerScheduler.Period, manPoolService,
+			msgRepo, obox, problemRepo, db))
 	if err != nil {
 		return fmt.Errorf("init manager scheduler error: %v", err)
 	}

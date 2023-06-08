@@ -262,7 +262,8 @@ func (s *MsgRepoHistoryAPISuite) getClientChatMessagesWhileCursor(clientID types
 	return result, cursors
 }
 
-func (s *MsgRepoHistoryAPISuite) getProblemMessagesWhileCursor(problemID types.ProblemID, pageSize int) ([][]msg, []cursor) {
+func (s *MsgRepoHistoryAPISuite) getProblemMessagesWhileCursor(problemID types.ProblemID,
+	pageSize int) ([][]msg, []cursor) {
 	s.T().Helper()
 
 	var result [][]msg

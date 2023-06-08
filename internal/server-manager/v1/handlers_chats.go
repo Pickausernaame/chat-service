@@ -45,7 +45,9 @@ func (h Handlers) PostGetChatHistory(eCtx echo.Context, params PostGetChatHistor
 		msgs = append(msgs, toMessage(m))
 	}
 
-	return eCtx.JSON(http.StatusOK, &GetChatHistoryResponse{Data: &MessagesPage{Messages: msgs, Next: resp.NextCursor}})
+	return eCtx.JSON(http.StatusOK, &GetChatHistoryResponse{
+		Data: &MessagesPage{Messages: msgs, Next: resp.NextCursor},
+	})
 }
 
 func toMessage(msg *getchathistory.Message) Message {

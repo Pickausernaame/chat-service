@@ -34,7 +34,8 @@ type outboxService interface {
 }
 
 type problemsRepository interface {
-	GetProblemByChatAndManagerIDs(ctx context.Context, chatID types.ChatID, managerID types.UserID) (*problemsrepo.Problem, error)
+	GetProblemByChatAndManagerIDs(ctx context.Context, chatID types.ChatID,
+		managerID types.UserID) (*problemsrepo.Problem, error)
 }
 
 type transactor interface {

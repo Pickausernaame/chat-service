@@ -15,7 +15,8 @@ type request struct {
 }
 
 func MarshalPayload(clientID types.UserID, managerID types.UserID,
-	requestID types.RequestID, messageID types.MessageID) (string, error) {
+	requestID types.RequestID, messageID types.MessageID,
+) (string, error) {
 	r := &request{
 		ClientID:  clientID,
 		ManagerID: managerID,

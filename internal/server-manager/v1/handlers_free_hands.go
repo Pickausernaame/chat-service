@@ -13,7 +13,9 @@ import (
 	"github.com/Pickausernaame/chat-service/pkg/pointer"
 )
 
-func (h Handlers) PostGetFreeHandsBtnAvailability(eCtx echo.Context, params PostGetFreeHandsBtnAvailabilityParams) error {
+func (h Handlers) PostGetFreeHandsBtnAvailability(eCtx echo.Context,
+	params PostGetFreeHandsBtnAvailabilityParams,
+) error {
 	ctx := eCtx.Request().Context()
 	managerID := middlewares.MustUserID(eCtx)
 

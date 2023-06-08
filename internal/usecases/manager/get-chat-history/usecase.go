@@ -30,7 +30,8 @@ type messagesRepository interface {
 }
 
 type problemsRepository interface {
-	GetProblemByChatAndManagerIDs(ctx context.Context, chatID types.ChatID, managerID types.UserID) (*problemsrepo.Problem, error)
+	GetProblemByChatAndManagerIDs(ctx context.Context, chatID types.ChatID,
+		managerID types.UserID) (*problemsrepo.Problem, error)
 }
 
 //go:generate options-gen -out-filename=usecase_options.gen.go -from-struct=Options

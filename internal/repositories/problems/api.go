@@ -47,14 +47,17 @@ func (r *Repo) GetAssignedUnsolvedProblems(ctx context.Context, managerID types.
 }
 
 func (r *Repo) GetManagerIDByChatID(ctx context.Context, chatID types.ChatID) (types.UserID, error) {
-	p, err := r.db.Problem(ctx).Query().Where(problem.And(problem.ChatID(chatID), problem.ResolveAtIsNil())).First(ctx)
+	p, err := r.db.Problem(ctx).Query().
+		Where(problem.And(problem.ChatID(chatID), problem.ResolveAtIsNil())).First(ctx)
 	if err != nil {
 		return types.UserIDNil, err
 	}
 	return p.ManagerID, nil
 }
 
-func (r *Repo) GetProblemByChatAndManagerIDs(ctx context.Context, chatID types.ChatID, managerID types.UserID) (*Problem, error) {
+func (r *Repo) GetProblemByChatAndManagerIDs(ctx context.Context, chatID types.ChatID,
+	managerID types.UserID,
+) (*Problem, error) {
 	p, err := r.db.Problem(ctx).Query().Where(problem.And(problem.ChatID(chatID), problem.ManagerID(managerID),
 		problem.ResolveAtIsNil())).First(ctx)
 	if err != nil {
