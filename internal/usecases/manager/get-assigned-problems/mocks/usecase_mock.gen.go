@@ -37,10 +37,10 @@ func (m *MockproblemRepository) EXPECT() *MockproblemRepositoryMockRecorder {
 }
 
 // GetAssignedUnsolvedProblems mocks base method.
-func (m *MockproblemRepository) GetAssignedUnsolvedProblems(ctx context.Context, managerID types.UserID) ([]*problemsrepo.Problem, error) {
+func (m *MockproblemRepository) GetAssignedUnsolvedProblems(ctx context.Context, managerID types.UserID) ([]*problemsrepo.ProblemAndClientID, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAssignedUnsolvedProblems", ctx, managerID)
-	ret0, _ := ret[0].([]*problemsrepo.Problem)
+	ret0, _ := ret[0].([]*problemsrepo.ProblemAndClientID)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

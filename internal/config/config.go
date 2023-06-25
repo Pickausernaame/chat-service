@@ -115,5 +115,5 @@ type AfcVerdictsProcessorServiceConfig struct {
 }
 
 type ManagerSchedulerServiceConfig struct {
-	Period time.Duration `toml:"period" validate:"required,min=1s"`
+	Period time.Duration `toml:"period" validate:"required,min=1s,max=1h"`
 }

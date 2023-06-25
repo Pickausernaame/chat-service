@@ -30,19 +30,49 @@ func (r *Repo) GetManagerOpenProblemsCount(ctx context.Context, managerID types.
 		).Count(ctx)
 }
 
-func (r *Repo) GetAssignedUnsolvedProblems(ctx context.Context, managerID types.UserID) ([]*Problem, error) {
-	ps, err := r.db.Problem(ctx).Query().
-		Where(problem.And(
-			problem.ResolveAtIsNil(),
-			problem.ManagerID(managerID)),
-		).Order(problem.ByCreatedAt()).All(ctx)
+func (r *Repo) GetAssignedUnsolvedProblems(ctx context.Context, managerID types.UserID) ([]*ProblemAndClientID, error) {
+	query := `
+	SELECT p.id, p.chat_id, p.resolved_at, p.created_at, c.client_id
+	FROM problems p
+	JOIN chat c ON p.chat_id = c.chat_id
+	WHERE p.resolve_at IS NULL AND p.manager_id = ?
+	ORDER BY p.created_at
+`
+	rows, err := r.db.Problem(ctx).QueryContext(ctx, query, managerID)
 	if err != nil {
 		return nil, err
 	}
-	res := make([]*Problem, 0, len(ps))
-	for _, p := range ps {
-		res = append(res, adaptStoreProblem(p))
+
+	defer rows.Close()
+	res := make([]*ProblemAndClientID, 0)
+	for rows.Next() {
+		var problemID types.ProblemID
+		var chatID types.ChatID
+		var resolvedAt sql.NullTime
+		var createdAt time.Time
+		var clientID types.UserID
+
+		err := rows.Scan(&problemID, &chatID, &resolvedAt, &createdAt, &clientID)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, &ProblemAndClientID{
+			Problem: &Problem{
+				ID:        problemID,
+				ChatID:    chatID,
+				ManagerID: managerID,
+				ResolveAt: resolvedAt.Time,
+				CreatedAt: createdAt,
+			},
+			ClientID: clientID,
+		})
 	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return res, nil
 }
 

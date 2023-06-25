@@ -15,6 +15,11 @@ type Problem struct {
 	CreatedAt time.Time
 }
 
+type ProblemAndClientID struct {
+	*Problem
+	ClientID types.UserID
+}
+
 func adaptStoreProblem(m *store.Problem) *Problem {
 	return &Problem{
 		ID:        m.ID,

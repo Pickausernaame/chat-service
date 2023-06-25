@@ -104,7 +104,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/CloseChatResponse"
 
-
 security:
   - bearerAuth: [ ]
 
@@ -137,7 +136,6 @@ components:
           $ref: "#/components/schemas/MessagesPage"
         error:
           $ref: "#/components/schemas/Error"
-
 
     GetFreeHandsBtnAvailabilityResponse:
       properties:

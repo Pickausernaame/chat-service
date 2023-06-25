@@ -73,14 +73,21 @@ func (s *Service) Run(ctx context.Context) (err error) {
 		case <-ctx.Done():
 			return nil
 		default:
-
 			ps, err := s.prbRepo.GetUnassignedProblems(ctx)
 			if err != nil {
 				s.lg.Error("getting unassigned problems", zap.Error(err))
 				continue
 			}
 
-			for _, p := range ps {
+			j := 0
+			for i := 0; i < s.mngrPool.Size(); i++ {
+				if j == len(ps) {
+					s.lg.Info("all problems solved")
+					break
+				}
+				p := ps[j]
+				j++
+
 				clientMsg, err := s.msgRepo.MessageForManagerByChatID(ctx, p.ChatID)
 				if err != nil {
 					if store.IsNotFound(err) {

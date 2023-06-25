@@ -32,9 +32,9 @@ type NewMessageEvent struct {
 	RequestID   types.RequestID `validate:"required"`
 	ChatID      types.ChatID    `validate:"required"`
 	MessageID   types.MessageID `validate:"required"`
-	UserID      types.UserID
-	CreatedAt   time.Time `validate:"required"`
-	MessageBody string    `validate:"required"`
+	UserID      types.UserID    // is not required, because available empty AuthorID
+	CreatedAt   time.Time       `validate:"required"`
+	MessageBody string          `validate:"required"`
 	IsService   bool
 }
 

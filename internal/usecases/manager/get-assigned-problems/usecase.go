@@ -16,7 +16,7 @@ var ErrInvalidRequest = errors.New("invalid request")
 //go:generate mockgen -source=$GOFILE -destination=mocks/usecase_mock.gen.go -package=getassignedproblemsmocks
 
 type problemRepository interface {
-	GetAssignedUnsolvedProblems(ctx context.Context, managerID types.UserID) ([]*problemsrepo.Problem, error)
+	GetAssignedUnsolvedProblems(ctx context.Context, managerID types.UserID) ([]*problemsrepo.ProblemAndClientID, error)
 }
 
 type chatRepository interface {
@@ -56,11 +56,8 @@ func (u UseCase) Handle(ctx context.Context, req Request) (Response, error) {
 
 	res := Response{Chats: make([]*Chat, 0, len(ps))}
 	for _, p := range ps {
-		clientID, err := u.chatRepo.ClientIDByID(ctx, p.ChatID)
-		if err != nil {
-			return Response{}, fmt.Errorf("getting clientID by chatID %s: %v", p.ChatID.String(), err)
-		}
-		res.Chats = append(res.Chats, &Chat{ChatID: p.ChatID, ClientID: clientID})
+
+		res.Chats = append(res.Chats, &Chat{ChatID: p.ChatID, ClientID: p.ClientID})
 	}
 
 	return res, nil
