@@ -56,7 +56,6 @@ func (u UseCase) Handle(ctx context.Context, req Request) (Response, error) {
 
 	res := Response{Chats: make([]*Chat, 0, len(ps))}
 	for _, p := range ps {
-
 		res.Chats = append(res.Chats, &Chat{ChatID: p.ChatID, ClientID: p.ClientID})
 	}
 
