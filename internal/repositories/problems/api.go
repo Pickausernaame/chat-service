@@ -32,10 +32,10 @@ func (r *Repo) GetManagerOpenProblemsCount(ctx context.Context, managerID types.
 
 func (r *Repo) GetAssignedUnsolvedProblems(ctx context.Context, managerID types.UserID) ([]*ProblemAndClientID, error) {
 	query := `
-	SELECT p.id, p.chat_id, p.resolved_at, p.created_at, c.client_id
+	SELECT p.id, p.chat_id, p.resolve_at, p.created_at, c.client_id
 	FROM problems p
-	JOIN chat c ON p.chat_id = c.chat_id
-	WHERE p.resolve_at IS NULL AND p.manager_id = ?
+	JOIN chats c ON p.chat_id = c.id
+	WHERE p.resolve_at IS NULL AND p.manager_id = $1
 	ORDER BY p.created_at
 `
 	rows, err := r.db.Problem(ctx).QueryContext(ctx, query, managerID)
