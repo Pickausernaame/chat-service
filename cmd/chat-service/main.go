@@ -26,11 +26,15 @@ import (
 	inmemeventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream/in-mem"
 	managerload "github.com/Pickausernaame/chat-service/internal/services/manager-load"
 	inmemmanagerpool "github.com/Pickausernaame/chat-service/internal/services/manager-pool/in-mem"
+	managerscheduler "github.com/Pickausernaame/chat-service/internal/services/manager-scheduler"
 	msgproducer "github.com/Pickausernaame/chat-service/internal/services/msg-producer"
 	"github.com/Pickausernaame/chat-service/internal/services/outbox"
 	clientmessageblockedjob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/client-message-blocked"
 	clientmessagesentjob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/client-message-sent"
+	jobresolveproblem "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/job-resolve-problem"
+	managerassignedtoproblemjob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/manager-assigned-to-problem"
 	sendclientmessagejob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/send-client-message"
+	sendmanagermessagejob "github.com/Pickausernaame/chat-service/internal/services/outbox/jobs/send-manager-message"
 	"github.com/Pickausernaame/chat-service/internal/store"
 	"github.com/Pickausernaame/chat-service/internal/types"
 )
@@ -47,6 +51,7 @@ type eventSubscriber interface {
 	Subscribe(ctx context.Context, userID types.UserID) (<-chan eventstream.Event, error)
 }
 
+//nolint:gocyclo
 func run() (errReturned error) {
 	flag.Parse()
 
@@ -119,8 +124,17 @@ func run() (errReturned error) {
 	kw := msgproducer.NewKafkaWriter(cfg.Service.MsgSender.Brokers,
 		cfg.Service.MsgSender.Topic, cfg.Service.MsgSender.BatchSize)
 
+	managerKw := msgproducer.NewKafkaWriter(cfg.Service.MsgSender.Brokers,
+		cfg.Service.MsgSender.Topic, cfg.Service.MsgSender.BatchSize)
+
 	msgProdService, err := msgproducer.New(
 		msgproducer.NewOptions(kw, msgproducer.WithEncryptKey(cfg.Service.MsgSender.EncryptionKey)))
+	if err != nil {
+		return fmt.Errorf("init msg sender service: %v", err)
+	}
+
+	managerMsgProdService, err := msgproducer.New(
+		msgproducer.NewOptions(managerKw, msgproducer.WithEncryptKey(cfg.Service.MsgSender.EncryptionKey)))
 	if err != nil {
 		return fmt.Errorf("init msg sender service: %v", err)
 	}
@@ -144,6 +158,18 @@ func run() (errReturned error) {
 		return fmt.Errorf("registration send msg job: %v", err)
 	}
 
+	sendManagerMsgJob, err := sendmanagermessagejob.New(
+		sendmanagermessagejob.NewOptions(managerMsgProdService, msgRepo,
+			chatRepo, eventStream))
+	if err != nil {
+		return fmt.Errorf("init send manager msg job: %v", err)
+	}
+
+	err = obox.RegisterJob(sendManagerMsgJob)
+	if err != nil {
+		return fmt.Errorf("registration send manager msg job: %v", err)
+	}
+
 	// initialization sendMsg job
 	msgBlockedJob, err := clientmessageblockedjob.New(clientmessageblockedjob.NewOptions(msgRepo, eventStream))
 	if err != nil {
@@ -155,7 +181,7 @@ func run() (errReturned error) {
 		return fmt.Errorf("registration msg blocked job: %v", err)
 	}
 
-	msgSentJob, err := clientmessagesentjob.New(clientmessagesentjob.NewOptions(msgRepo, eventStream))
+	msgSentJob, err := clientmessagesentjob.New(clientmessagesentjob.NewOptions(msgRepo, problemRepo, eventStream))
 	if err != nil {
 		return fmt.Errorf("init msg sent job: %v", err)
 	}
@@ -169,9 +195,39 @@ func run() (errReturned error) {
 	manPoolService := inmemmanagerpool.New()
 
 	// initialization manager load service
-	manLoadService, err := managerload.New(managerload.NewOptions(cfg.Service.ManagerLoad.MaxProblemsAtSameTime, problemRepo))
+	manLoadService, err := managerload.New(
+		managerload.NewOptions(cfg.Service.ManagerLoad.MaxProblemsAtSameTime,
+			problemRepo))
 	if err != nil {
-		return fmt.Errorf("init outbox service: %v", err)
+		return fmt.Errorf("init manLoadService service: %v", err)
+	}
+
+	mngrAssignedJob, err := managerassignedtoproblemjob.New(
+		managerassignedtoproblemjob.NewOptions(msgRepo, manLoadService, eventStream))
+	if err != nil {
+		return fmt.Errorf("init manager assigned job: %v", err)
+	}
+
+	err = obox.RegisterJob(mngrAssignedJob)
+	if err != nil {
+		return fmt.Errorf("registration manager assigned job: %v", err)
+	}
+
+	resolveProblem, err := jobresolveproblem.New(jobresolveproblem.NewOptions(msgRepo, chatRepo, manLoadService, eventStream))
+	if err != nil {
+		return fmt.Errorf("init resolve problem job: %v", err)
+	}
+
+	err = obox.RegisterJob(resolveProblem)
+	if err != nil {
+		return fmt.Errorf("registration resolve problem job: %v", err)
+	}
+
+	mngrScheduler, err := managerscheduler.New(
+		managerscheduler.NewOptions(cfg.Service.ManagerScheduler.Period, manPoolService,
+			msgRepo, obox, problemRepo, db))
+	if err != nil {
+		return fmt.Errorf("init manager scheduler error: %v", err)
 	}
 
 	// initialization afc-verdicts-processor service
@@ -206,7 +262,8 @@ func run() (errReturned error) {
 	}
 
 	// initialization manager server
-	srvManager, err := initServerManager(cfg, kc, manLoadService, manPoolService, eventStream)
+	srvManager, err := initServerManager(cfg, kc, manLoadService, manPoolService, eventStream, chatRepo,
+		problemRepo, msgRepo, obox, db)
 	if err != nil {
 		return fmt.Errorf("init server manager: %v", err)
 	}
@@ -227,6 +284,8 @@ func run() (errReturned error) {
 	eg.Go(func() error { return obox.Run(ctx) })
 
 	eg.Go(func() error { return afcProcessor.Run(ctx) })
+
+	eg.Go(func() error { return mngrScheduler.Run(ctx) })
 
 	if err = eg.Wait(); err != nil && !errors.Is(err, context.Canceled) {
 		return fmt.Errorf("wait app stop: %v", err)

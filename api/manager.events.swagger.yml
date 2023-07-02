@@ -1,0 +1,117 @@
+openapi: 3.1.0
+info:
+  title: Bank Support Chat Client Events
+  version: v1
+
+servers:
+  - url: ws://localhost:8080/ws
+    description: Development server
+
+components:
+  schemas:
+    MessageId:
+      required: [ messageId ]
+      properties:
+        messageId:
+          type: string
+          format: uuid
+          x-go-type: types.MessageID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+
+    BaseEvent:
+      required: [ eventId, eventType, requestId ]
+      properties:
+        eventId:
+          type: string
+          format: uuid
+          x-go-type: types.EventID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+          description: Unique identifier for the event
+        eventType:
+          type: string
+          enum:
+            - NewChatEvent
+            - NewMessageEvent
+            - ChatClosedEvent
+          description: Type of the event
+        requestId:
+          type: string
+          format: uuid
+          x-go-type: types.RequestID
+          x-go-type-import:
+            path: "github.com/Pickausernaame/chat-service/internal/types"
+          description: Unique identifier for the request
+
+    NewChatEvent:
+      allOf:
+        - $ref: '#/components/schemas/BaseEvent'
+        - type: object
+          required: [ clientId, chatId, canTakeMoreProblems ]
+          properties:
+            clientId:
+              type: string
+              format: uuid
+              x-go-type: types.UserID
+              x-go-type-import:
+                path: "github.com/Pickausernaame/chat-service/internal/types"
+              description: Unique identifier for the client
+            chatId:
+              type: string
+              format: uuid
+              x-go-type: types.ChatID
+              x-go-type-import:
+                path: "github.com/Pickausernaame/chat-service/internal/types"
+              description: Unique identifier for the chat
+            canTakeMoreProblems:
+              type: boolean
+              description: Indicates if manager can take more problems
+     
+    NewMessageEvent:
+      allOf:
+        - $ref: '#/components/schemas/BaseEvent'
+        - $ref: '#/components/schemas/MessageId'
+        - type: object
+          required: [ authorId, body, createdAt, chatId ]
+          properties:
+            authorId:
+              type: string
+              format: uuid
+              x-go-type: types.UserID
+              x-go-type-import:
+                path: "github.com/Pickausernaame/chat-service/internal/types"
+              description: Unique identifier for the author
+            body:
+              type: string
+              minLength: 1
+              maxLength: 3000
+              description: Body of the message
+            createdAt:
+              type: string
+              format: date-time
+              description: Date and time of event creation
+            chatId:
+              type: string
+              format: uuid
+              x-go-type: types.ChatID
+              x-go-type-import:
+                path: "github.com/Pickausernaame/chat-service/internal/types"
+              description: Unique identifier for the chat
+
+    ChatClosedEvent:
+      allOf:
+        - $ref: '#/components/schemas/BaseEvent'
+        - type: object
+          required: [ chatId, canTakeMoreProblems ]
+          properties:
+            chatId:
+              type: string
+              format: uuid
+              x-go-type: types.ChatID
+              x-go-type-import:
+                path: "github.com/Pickausernaame/chat-service/internal/types"
+              description: Unique identifier for the chat
+            canTakeMoreProblems:
+              type: boolean
+              description: Indicates if manager can take more problems

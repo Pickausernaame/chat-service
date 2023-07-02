@@ -27,7 +27,7 @@
       </ENTRIES>
     </EXTENSION>
     <kind value="PACKAGE" />
-    <package value="github.com/Pickausernaame/chat-service/internal/services/afc-verdicts-processor" />
+    <package value="github.com/Pickausernaame/chat-service/internal/repositories/messages" />
     <directory value="$PROJECT_DIR$/internal/services/afc-verdicts-processor" />
     <filePath value="$PROJECT_DIR$" />
     <framework value="gotest" />

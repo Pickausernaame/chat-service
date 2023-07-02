@@ -17,6 +17,8 @@ const (
 	EventTypeMessageBlockedEvent string = "MessageBlockedEvent"
 	EventTypeMessageSentEvent    string = "MessageSentEvent"
 	EventTypeNewMessageEvent     string = "NewMessageEvent"
+	EventTypeNewChatEvent        string = "NewChatEvent"
+	EventTypeChatClosedEvent     string = "ChatClosedEvent"
 )
 
 type event struct{}         //
@@ -30,7 +32,7 @@ type NewMessageEvent struct {
 	RequestID   types.RequestID `validate:"required"`
 	ChatID      types.ChatID    `validate:"required"`
 	MessageID   types.MessageID `validate:"required"`
-	UserID      types.UserID    `validate:"required"`
+	UserID      types.UserID    // is not required, because available empty AuthorID
 	CreatedAt   time.Time       `validate:"required"`
 	MessageBody string          `validate:"required"`
 	IsService   bool
@@ -120,5 +122,76 @@ func (e *MessageBlockedEvent) Validate() error {
 }
 
 func (e *MessageBlockedEvent) Type() string {
+	return e.EventType
+}
+
+type NewChatEvent struct {
+	event
+
+	EventID             types.EventID   `validate:"required"`
+	RequestID           types.RequestID `validate:"required"`
+	CanTakeMoreProblems bool
+	ChatID              types.ChatID `validate:"required"`
+	ClientID            types.UserID `validate:"required"`
+	EventType           string       `validate:"required"`
+}
+
+func NewNewChatEvent(
+	eventID types.EventID,
+	requestID types.RequestID,
+	canTakeMoreProblems bool,
+	chatID types.ChatID,
+	clientID types.UserID,
+) *NewChatEvent {
+	return &NewChatEvent{
+		event:               event{},
+		EventID:             eventID,
+		RequestID:           requestID,
+		CanTakeMoreProblems: canTakeMoreProblems,
+		ChatID:              chatID,
+		ClientID:            clientID,
+		EventType:           EventTypeNewChatEvent,
+	}
+}
+
+func (e *NewChatEvent) Validate() error {
+	return validator.Validator.Struct(e)
+}
+
+func (e *NewChatEvent) Type() string {
+	return e.EventType
+}
+
+type ChatClosedEvent struct {
+	event
+
+	EventID             types.EventID   `validate:"required"`
+	RequestID           types.RequestID `validate:"required"`
+	CanTakeMoreProblems bool
+	ChatID              types.ChatID `validate:"required"`
+	EventType           string       `validate:"required"`
+}
+
+func NewChatClosedEvent(
+	eventID types.EventID,
+	requestID types.RequestID,
+	canTakeMoreProblems bool,
+	chatID types.ChatID,
+) *ChatClosedEvent {
+	return &ChatClosedEvent{
+		event:               event{},
+		EventID:             eventID,
+		RequestID:           requestID,
+		CanTakeMoreProblems: canTakeMoreProblems,
+		ChatID:              chatID,
+		EventType:           EventTypeChatClosedEvent,
+	}
+}
+
+func (e *ChatClosedEvent) Validate() error {
+	return validator.Validator.Struct(e)
+}
+
+func (e *ChatClosedEvent) Type() string {
 	return e.EventType
 }

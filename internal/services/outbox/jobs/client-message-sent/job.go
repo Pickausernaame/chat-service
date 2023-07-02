@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
 	eventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream"
@@ -12,10 +13,16 @@ import (
 	"github.com/Pickausernaame/chat-service/internal/types"
 )
 
+//go:generate mockgen -source=$GOFILE -destination=mocks/job_mock.gen.go -package=clientmessagesentjobmocks
+
 const Name = "client-message-sent"
 
 type messageRepository interface {
 	GetMessageByID(ctx context.Context, msgID types.MessageID) (*messagesrepo.Message, error)
+}
+
+type problemRepository interface {
+	GetManagerIDByChatID(ctx context.Context, chatID types.ChatID) (types.UserID, error)
 }
 
 type eventStream interface {
@@ -25,6 +32,7 @@ type eventStream interface {
 //go:generate options-gen -out-filename=job_options.gen.go -from-struct=Options
 type Options struct {
 	msgRepo     messageRepository `option:"mandatory" validate:"required"`
+	prbRepo     problemRepository `option:"mandatory" validate:"required"`
 	eventStream eventStream       `option:"mandatory" validate:"required"`
 }
 
@@ -58,8 +66,34 @@ func (j *Job) Handle(ctx context.Context, payload string) error {
 		return fmt.Errorf("getting msg by id: %v", err)
 	}
 
-	msgSentEv := eventstream.NewMessageSentEvent(types.NewEventID(), msg.InitialRequestID, msg.ID)
-	err = j.eventStream.Publish(ctx, msg.AuthorID, msgSentEv)
+	eg, ctx := errgroup.WithContext(ctx)
+	defer func() {
+		if err := eg.Wait(); err != nil {
+			j.lg.Error("error group error", zap.Error(err))
+		}
+	}()
+	eg.Go(func() error {
+		msgSentEv := eventstream.NewMessageSentEvent(types.NewEventID(), msg.InitialRequestID, msg.ID)
+		err := j.eventStream.Publish(ctx, msg.AuthorID, msgSentEv)
+		if err != nil {
+			return fmt.Errorf("publishing event: %v", err)
+		}
+		return nil
+	})
+
+	managerID, err := j.prbRepo.GetManagerIDByChatID(ctx, msg.ChatID)
+	if err != nil {
+		return fmt.Errorf("getting manager by chatID: %v", err)
+	}
+
+	// if manager not assigned
+	if managerID.IsZero() {
+		return nil
+	}
+
+	event := eventstream.NewNewMessageEvent(types.NewEventID(), msg.InitialRequestID,
+		msg.ChatID, msg.ID, msg.AuthorID, msg.CreatedAt, msg.Body, msg.IsService)
+	err = j.eventStream.Publish(ctx, managerID, event)
 	if err != nil {
 		return fmt.Errorf("publishing event: %v", err)
 	}

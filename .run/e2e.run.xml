@@ -6,14 +6,19 @@
     <envs>
       <env name="E2E_CLIENT_V1_API_ENDPOINT" value="http://localhost:8080/v1" />
       <env name="E2E_CLIENT_WS_ENDPOINT" value="ws://localhost:8080/ws" />
-      <env name="E2E_CLIENT_WS_SEC_PROTOCOL" value="chat-service-protocol" />
       <env name="E2E_CLIENT_WS_ORIGIN" value="http://localhost:3000" />
+      <env name="E2E_CLIENT_WS_SEC_PROTOCOL" value="chat-service-protocol" />
       <env name="E2E_KEYCLOAK_BASE_PATH" value="http://localhost:3010" />
-      <env name="E2E_KEYCLOAK_REALM" value="Bank" />
+      <env name="E2E_KEYCLOAK_CLIENT_DEBUG" value="false" />
       <env name="E2E_KEYCLOAK_CLIENT_ID" value="e2e-testing" />
       <env name="E2E_KEYCLOAK_CLIENT_SECRET" value="BVg0D8oeOQfGgQVvQMKeMtezvl4WvA4D" />
-      <env name="E2E_KEYCLOAK_CLIENT_DEBUG" value="false" />
-      <env name="E2E_KEYCLOAK_CLIENTS" value="e2e-user,e2e-user1,e2e-user2" />
+      <env name="E2E_KEYCLOAK_CLIENTS" value="e2e-user,e2e-user1,e2e-user2,e2e-user3" />
+      <env name="E2E_KEYCLOAK_REALM" value="Bank" />
+      <env name="E2E_KEYCLOAK_MANAGERS" value="e2e_manager,e2e_manager1,e2e_manager2,e2e_manager3" />
+      <env name="E2E_MANAGER_V1_API_ENDPOINT" value="http://localhost:8081/v1" />
+      <env name="E2E_MANAGER_WS_ENDPOINT" value="ws://localhost:8081/ws" />
+      <env name="E2E_MANAGER_WS_SEC_PROTOCOL" value="chat-service-protocol" />
+      <env name="E2E_MANAGER_WS_ORIGIN" value="http://localhost:3001" />
     </envs>
     <EXTENSION ID="net.ashald.envfile">
       <option name="IS_ENABLED" value="false" />

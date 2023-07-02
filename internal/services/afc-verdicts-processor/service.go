@@ -109,16 +109,18 @@ func (s *Service) Run(ctx context.Context) error {
 					s.lg.Error("closing consumer error", zap.Error(err))
 				}
 			}()
-
+			wg := sync.WaitGroup{}
 			for {
 				select {
 				case <-ctx.Done():
 					return nil
 				default:
-					wg := sync.WaitGroup{}
+
 					var msgs []kafka.Message
 					for i := 0; i < s.processBatchSize; i++ {
+						ctx, cancel := context.WithTimeout(ctx, time.Second*3)
 						msg, err := consumer.FetchMessage(ctx)
+						cancel()
 						if err != nil {
 							if errors.Is(err, context.DeadlineExceeded) {
 								continue
@@ -134,13 +136,13 @@ func (s *Service) Run(ctx context.Context) error {
 						if err != nil {
 							s.lg.Error("extract verdict error", zap.Error(err))
 							wg.Add(1)
-							go func() {
+							go func(msg kafka.Message, err error) {
 								defer wg.Done()
 								err = s.dlqWriter.WriteMessages(ctx, prepareDLQMessage(msg, err))
 								if err != nil {
 									s.lg.Error("dlqWriter error", zap.Error(err))
 								}
-							}()
+							}(msg, err)
 							continue
 						}
 
@@ -151,13 +153,13 @@ func (s *Service) Run(ctx context.Context) error {
 							if err != nil {
 								s.lg.Error("handle suspicious error", zap.Error(err))
 								wg.Add(1)
-								go func() {
+								go func(msg kafka.Message, err error) {
 									defer wg.Done()
 									err = s.dlqWriter.WriteMessages(ctx, prepareDLQMessage(msg, err))
 									if err != nil {
 										s.lg.Error("dlqWriter error", zap.Error(err))
 									}
-								}()
+								}(msg, err)
 								continue
 							}
 						case okVerdictType:
@@ -165,17 +167,18 @@ func (s *Service) Run(ctx context.Context) error {
 							if err != nil {
 								s.lg.Error("retry with exponential backoff error", zap.Error(err))
 								wg.Add(1)
-								go func() {
+								go func(msg kafka.Message, err error) {
 									defer wg.Done()
 									err = s.dlqWriter.WriteMessages(ctx, prepareDLQMessage(msg, err))
 									if err != nil {
 										s.lg.Error("dlqWriter error", zap.Error(err))
 									}
-								}()
+								}(msg, err)
 								continue
 							}
 						}
 					}
+
 					wg.Wait()
 					err := consumer.CommitMessages(ctx, msgs...)
 					if err != nil {
@@ -229,8 +232,11 @@ func (s *Service) handleSuspicious(ctx context.Context, msgID types.MessageID) f
 			if err != nil {
 				return fmt.Errorf("blocking msg: %v", err)
 			}
-
-			_, err = s.outBox.Put(ctx, clientmessageblockedjob.Name, msgID.String(), time.Now())
+			payload, err := clientmessageblockedjob.MarshalPayload(msgID)
+			if err != nil {
+				return fmt.Errorf("marshaling clientmessageblockedjob payload: %v", err)
+			}
+			_, err = s.outBox.Put(ctx, clientmessageblockedjob.Name, payload, time.Now())
 			if err != nil {
 				return fmt.Errorf("putting %s job: %v", clientmessageblockedjob.Name, err)
 			}
@@ -247,7 +253,12 @@ func (s *Service) handleOk(ctx context.Context, msgID types.MessageID) func() er
 				return fmt.Errorf("marking visible for manager msg: %v", err)
 			}
 
-			_, err = s.outBox.Put(ctx, clientmessagesentjob.Name, msgID.String(), time.Now())
+			payload, err := clientmessagesentjob.MarshalPayload(msgID)
+			if err != nil {
+				return fmt.Errorf("marshaling clientmessagesentjob payload: %v", err)
+			}
+
+			_, err = s.outBox.Put(ctx, clientmessagesentjob.Name, payload, time.Now())
 			if err != nil {
 				return fmt.Errorf("putting %s job: %v", clientmessagesentjob.Name, err)
 			}

@@ -56,3 +56,79 @@ func (r *Repo) CreateClientVisible(
 	}
 	return adaptStoreMessage(m), nil
 }
+
+func (r *Repo) MessageForManagerByChatID(ctx context.Context, id types.ChatID) (*Message, error) {
+	m, err := r.db.Message(ctx).Query().
+		Where(
+			message.ChatID(id),
+			message.IsVisibleForManager(true),
+			message.IsBlocked(false)).
+		Order(message.ByCreatedAt()).First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting message visible msg: %v", err)
+	}
+	return adaptStoreMessage(m), nil
+}
+
+func (r *Repo) CreateProblemAssignedMessage(
+	ctx context.Context,
+	chatID types.ChatID,
+	managerID types.UserID,
+	problemID types.ProblemID,
+) (*Message, error) {
+	m, err := r.db.Message(ctx).Create().
+		SetChatID(chatID).
+		SetIsVisibleForClient(true).
+		SetIsService(true).
+		SetProblemID(problemID).
+		SetBody(fmt.Sprintf("Manager %s will answer you", managerID.String())).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return adaptStoreMessage(m), nil
+}
+
+func (r *Repo) CreateFullVisible(
+	ctx context.Context,
+	reqID types.RequestID,
+	problemID types.ProblemID,
+	chatID types.ChatID,
+	authorID types.UserID,
+	msgBody string,
+) (*Message, error) {
+	m, err := r.db.Message(ctx).Create().
+		SetChatID(chatID).
+		SetIsVisibleForClient(true).
+		SetIsVisibleForManager(true).
+		SetIsService(false).
+		SetAuthorID(authorID).
+		SetBody(msgBody).
+		SetInitialRequestID(reqID).
+		SetProblemID(problemID).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return adaptStoreMessage(m), nil
+}
+
+func (r *Repo) CreateProblemResolvedMessage(
+	ctx context.Context,
+	chatID types.ChatID,
+	problemID types.ProblemID,
+	reqID types.RequestID,
+) (*Message, error) {
+	m, err := r.db.Message(ctx).Create().
+		SetChatID(chatID).
+		SetIsVisibleForClient(true).
+		SetIsService(true).
+		SetProblemID(problemID).
+		SetInitialRequestID(reqID).
+		SetBody("Your question has been marked as resolved.\nThank you for being with us!").
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return adaptStoreMessage(m), nil
+}

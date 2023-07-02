@@ -13,7 +13,9 @@ import (
 	"github.com/Pickausernaame/chat-service/pkg/pointer"
 )
 
-func (h Handlers) PostGetFreeHandsBtnAvailability(eCtx echo.Context, params PostGetFreeHandsBtnAvailabilityParams) error {
+func (h Handlers) PostGetFreeHandsBtnAvailability(eCtx echo.Context,
+	params PostGetFreeHandsBtnAvailabilityParams,
+) error {
 	ctx := eCtx.Request().Context()
 	managerID := middlewares.MustUserID(eCtx)
 
@@ -26,7 +28,7 @@ func (h Handlers) PostGetFreeHandsBtnAvailability(eCtx echo.Context, params Post
 	}
 
 	return eCtx.JSON(http.StatusOK,
-		PostGetFreeHandsBtnAvailabilityResponse{
+		GetFreeHandsBtnAvailabilityResponse{
 			Data: &ManagerAvailability{
 				Available: pointer.PtrWithZeroAsNil(resp.Result),
 			},
@@ -49,5 +51,5 @@ func (h Handlers) PostFreeHands(eCtx echo.Context, params PostFreeHandsParams) e
 	}
 
 	return eCtx.JSON(http.StatusOK,
-		PostFreeHandsResponse{Data: nil})
+		FreeHandsResponse{Data: nil})
 }

@@ -45,7 +45,6 @@ components:
           description: Unique identifier for the request
 
     NewMessageEvent:
-
       allOf:
         - $ref: '#/components/schemas/BaseEvent'
         - $ref: '#/components/schemas/MessageId'

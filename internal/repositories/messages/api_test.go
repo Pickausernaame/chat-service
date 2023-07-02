@@ -3,6 +3,7 @@
 package messagesrepo_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -161,6 +162,71 @@ func (s *MsgRepoAPISuite) Test_CreateClientVisible() {
 	}
 }
 
+func (s *MsgRepoAPISuite) Test_MessageForManagerByChatID() {
+	s.Run("first message of chat, that visible for manager", func() {
+		authorID := types.NewUserID()
+
+		// Create chat and problem.
+		problemID, chatID := s.createProblemAndChat(authorID)
+		initialRequestID := types.NewRequestID()
+
+		for i := 0; i < 10; i++ {
+			reqID := types.NewRequestID()
+			if i == 0 {
+				reqID = initialRequestID
+			}
+			// Check message was created.
+			msg, err := s.Database.Message(s.Ctx).
+				Create().
+				SetInitialRequestID(reqID).
+				SetProblemID(problemID).
+				SetChatID(chatID).
+				SetAuthorID(authorID).
+				SetBody(msgBody).
+				SetIsVisibleForClient(true).
+				SetIsVisibleForManager(true).
+				Save(s.Ctx)
+
+			s.Require().NoError(err)
+			s.Require().NotNil(msg)
+			s.NotEmpty(msg.ID)
+			s.Equal(chatID, msg.ChatID)
+			s.Equal(authorID, msg.AuthorID)
+			s.Equal(msgBody, msg.Body)
+			s.False(msg.CreatedAt.IsZero())
+			s.True(msg.IsVisibleForClient)
+			s.True(msg.IsVisibleForManager)
+			s.False(msg.IsBlocked)
+			s.False(msg.IsService)
+		}
+
+		msg, err := s.repo.MessageForManagerByChatID(s.Ctx, chatID)
+		s.Require().NoError(err)
+		s.Require().NotNil(msg)
+		s.Require().Equal(initialRequestID, msg.InitialRequestID)
+
+		return
+	})
+}
+
+func (s *MsgRepoAPISuite) Test_CreateProblemAssignedMessage() {
+	s.Run("create system message after assigning problem to manager", func() {
+		managerID := types.NewUserID()
+
+		authorID := types.NewUserID()
+		// Create chat and problem.
+		problemID, chatID := s.createProblemAndChat(authorID)
+
+		msg, err := s.repo.CreateProblemAssignedMessage(s.Ctx, chatID, managerID, problemID)
+		s.Require().NoError(err)
+		s.Require().NotNil(msg)
+		s.Require().Empty(msg.AuthorID)
+		s.Require().Equal(fmt.Sprintf("Manager %s will answer you", managerID.String()), msg.Body)
+
+		return
+	})
+}
+
 func (s *MsgRepoAPISuite) Test_CreateClientVisible_DuplicationError() {
 	authorID := types.NewUserID()
 
@@ -187,4 +253,41 @@ func (s *MsgRepoAPISuite) createProblemAndChat(clientID types.UserID) (types.Pro
 	s.Require().NoError(err)
 
 	return problem.ID, chat.ID
+}
+
+func (s *MsgRepoAPISuite) Test_CreateFullVisible() {
+	authorID := types.NewUserID()
+
+	// Create chat and problem.
+	problemID, chatID := s.createProblemAndChat(authorID)
+	initialRequestID := types.NewRequestID()
+
+	// Check message was created.
+	msg, err := s.repo.CreateFullVisible(s.Ctx, initialRequestID, problemID, chatID, authorID, msgBody)
+	s.Require().NoError(err)
+	s.Require().NotNil(msg)
+	s.NotEmpty(msg.ID)
+	s.Equal(chatID, msg.ChatID)
+	s.Equal(authorID, msg.AuthorID)
+	s.Equal(msgBody, msg.Body)
+	s.True(msg.IsVisibleForClient)
+	s.True(msg.IsVisibleForManager)
+	s.False(msg.IsBlocked)
+	s.False(msg.IsService)
+	s.Equal(initialRequestID, msg.InitialRequestID)
+
+	{
+		dbMsg, err := s.Database.Message(s.Ctx).Get(s.Ctx, msg.ID)
+		s.Require().NoError(err)
+		s.Require().NotNil(dbMsg)
+
+		s.Run("message is visible for client and for manager both", func() {
+			s.True(dbMsg.IsVisibleForClient)
+			s.True(dbMsg.IsVisibleForManager)
+		})
+
+		s.Run("initial_request_id is set correctly", func() {
+			s.Equal(initialRequestID, dbMsg.InitialRequestID)
+		})
+	}
 }

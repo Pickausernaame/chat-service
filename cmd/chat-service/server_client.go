@@ -12,6 +12,7 @@ import (
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
 	problemsrepo "github.com/Pickausernaame/chat-service/internal/repositories/problems"
 	"github.com/Pickausernaame/chat-service/internal/server"
+	clientevents "github.com/Pickausernaame/chat-service/internal/server-client/events"
 	clientv1 "github.com/Pickausernaame/chat-service/internal/server-client/v1"
 	"github.com/Pickausernaame/chat-service/internal/server/errhandler"
 	"github.com/Pickausernaame/chat-service/internal/services/outbox"
@@ -80,6 +81,7 @@ func initServerClient(
 			cfg.Servers.Client.SecWsProtocol,
 			subscriber,
 			errHandler.Handle,
+			clientevents.Adapter{},
 		))
 	if err != nil {
 		return nil, fmt.Errorf("init server: %v", err)

@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
+
 	messagesrepo "github.com/Pickausernaame/chat-service/internal/repositories/messages"
 	eventstream "github.com/Pickausernaame/chat-service/internal/services/event-stream"
 	msgproducer "github.com/Pickausernaame/chat-service/internal/services/msg-producer"
@@ -36,6 +38,7 @@ type Options struct {
 
 type Job struct {
 	Options
+	lg *zap.Logger
 	outbox.DefaultJob
 }
 
@@ -44,7 +47,7 @@ func New(opts Options) (*Job, error) {
 		return nil, fmt.Errorf("validations opts: %v", err)
 	}
 
-	return &Job{Options: opts}, nil
+	return &Job{Options: opts, lg: zap.L().Named(Name)}, nil
 }
 
 func (j *Job) Name() string {

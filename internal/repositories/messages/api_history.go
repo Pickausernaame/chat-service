@@ -3,6 +3,7 @@ package messagesrepo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -35,6 +36,39 @@ func (r *Repo) GetClientChatMessages(
 	pageSize int,
 	cursor *Cursor,
 ) ([]*Message, *Cursor, error) {
+	query := r.messagesByClientIDQuery(ctx, clientID)
+	return r.getMessages(ctx, query, pageSize, cursor)
+}
+
+// GetProblemMessages returns Nth page of messages in the chat for manager side (specific problem).
+func (r *Repo) GetProblemMessages(
+	ctx context.Context,
+	problemID types.ProblemID,
+	pageSize int,
+	cursor *Cursor,
+) ([]*Message, *Cursor, error) {
+	query := r.messagesByProblemIDQuery(ctx, problemID)
+	return r.getMessages(ctx, query, pageSize, cursor)
+}
+
+func (r *Repo) messagesByClientIDQuery(ctx context.Context, clientID types.UserID) *store.MessageQuery {
+	return r.db.Message(ctx).Query().Where(func(s *sql.Selector) {
+		ch := sql.Table(chat.Table)
+		s.Join(ch).On(s.C(message.ChatColumn), ch.C(chat.FieldID))
+		s.Where(sql.EQ(ch.C(chat.FieldClientID), clientID))
+	}).Where(message.IsVisibleForClient(true))
+}
+
+func (r *Repo) messagesByProblemIDQuery(ctx context.Context, problemID types.ProblemID) *store.MessageQuery {
+	return r.db.Message(ctx).Query().Where(message.ProblemID(problemID), message.IsVisibleForManager(true))
+}
+
+func (r *Repo) getMessages(
+	ctx context.Context,
+	query *store.MessageQuery,
+	pageSize int,
+	cursor *Cursor,
+) ([]*Message, *Cursor, error) {
 	var msgs []*store.Message
 	isPageSizeExist := false
 	isCursorExist := false
@@ -62,17 +96,16 @@ func (r *Repo) GetClientChatMessages(
 		cursorPageSize = cursor.PageSize
 	}
 
+	var err error
 	switch {
 	case isCursorExist:
-		msgs = r.messagesByClientIDQuery(ctx, clientID).Where(
-			message.And(
-				message.CreatedAtLT(cursor.LastCreatedAt),
-				message.IsVisibleForClient(true),
-			),
-		).Order(message.ByCreatedAt(sql.OrderDesc())).Limit(cursor.PageSize).AllX(ctx)
+		msgs, err = query.Where(message.CreatedAtLT(cursor.LastCreatedAt)).
+			Order(message.ByCreatedAt(sql.OrderDesc())).Limit(cursor.PageSize).All(ctx)
 	case isPageSizeExist:
-		msgs = r.messagesByClientIDQuery(ctx, clientID).Where(message.IsVisibleForClient(true)).
-			Order(message.ByCreatedAt(sql.OrderDesc())).Limit(pageSize).AllX(ctx)
+		msgs, err = query.Order(message.ByCreatedAt(sql.OrderDesc())).Limit(pageSize).All(ctx)
+	}
+	if err != nil {
+		return nil, nil, fmt.Errorf("getting list: %v", err)
 	}
 
 	res := make([]*Message, 0, len(msgs))
@@ -82,8 +115,7 @@ func (r *Repo) GetClientChatMessages(
 
 	cursor = nil
 	if len(msgs) != 0 {
-		c := r.messagesByClientIDQuery(ctx, clientID).
-			Where(message.CreatedAtLT(msgs[len(msgs)-1].CreatedAt)).CountX(ctx)
+		c := query.Where(message.CreatedAtLT(msgs[len(msgs)-1].CreatedAt)).CountX(ctx)
 		if c > 0 {
 			cursor = &Cursor{
 				LastCreatedAt: msgs[len(msgs)-1].CreatedAt,
@@ -96,12 +128,4 @@ func (r *Repo) GetClientChatMessages(
 	}
 
 	return res, cursor, nil
-}
-
-func (r *Repo) messagesByClientIDQuery(ctx context.Context, clientID types.UserID) *store.MessageQuery {
-	return r.db.Message(ctx).Query().Where(func(s *sql.Selector) {
-		ch := sql.Table(chat.Table)
-		s.Join(ch).On(s.C(message.ChatColumn), ch.C(chat.FieldID))
-		s.Where(sql.EQ(ch.C(chat.FieldClientID), clientID))
-	})
 }
